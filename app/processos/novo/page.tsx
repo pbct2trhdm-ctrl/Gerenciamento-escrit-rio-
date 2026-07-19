@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { ProcessoForm } from "@/components/processo-form";
 import { criarProcesso } from "@/lib/actions/processos";
+import { classeTituloPagina } from "@/lib/estilos";
 
 export default async function NovoProcessoPage({
   searchParams,
@@ -15,7 +16,7 @@ export default async function NovoProcessoPage({
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold mb-6">Novo processo</h1>
+      <h1 className={`${classeTituloPagina} mb-6`}>Novo processo</h1>
       <ProcessoForm
         clientes={clientes}
         clienteIdPadrao={clienteId}

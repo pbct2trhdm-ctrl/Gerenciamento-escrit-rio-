@@ -3,6 +3,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { SucumbenciaForm } from "@/components/sucumbencia-form";
 import { atualizarSucumbencia, excluirSucumbencia } from "@/lib/actions/sucumbencia";
+import { classeBotaoPerigo, classeTituloSecao } from "@/lib/estilos";
 
 export default async function EditarSucumbenciaPage({
   params,
@@ -22,19 +23,14 @@ export default async function EditarSucumbenciaPage({
   return (
     <div>
       <div className="flex items-center justify-between mb-1">
-        <h2 className="text-lg font-medium">
-          {sucumbencia.processo.cliente.nome}
-        </h2>
+        <h2 className={classeTituloSecao}>{sucumbencia.processo.cliente.nome}</h2>
         <form action={excluirSucumbencia.bind(null, sucumbencia.id)}>
-          <button
-            type="submit"
-            className="rounded-md border border-red-300 px-3 py-1.5 text-sm text-red-700 hover:bg-red-50"
-          >
+          <button type="submit" className={classeBotaoPerigo}>
             Excluir
           </button>
         </form>
       </div>
-      <p className="text-gray-500 mb-6">
+      <p className="text-texto-secundario mb-6">
         <Link href={`/processos/${sucumbencia.processo.id}`} className="underline">
           {sucumbencia.processo.numeroProcesso ?? "Processo sem número"}
         </Link>

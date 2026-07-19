@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { ObrigacaoSocietaria } from "@/app/generated/prisma/client";
 import { sugerirInss, sugerirCpp } from "@/lib/financeiro";
+import { classeInput, classeBotaoPrimario } from "@/lib/estilos";
 
 function paraInputDate(data: Date | string | null | undefined): string {
   if (!data) return "";
@@ -53,14 +54,16 @@ export function ObrigacoesForm({
   return (
     <form action={action} className="space-y-4">
       <input type="hidden" name="competencia" value={competenciaTexto} />
-      <div className="rounded-lg border border-gray-200 bg-white divide-y">
+      <div className="rounded-lg border border-gray-200 bg-superficie divide-y divide-gray-100">
         {LINHAS.map((linha) => {
           const existente = obrigacoes[linha.tipo];
           return (
             <div key={linha.tipo} className="grid grid-cols-4 gap-3 p-3 items-end">
-              <div className="text-sm font-medium">{linha.label}</div>
+              <div className="font-display text-sm font-medium text-texto-principal">
+                {linha.label}
+              </div>
               <div>
-                <label className="block text-xs text-gray-500 mb-1">
+                <label className="block text-xs text-texto-secundario mb-1">
                   Valor (R$)
                 </label>
                 <input
@@ -78,29 +81,29 @@ export function ObrigacoesForm({
                       setValores((atual) => ({ ...atual, [linha.tipo]: e.target.value }));
                     }
                   }}
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+                  className={`${classeInput} tabular-nums`}
                 />
               </div>
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Status</label>
+                <label className="block text-xs text-texto-secundario mb-1">Status</label>
                 <select
                   name={`status_${linha.tipo}`}
                   defaultValue={existente?.status ?? "PENDENTE"}
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+                  className={classeInput}
                 >
                   <option value="PENDENTE">Pendente</option>
                   <option value="PAGO">Pago</option>
                 </select>
               </div>
               <div>
-                <label className="block text-xs text-gray-500 mb-1">
+                <label className="block text-xs text-texto-secundario mb-1">
                   Data pagamento
                 </label>
                 <input
                   name={`dataPagamento_${linha.tipo}`}
                   type="date"
                   defaultValue={paraInputDate(existente?.dataPagamento)}
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+                  className={classeInput}
                 />
               </div>
             </div>
@@ -108,10 +111,7 @@ export function ObrigacoesForm({
         })}
       </div>
 
-      <button
-        type="submit"
-        className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-      >
+      <button type="submit" className={classeBotaoPrimario}>
         Salvar obrigações do mês
       </button>
     </form>

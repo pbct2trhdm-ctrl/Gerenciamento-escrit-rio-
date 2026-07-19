@@ -1,4 +1,5 @@
 import { FinanceiroTabs } from "@/components/financeiro-tabs";
+import { classeTituloPagina } from "@/lib/estilos";
 
 export default function FinanceiroLayout({
   children,
@@ -7,7 +8,7 @@ export default function FinanceiroLayout({
 }) {
   return (
     <div className="max-w-5xl">
-      <h1 className="text-2xl font-semibold mb-4">Financeiro</h1>
+      <h1 className={`${classeTituloPagina} mb-4`}>Financeiro</h1>
       <FinanceiroTabs />
       {children}
     </div>

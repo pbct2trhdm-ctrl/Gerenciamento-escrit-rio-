@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { AlvaraForm } from "@/components/alvara-form";
 import { atualizarAlvara, excluirAlvara } from "@/lib/actions/alvaras";
+import { classeBotaoPerigo, classeTituloSecao } from "@/lib/estilos";
 
 export default async function EditarAlvaraPage({
   params,
@@ -26,17 +27,14 @@ export default async function EditarAlvaraPage({
   return (
     <div>
       <div className="flex items-center justify-between mb-1">
-        <h2 className="text-lg font-medium">{alvara.processo.cliente.nome}</h2>
+        <h2 className={classeTituloSecao}>{alvara.processo.cliente.nome}</h2>
         <form action={excluirAlvara.bind(null, alvara.id)}>
-          <button
-            type="submit"
-            className="rounded-md border border-red-300 px-3 py-1.5 text-sm text-red-700 hover:bg-red-50"
-          >
+          <button type="submit" className={classeBotaoPerigo}>
             Excluir
           </button>
         </form>
       </div>
-      <p className="text-gray-500 mb-6">
+      <p className="text-texto-secundario mb-6">
         {alvara.processo.numeroProcesso ?? "Processo sem número"}
       </p>
       <AlvaraForm

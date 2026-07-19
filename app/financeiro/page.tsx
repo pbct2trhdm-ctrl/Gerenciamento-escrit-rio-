@@ -7,6 +7,7 @@ import {
   diasDesde,
   DIAS_ALERTA_ALVARA,
 } from "@/lib/financeiro";
+import { classeCard, classeTituloSecao } from "@/lib/estilos";
 
 export default async function FinanceiroVisaoGeralPage() {
   const hoje = new Date();
@@ -104,34 +105,34 @@ export default async function FinanceiroVisaoGeralPage() {
     <div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {cards.map((card) => (
-          <div key={card.label} className="rounded-lg border border-gray-200 bg-white p-4">
-            <p className="text-sm text-gray-500">{card.label}</p>
+          <div key={card.label} className={classeCard}>
+            <p className="text-sm text-texto-secundario">{card.label}</p>
             <p
-              className={`text-xl font-semibold mt-1 ${
-                card.valor < 0 ? "text-red-600" : "text-gray-900"
+              className={`text-xl font-semibold mt-1 tabular-nums ${
+                card.valor < 0 ? "text-critico" : "text-texto-principal"
               }`}
             >
               {formatarMoeda(card.valor)}
             </p>
             {card.detalhe && (
-              <p className="text-xs text-gray-400 mt-1">{card.detalhe}</p>
+              <p className="text-xs text-texto-secundario/80 mt-1">{card.detalhe}</p>
             )}
           </div>
         ))}
       </div>
 
       <div className="space-y-4">
-        <h2 className="text-lg font-medium">Alertas</h2>
+        <h2 className={classeTituloSecao}>Alertas</h2>
 
         {parcelasSemNf.length === 0 &&
         sucumbenciasSemNf.length === 0 &&
         alvarasAguardando.length === 0 ? (
-          <p className="text-gray-500 text-sm">Nenhum alerta no momento.</p>
+          <p className="text-texto-secundario text-sm">Nenhum alerta no momento.</p>
         ) : (
           <div className="space-y-3">
             {parcelasSemNf.length > 0 && (
-              <div className="rounded-lg border border-amber-300 bg-amber-50 p-4">
-                <p className="font-medium text-amber-800 text-sm mb-2">
+              <div className="rounded-lg border border-atencao/40 bg-atencao/10 p-4">
+                <p className="font-medium text-atencao text-sm mb-2">
                   Parcelas pagas sem nota fiscal emitida ({parcelasSemNf.length})
                 </p>
                 <ul className="text-sm space-y-1">
@@ -142,7 +143,7 @@ export default async function FinanceiroVisaoGeralPage() {
                         className="underline"
                       >
                         {p.honorario.processo.cliente.nome} — parcela nº {p.numero} ·{" "}
-                        {formatarMoeda(p.valor)}
+                        <span className="tabular-nums">{formatarMoeda(p.valor)}</span>
                       </Link>
                     </li>
                   ))}
@@ -151,8 +152,8 @@ export default async function FinanceiroVisaoGeralPage() {
             )}
 
             {sucumbenciasSemNf.length > 0 && (
-              <div className="rounded-lg border border-amber-300 bg-amber-50 p-4">
-                <p className="font-medium text-amber-800 text-sm mb-2">
+              <div className="rounded-lg border border-atencao/40 bg-atencao/10 p-4">
+                <p className="font-medium text-atencao text-sm mb-2">
                   Sucumbências recebidas sem nota fiscal emitida ({sucumbenciasSemNf.length})
                 </p>
                 <ul className="text-sm space-y-1">
@@ -160,7 +161,9 @@ export default async function FinanceiroVisaoGeralPage() {
                     <li key={s.id}>
                       <Link href={`/financeiro/sucumbencia/${s.id}/editar`} className="underline">
                         {s.processo.cliente.nome} ·{" "}
-                        {formatarMoeda(s.valorDefinido ?? s.valorEstimado ?? 0)}
+                        <span className="tabular-nums">
+                          {formatarMoeda(s.valorDefinido ?? s.valorEstimado ?? 0)}
+                        </span>
                       </Link>
                     </li>
                   ))}
@@ -169,8 +172,8 @@ export default async function FinanceiroVisaoGeralPage() {
             )}
 
             {alvarasAguardando.length > 0 && (
-              <div className="rounded-lg border border-red-300 bg-red-50 p-4">
-                <p className="font-medium text-red-800 text-sm mb-2">
+              <div className="rounded-lg border border-critico/40 bg-critico/10 p-4">
+                <p className="font-medium text-critico text-sm mb-2">
                   Alvarás aguardando repasse há mais de {DIAS_ALERTA_ALVARA} dias (
                   {alvarasAguardando.length})
                 </p>
@@ -178,8 +181,12 @@ export default async function FinanceiroVisaoGeralPage() {
                   {alvarasAguardando.map((a) => (
                     <li key={a.id}>
                       <Link href={`/financeiro/alvaras/${a.id}/editar`} className="underline">
-                        {a.processo.cliente.nome} · {formatarMoeda(a.valorTotal)} · recebido em{" "}
-                        {a.dataRecebimento ? formatarData(a.dataRecebimento) : "—"}
+                        {a.processo.cliente.nome} ·{" "}
+                        <span className="tabular-nums">{formatarMoeda(a.valorTotal)}</span> ·
+                        recebido em{" "}
+                        <span className="tabular-nums">
+                          {a.dataRecebimento ? formatarData(a.dataRecebimento) : "—"}
+                        </span>
                       </Link>
                     </li>
                   ))}

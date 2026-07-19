@@ -1,4 +1,5 @@
 import type { Parcela } from "@/app/generated/prisma/client";
+import { classeInput, classeBotaoPrimario } from "@/lib/estilos";
 
 function paraInputDate(data: Date | string | null | undefined): string {
   if (!data) return "";
@@ -19,7 +20,7 @@ export function ParcelaForm({
     <form action={action} className="space-y-3">
       <div className="grid grid-cols-3 gap-3">
         <div>
-          <label className="block text-xs font-medium mb-1" htmlFor="numero">
+          <label className="block text-xs font-medium mb-1 text-texto-secundario" htmlFor="numero">
             Nº
           </label>
           <input
@@ -29,11 +30,11 @@ export function ParcelaForm({
             min={1}
             required
             defaultValue={parcela?.numero ?? proximoNumero ?? 1}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+            className={classeInput}
           />
         </div>
         <div>
-          <label className="block text-xs font-medium mb-1" htmlFor="valor">
+          <label className="block text-xs font-medium mb-1 text-texto-secundario" htmlFor="valor">
             Valor (R$)
           </label>
           <input
@@ -44,11 +45,11 @@ export function ParcelaForm({
             min={0}
             required
             defaultValue={parcela?.valor ?? ""}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+            className={classeInput}
           />
         </div>
         <div>
-          <label className="block text-xs font-medium mb-1" htmlFor="vencimento">
+          <label className="block text-xs font-medium mb-1 text-texto-secundario" htmlFor="vencimento">
             Vencimento
           </label>
           <input
@@ -57,7 +58,7 @@ export function ParcelaForm({
             type="date"
             required
             defaultValue={paraInputDate(parcela?.vencimento)}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+            className={classeInput}
           />
         </div>
       </div>
@@ -65,14 +66,14 @@ export function ParcelaForm({
       {parcela && (
         <div className="grid grid-cols-3 gap-3 items-end">
           <div>
-            <label className="block text-xs font-medium mb-1" htmlFor="status">
+            <label className="block text-xs font-medium mb-1 text-texto-secundario" htmlFor="status">
               Status
             </label>
             <select
               id="status"
               name="status"
               defaultValue={parcela.status === "ATRASADO" ? "PENDENTE" : parcela.status}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+              className={classeInput}
             >
               <option value="PENDENTE">Pendente</option>
               <option value="PAGO">Pago</option>
@@ -80,7 +81,7 @@ export function ParcelaForm({
           </div>
           <div>
             <label
-              className="block text-xs font-medium mb-1"
+              className="block text-xs font-medium mb-1 text-texto-secundario"
               htmlFor="dataPagamento"
             >
               Data pagamento
@@ -90,12 +91,12 @@ export function ParcelaForm({
               name="dataPagamento"
               type="date"
               defaultValue={paraInputDate(parcela.dataPagamento)}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+              className={classeInput}
             />
           </div>
           <div>
             <label
-              className="block text-xs font-medium mb-1"
+              className="block text-xs font-medium mb-1 text-texto-secundario"
               htmlFor="dataEmissaoNf"
             >
               Emissão da NF
@@ -105,7 +106,7 @@ export function ParcelaForm({
               name="dataEmissaoNf"
               type="date"
               defaultValue={paraInputDate(parcela.dataEmissaoNf)}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+              className={classeInput}
             />
           </div>
           <label className="flex items-center gap-2 text-sm col-span-3">
@@ -121,7 +122,7 @@ export function ParcelaForm({
 
       <button
         type="submit"
-        className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
+        className={`${classeBotaoPrimario} !px-3 !py-1.5`}
       >
         {parcela ? "Salvar parcela" : "Adicionar parcela"}
       </button>

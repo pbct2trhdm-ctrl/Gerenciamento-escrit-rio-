@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { DespesaForm } from "@/components/despesa-form";
 import { criarDespesa } from "@/lib/actions/despesas";
+import { classeTituloSecao } from "@/lib/estilos";
 
 export default async function NovaDespesaPage() {
   const processos = await prisma.processo.findMany({
@@ -10,7 +11,7 @@ export default async function NovaDespesaPage() {
 
   return (
     <div>
-      <h2 className="text-lg font-medium mb-6">Nova despesa</h2>
+      <h2 className={`${classeTituloSecao} mb-6`}>Nova despesa</h2>
       <DespesaForm processos={processos} action={criarDespesa} />
     </div>
   );

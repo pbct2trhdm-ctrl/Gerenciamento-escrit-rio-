@@ -2,25 +2,32 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import {
+  IconeDashboard,
+  IconeClientes,
+  IconeProcessos,
+  IconePrazos,
+  IconeFinanceiro,
+} from "@/components/icones";
 
 const itens = [
-  { href: "/", label: "Dashboard" },
-  { href: "/clientes", label: "Clientes" },
-  { href: "/processos", label: "Processos" },
-  { href: "/prazos", label: "Prazos/Agenda" },
-  { href: "/financeiro", label: "Financeiro" },
+  { href: "/", label: "Dashboard", Icone: IconeDashboard },
+  { href: "/clientes", label: "Clientes", Icone: IconeClientes },
+  { href: "/processos", label: "Processos", Icone: IconeProcessos },
+  { href: "/prazos", label: "Prazos/Agenda", Icone: IconePrazos },
+  { href: "/financeiro", label: "Financeiro", Icone: IconeFinanceiro },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <nav className="w-60 shrink-0 border-r border-gray-200 bg-white min-h-screen flex flex-col">
-      <div className="px-5 py-6 border-b border-gray-200">
-        <p className="font-semibold text-sm leading-tight">
+    <nav className="w-60 shrink-0 border-r border-black/10 bg-base-escura min-h-screen flex flex-col">
+      <div className="px-5 py-6 border-b border-white/10">
+        <p className="font-display text-base font-semibold leading-tight text-white">
           Pastana Mota
         </p>
-        <p className="text-xs text-gray-500 leading-tight">
+        <p className="text-xs text-white/55 leading-tight mt-0.5">
           Sociedade Individual de Advocacia
         </p>
       </div>
@@ -34,12 +41,13 @@ export function Sidebar() {
             <li key={item.href}>
               <Link
                 href={item.href}
-                className={`block mx-3 mb-1 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                className={`flex items-center gap-3 mx-3 mb-1 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
                   ativo
-                    ? "bg-blue-600 text-white"
-                    : "text-gray-700 hover:bg-gray-100"
+                    ? "bg-accent text-base-escura"
+                    : "text-white/75 hover:bg-white/10 hover:text-white"
                 }`}
               >
+                <item.Icone />
                 {item.label}
               </Link>
             </li>

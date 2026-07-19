@@ -1,8 +1,17 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { LABEL_STATUS_ALVARA, formatarMoeda, formatarData } from "@/lib/formatacao";
-import { diasDesde, DIAS_ALERTA_ALVARA } from "@/lib/financeiro";
+import { DIAS_ALERTA_ALVARA } from "@/lib/financeiro";
 import { marcarAlvaraRepassado } from "@/lib/actions/alvaras";
+import { tierAlvara } from "@/lib/urgencia";
+import { Badge } from "@/components/badge";
+import { EmptyState } from "@/components/empty-state";
+import {
+  classeBotaoPrimario,
+  classeBotaoSecundario,
+  classeBotaoConfirma,
+  classeTituloSecao,
+} from "@/lib/estilos";
 
 export default async function AlvarasPage() {
   const alvaras = await prisma.alvara.findMany({
@@ -13,60 +22,54 @@ export default async function AlvarasPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-lg font-medium">Alvarás</h2>
-        <Link
-          href="/financeiro/alvaras/novo"
-          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-        >
+        <h2 className={classeTituloSecao}>Alvarás</h2>
+        <Link href="/financeiro/alvaras/novo" className={classeBotaoPrimario}>
           Novo alvará
         </Link>
       </div>
 
       {alvaras.length === 0 ? (
-        <p className="text-gray-500">Nenhum alvará cadastrado.</p>
+        <EmptyState
+          mensagem="Nenhum alvará cadastrado."
+          acaoHref="/financeiro/alvaras/novo"
+          acaoLabel="Adicionar o primeiro alvará"
+        />
       ) : (
-        <ul className="space-y-2">
+        <ul className="space-y-3">
           {alvaras.map((alvara) => {
-            const pendenteHaMuitoTempo =
-              alvara.status === "AGUARDANDO_REPASSE" &&
-              alvara.dataRecebimento &&
-              diasDesde(alvara.dataRecebimento) > DIAS_ALERTA_ALVARA;
+            const tier = tierAlvara(alvara, DIAS_ALERTA_ALVARA);
             return (
               <li key={alvara.id}>
                 <div
-                  className={`rounded-lg border p-4 ${
-                    pendenteHaMuitoTempo
-                      ? "border-red-300 bg-red-50"
-                      : "border-gray-200 bg-white"
+                  className={`rounded-lg border bg-superficie p-4 ${
+                    tier === "critico" ? "border-critico/30" : "border-gray-200"
                   }`}
                 >
                   <div className="flex items-center justify-between gap-4">
                     <div className="min-w-0">
                       <p className="font-medium truncate">{alvara.processo.cliente.nome}</p>
-                      <p className="text-sm text-gray-500 truncate">
+                      <p className="text-sm text-texto-secundario truncate tabular-nums">
                         {alvara.processo.numeroProcesso ?? "Sem número"}
                         {alvara.dataRecebimento &&
                           ` · recebido em ${formatarData(alvara.dataRecebimento)}`}
                       </p>
                     </div>
                     <div className="text-right shrink-0">
-                      <p className="font-semibold">{formatarMoeda(alvara.valorTotal)}</p>
-                      <p className="text-sm text-gray-500">
+                      <p className="font-semibold tabular-nums">
+                        {formatarMoeda(alvara.valorTotal)}
+                      </p>
+                      <p className="text-sm text-texto-secundario tabular-nums">
                         Repassar: {formatarMoeda(alvara.valorRepassado)}
                       </p>
-                      <p
-                        className={`text-sm ${
-                          pendenteHaMuitoTempo ? "text-red-700 font-medium" : "text-gray-500"
-                        }`}
-                      >
-                        {LABEL_STATUS_ALVARA[alvara.status]}
-                      </p>
+                      <div className="mt-1">
+                        <Badge tier={tier}>{LABEL_STATUS_ALVARA[alvara.status]}</Badge>
+                      </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 mt-3">
                     <Link
                       href={`/financeiro/alvaras/${alvara.id}/editar`}
-                      className="rounded-md border border-gray-300 px-3 py-1 text-xs hover:bg-gray-50"
+                      className={`${classeBotaoSecundario} !px-3 !py-1 text-xs`}
                     >
                       Editar
                     </Link>
@@ -74,7 +77,7 @@ export default async function AlvarasPage() {
                       <form action={marcarAlvaraRepassado.bind(null, alvara.id)}>
                         <button
                           type="submit"
-                          className="rounded-md border border-green-300 px-3 py-1 text-xs text-green-700 hover:bg-green-50"
+                          className={`${classeBotaoConfirma} !px-3 !py-1 text-xs`}
                         >
                           Marcar como repassado
                         </button>

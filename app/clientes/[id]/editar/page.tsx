@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { ClienteForm } from "@/components/cliente-form";
 import { atualizarCliente } from "@/lib/actions/clientes";
+import { classeTituloPagina } from "@/lib/estilos";
 
 export default async function EditarClientePage({
   params,
@@ -17,7 +18,7 @@ export default async function EditarClientePage({
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold mb-6">Editar cliente</h1>
+      <h1 className={`${classeTituloPagina} mb-6`}>Editar cliente</h1>
       <ClienteForm cliente={cliente} action={atualizarCliente.bind(null, id)} />
     </div>
   );

@@ -8,6 +8,17 @@ import {
 import { diasRestantes } from "@/lib/prazos";
 import { marcarPrazoComoCumprido } from "@/lib/actions/prazos";
 import type { Prisma } from "@/app/generated/prisma/client";
+import { tierPrazo } from "@/lib/urgencia";
+import { SeloPrazo } from "@/components/selo-prazo";
+import { Badge } from "@/components/badge";
+import { EmptyState } from "@/components/empty-state";
+import {
+  classeInputAuto,
+  classeBotaoPrimario,
+  classeBotaoSecundario,
+  classeBotaoConfirma,
+  classeTituloPagina,
+} from "@/lib/estilos";
 
 export default async function PrazosPage({
   searchParams,
@@ -39,21 +50,14 @@ export default async function PrazosPage({
   return (
     <div className="max-w-4xl">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-semibold">Prazos/Agenda</h1>
-        <Link
-          href="/prazos/novo"
-          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-        >
+        <h1 className={classeTituloPagina}>Prazos/Agenda</h1>
+        <Link href="/prazos/novo" className={classeBotaoPrimario}>
           Novo prazo
         </Link>
       </div>
 
       <form className="flex flex-wrap gap-3 mb-6" method="get">
-        <select
-          name="status"
-          defaultValue={status ?? ""}
-          className="rounded-md border border-gray-300 px-3 py-2 text-sm"
-        >
+        <select name="status" defaultValue={status ?? ""} className={classeInputAuto}>
           <option value="">Todos os status</option>
           <option value="PENDENTE">Pendente</option>
           <option value="CUMPRIDO">Cumprido</option>
@@ -62,7 +66,7 @@ export default async function PrazosPage({
         <select
           name="processoId"
           defaultValue={processoId ?? ""}
-          className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+          className={classeInputAuto}
         >
           <option value="">Todos os processos</option>
           {processos.map((processo) => (
@@ -71,32 +75,34 @@ export default async function PrazosPage({
             </option>
           ))}
         </select>
-        <button
-          type="submit"
-          className="rounded-md border border-gray-300 px-4 py-2 text-sm hover:bg-gray-50"
-        >
+        <button type="submit" className={classeBotaoSecundario}>
           Filtrar
         </button>
       </form>
 
       {prazos.length === 0 ? (
-        <p className="text-gray-500">Nenhum prazo encontrado.</p>
+        <EmptyState
+          mensagem="Nenhum prazo encontrado."
+          acaoHref="/prazos/novo"
+          acaoLabel="Adicionar o primeiro prazo"
+        />
       ) : (
-        <ul className="space-y-2">
+        <ul className="space-y-3">
           {prazos.map((prazo) => {
             const restantes = diasRestantes(prazo.dataFinal);
-            const urgente = prazo.status === "PENDENTE" && restantes <= 7;
+            const tier = tierPrazo(prazo.status, restantes);
             return (
               <li key={prazo.id}>
                 <div
-                  className={`rounded-lg border p-4 ${
-                    urgente
-                      ? "border-red-300 bg-red-50"
-                      : "border-gray-200 bg-white"
+                  className={`rounded-lg border bg-superficie p-4 ${
+                    tier === "critico" && prazo.status === "PENDENTE"
+                      ? "border-critico/30"
+                      : "border-gray-200"
                   }`}
                 >
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="min-w-0">
+                  <div className="flex items-center gap-4">
+                    <SeloPrazo id={prazo.id} dias={restantes} tier={tier} size={64} />
+                    <div className="min-w-0 flex-1">
                       <Link
                         href={`/processos/${prazo.processoId}`}
                         className="font-medium hover:underline"
@@ -104,27 +110,23 @@ export default async function PrazosPage({
                         {prazo.processo.cliente.nome} ·{" "}
                         {prazo.processo.numeroProcesso ?? "Sem número"}
                       </Link>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-texto-secundario">
                         {LABEL_TIPO_PRAZO[prazo.tipo]}
                       </p>
                     </div>
                     <div className="text-right shrink-0">
-                      <p
-                        className={`font-semibold ${
-                          urgente ? "text-red-700" : "text-gray-900"
-                        }`}
-                      >
+                      <p className="font-semibold tabular-nums">
                         {formatarData(prazo.dataFinal)}
                       </p>
-                      <p className="text-sm text-gray-500">
-                        {LABEL_STATUS_PRAZO[prazo.status]}
-                      </p>
+                      <div className="mt-1">
+                        <Badge tier={tier}>{LABEL_STATUS_PRAZO[prazo.status]}</Badge>
+                      </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 mt-3">
                     <Link
                       href={`/prazos/${prazo.id}/editar`}
-                      className="rounded-md border border-gray-300 px-3 py-1 text-xs hover:bg-gray-50"
+                      className={`${classeBotaoSecundario} !px-3 !py-1 text-xs`}
                     >
                       Editar
                     </Link>
@@ -132,7 +134,7 @@ export default async function PrazosPage({
                       <form action={marcarPrazoComoCumprido.bind(null, prazo.id)}>
                         <button
                           type="submit"
-                          className="rounded-md border border-green-300 px-3 py-1 text-xs text-green-700 hover:bg-green-50"
+                          className={`${classeBotaoConfirma} !px-3 !py-1 text-xs`}
                         >
                           Marcar como cumprido
                         </button>

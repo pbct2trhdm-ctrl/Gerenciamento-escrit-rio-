@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { ParcelaForm } from "@/components/parcela-form";
 import { atualizarParcela } from "@/lib/actions/honorarios";
+import { classeTituloSecao } from "@/lib/estilos";
 
 export default async function EditarParcelaPage({
   params,
@@ -17,7 +18,7 @@ export default async function EditarParcelaPage({
 
   return (
     <div className="max-w-xl">
-      <h2 className="text-lg font-medium mb-6">Editar parcela</h2>
+      <h2 className={`${classeTituloSecao} mb-6`}>Editar parcela</h2>
       <ParcelaForm
         parcela={parcela}
         action={atualizarParcela.bind(null, parcelaId, id)}

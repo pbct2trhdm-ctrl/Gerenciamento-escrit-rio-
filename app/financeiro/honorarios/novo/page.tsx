@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { HonorarioForm } from "@/components/honorario-form";
 import { criarHonorario } from "@/lib/actions/honorarios";
+import { classeTituloSecao } from "@/lib/estilos";
 
 export default async function NovoHonorarioPage({
   searchParams,
@@ -15,7 +16,7 @@ export default async function NovoHonorarioPage({
 
   return (
     <div>
-      <h2 className="text-lg font-medium mb-6">Novo honorário</h2>
+      <h2 className={`${classeTituloSecao} mb-6`}>Novo honorário</h2>
       <HonorarioForm
         processos={processos}
         processoIdPadrao={processoId}

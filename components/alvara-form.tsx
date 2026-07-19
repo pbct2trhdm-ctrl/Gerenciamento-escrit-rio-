@@ -7,6 +7,7 @@ import type {
   Cliente,
   HonorarioSucumbencial,
 } from "@/app/generated/prisma/client";
+import { classeInput, classeLabel, classeBotaoPrimario } from "@/lib/estilos";
 
 type ProcessoComCliente = Pick<Processo, "id" | "numeroProcesso"> & {
   cliente: Pick<Cliente, "nome">;
@@ -49,7 +50,7 @@ export function AlvaraForm({
     <form action={action} className="max-w-xl space-y-4">
       {processos && (
         <div>
-          <label className="block text-sm font-medium mb-1" htmlFor="processoId">
+          <label className={classeLabel} htmlFor="processoId">
             Processo
           </label>
           <select
@@ -57,7 +58,7 @@ export function AlvaraForm({
             name="processoId"
             required
             defaultValue={processoIdPadrao ?? ""}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+            className={classeInput}
           >
             <option value="" disabled>
               Selecione um processo
@@ -74,7 +75,7 @@ export function AlvaraForm({
 
       <div>
         <label
-          className="block text-sm font-medium mb-1"
+          className={classeLabel}
           htmlFor="honorarioSucumbencialId"
         >
           Sucumbência vinculada (opcional)
@@ -83,7 +84,7 @@ export function AlvaraForm({
           id="honorarioSucumbencialId"
           name="honorarioSucumbencialId"
           defaultValue={alvara?.honorarioSucumbencialId ?? ""}
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+          className={classeInput}
         >
           <option value="">Nenhuma</option>
           {sucumbencias.map((s) => (
@@ -96,7 +97,7 @@ export function AlvaraForm({
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium mb-1" htmlFor="valorTotal">
+          <label className={classeLabel} htmlFor="valorTotal">
             Valor total (R$)
           </label>
           <input
@@ -111,11 +112,11 @@ export function AlvaraForm({
               setValorTotal(e.target.value);
               recalcularRepasse(e.target.value, valorRetido);
             }}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+            className={classeInput}
           />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1" htmlFor="valorRetido">
+          <label className={classeLabel} htmlFor="valorRetido">
             Valor retido — honorários (R$)
           </label>
           <input
@@ -130,14 +131,14 @@ export function AlvaraForm({
               setValorRetido(e.target.value);
               recalcularRepasse(valorTotal, e.target.value);
             }}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+            className={classeInput}
           />
         </div>
       </div>
 
       <div>
         <label
-          className="block text-sm font-medium mb-1"
+          className={classeLabel}
           htmlFor="valorRepassado"
         >
           Valor repassado ao cliente (R$)
@@ -153,9 +154,9 @@ export function AlvaraForm({
             setRepasseCustomizado(true);
             setValorRepassado(e.target.value);
           }}
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+          className={classeInput}
         />
-        <p className="text-xs text-gray-500 mt-1">
+        <p className="text-xs text-texto-secundario mt-1">
           Calculado automaticamente como total − retido; pode ser ajustado
           manualmente.
         </p>
@@ -164,7 +165,7 @@ export function AlvaraForm({
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label
-            className="block text-sm font-medium mb-1"
+            className={classeLabel}
             htmlFor="dataRecebimento"
           >
             Data de recebimento
@@ -174,18 +175,18 @@ export function AlvaraForm({
             name="dataRecebimento"
             type="date"
             defaultValue={paraInputDate(alvara?.dataRecebimento)}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+            className={classeInput}
           />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1" htmlFor="status">
+          <label className={classeLabel} htmlFor="status">
             Status
           </label>
           <select
             id="status"
             name="status"
             defaultValue={alvara?.status ?? "AGUARDANDO_REPASSE"}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+            className={classeInput}
           >
             <option value="AGUARDANDO_REPASSE">Aguardando repasse</option>
             <option value="REPASSADO">Repassado</option>
@@ -194,7 +195,7 @@ export function AlvaraForm({
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1" htmlFor="dataRepasse">
+        <label className={classeLabel} htmlFor="dataRepasse">
           Data do repasse
         </label>
         <input
@@ -202,16 +203,16 @@ export function AlvaraForm({
           name="dataRepasse"
           type="date"
           defaultValue={paraInputDate(alvara?.dataRepasse)}
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+          className={classeInput}
         />
       </div>
 
       <fieldset className="rounded-md border border-gray-200 p-3 space-y-3">
-        <legend className="text-sm font-medium px-1">Dados bancários de destino</legend>
+        <legend className="font-display text-sm font-medium px-1 text-texto-principal">Dados bancários de destino</legend>
         <div className="grid grid-cols-3 gap-3">
           <div>
             <label
-              className="block text-xs font-medium mb-1"
+              className="block text-xs font-medium mb-1 text-texto-secundario"
               htmlFor="bancoDestino"
             >
               Banco
@@ -220,12 +221,12 @@ export function AlvaraForm({
               id="bancoDestino"
               name="bancoDestino"
               defaultValue={alvara?.bancoDestino ?? ""}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+              className={classeInput}
             />
           </div>
           <div>
             <label
-              className="block text-xs font-medium mb-1"
+              className="block text-xs font-medium mb-1 text-texto-secundario"
               htmlFor="agenciaDestino"
             >
               Agência
@@ -234,12 +235,12 @@ export function AlvaraForm({
               id="agenciaDestino"
               name="agenciaDestino"
               defaultValue={alvara?.agenciaDestino ?? ""}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+              className={classeInput}
             />
           </div>
           <div>
             <label
-              className="block text-xs font-medium mb-1"
+              className="block text-xs font-medium mb-1 text-texto-secundario"
               htmlFor="contaDestino"
             >
               Conta
@@ -248,13 +249,13 @@ export function AlvaraForm({
               id="contaDestino"
               name="contaDestino"
               defaultValue={alvara?.contaDestino ?? ""}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+              className={classeInput}
             />
           </div>
         </div>
         <div>
           <label
-            className="block text-xs font-medium mb-1"
+            className="block text-xs font-medium mb-1 text-texto-secundario"
             htmlFor="chavePixDestino"
           >
             Chave Pix (opcional)
@@ -263,13 +264,13 @@ export function AlvaraForm({
             id="chavePixDestino"
             name="chavePixDestino"
             defaultValue={alvara?.chavePixDestino ?? ""}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+            className={classeInput}
           />
         </div>
       </fieldset>
 
       <div>
-        <label className="block text-sm font-medium mb-1" htmlFor="observacoes">
+        <label className={classeLabel} htmlFor="observacoes">
           Observações
         </label>
         <textarea
@@ -277,13 +278,13 @@ export function AlvaraForm({
           name="observacoes"
           defaultValue={alvara?.observacoes ?? ""}
           rows={3}
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+          className={classeInput}
         />
       </div>
 
       <button
         type="submit"
-        className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+        className={classeBotaoPrimario}
       >
         Salvar
       </button>

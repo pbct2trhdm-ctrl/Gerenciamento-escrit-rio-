@@ -1,4 +1,5 @@
 import type { Honorario, Processo, Cliente } from "@/app/generated/prisma/client";
+import { classeInput, classeLabel, classeBotaoPrimario } from "@/lib/estilos";
 
 type ProcessoComCliente = Pick<Processo, "id" | "numeroProcesso"> & {
   cliente: Pick<Cliente, "nome">;
@@ -24,7 +25,7 @@ export function HonorarioForm({
     <form action={action} className="max-w-xl space-y-4">
       {processos && (
         <div>
-          <label className="block text-sm font-medium mb-1" htmlFor="processoId">
+          <label className={classeLabel} htmlFor="processoId">
             Processo
           </label>
           <select
@@ -32,7 +33,7 @@ export function HonorarioForm({
             name="processoId"
             required
             defaultValue={processoIdPadrao ?? ""}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+            className={classeInput}
           >
             <option value="" disabled>
               Selecione um processo
@@ -48,14 +49,14 @@ export function HonorarioForm({
       )}
 
       <div>
-        <label className="block text-sm font-medium mb-1" htmlFor="tipo">
+        <label className={classeLabel} htmlFor="tipo">
           Tipo
         </label>
         <select
           id="tipo"
           name="tipo"
           defaultValue={honorario?.tipo ?? "FIXO"}
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+          className={classeInput}
         >
           <option value="FIXO">Fixo</option>
           <option value="PARCELADO">Parcelado</option>
@@ -66,7 +67,7 @@ export function HonorarioForm({
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium mb-1" htmlFor="valorTotal">
+          <label className={classeLabel} htmlFor="valorTotal">
             Valor total (R$)
           </label>
           <input
@@ -77,12 +78,12 @@ export function HonorarioForm({
             min={0}
             defaultValue={honorario?.valorTotal ?? ""}
             placeholder="Deixe em branco se for só êxito"
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+            className={classeInput}
           />
         </div>
         <div>
           <label
-            className="block text-sm font-medium mb-1"
+            className={classeLabel}
             htmlFor="percentualExito"
           >
             % de êxito
@@ -95,13 +96,13 @@ export function HonorarioForm({
             min={0}
             max={100}
             defaultValue={honorario?.percentualExito ?? ""}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+            className={classeInput}
           />
         </div>
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1" htmlFor="dataContrato">
+        <label className={classeLabel} htmlFor="dataContrato">
           Data do contrato
         </label>
         <input
@@ -112,12 +113,12 @@ export function HonorarioForm({
           defaultValue={
             honorario ? paraInputDate(honorario.dataContrato) : paraInputDate(new Date())
           }
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+          className={classeInput}
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1" htmlFor="observacoes">
+        <label className={classeLabel} htmlFor="observacoes">
           Observações
         </label>
         <textarea
@@ -125,13 +126,13 @@ export function HonorarioForm({
           name="observacoes"
           defaultValue={honorario?.observacoes ?? ""}
           rows={3}
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+          className={classeInput}
         />
       </div>
 
       <button
         type="submit"
-        className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+        className={classeBotaoPrimario}
       >
         Salvar
       </button>

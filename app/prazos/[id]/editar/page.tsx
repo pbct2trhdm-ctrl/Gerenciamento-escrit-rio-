@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { PrazoForm } from "@/components/prazo-form";
 import { atualizarPrazo } from "@/lib/actions/prazos";
+import { classeTituloPagina } from "@/lib/estilos";
 
 export default async function EditarPrazoPage({
   params,
@@ -23,7 +24,7 @@ export default async function EditarPrazoPage({
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold mb-6">Editar prazo</h1>
+      <h1 className={`${classeTituloPagina} mb-6`}>Editar prazo</h1>
       <PrazoForm
         prazo={prazo}
         processos={processos}

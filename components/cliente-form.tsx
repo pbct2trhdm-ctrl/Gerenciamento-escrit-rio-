@@ -1,4 +1,5 @@
 import type { Cliente } from "@/app/generated/prisma/client";
+import { classeInput, classeLabel, classeBotaoPrimario } from "@/lib/estilos";
 
 export function ClienteForm({
   cliente,
@@ -10,7 +11,7 @@ export function ClienteForm({
   return (
     <form action={action} className="max-w-xl space-y-4">
       <div>
-        <label className="block text-sm font-medium mb-1" htmlFor="nome">
+        <label className={classeLabel} htmlFor="nome">
           Nome / Razão social
         </label>
         <input
@@ -18,19 +19,19 @@ export function ClienteForm({
           name="nome"
           defaultValue={cliente?.nome}
           required
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+          className={classeInput}
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1" htmlFor="tipo">
+        <label className={classeLabel} htmlFor="tipo">
           Tipo
         </label>
         <select
           id="tipo"
           name="tipo"
           defaultValue={cliente?.tipo ?? "PF"}
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+          className={classeInput}
         >
           <option value="PF">Pessoa Física</option>
           <option value="PJ">Pessoa Jurídica</option>
@@ -38,31 +39,31 @@ export function ClienteForm({
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1" htmlFor="cpfCnpj">
+        <label className={classeLabel} htmlFor="cpfCnpj">
           CPF/CNPJ
         </label>
         <input
           id="cpfCnpj"
           name="cpfCnpj"
           defaultValue={cliente?.cpfCnpj ?? ""}
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+          className={classeInput}
         />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium mb-1" htmlFor="telefone">
+          <label className={classeLabel} htmlFor="telefone">
             Telefone
           </label>
           <input
             id="telefone"
             name="telefone"
             defaultValue={cliente?.telefone ?? ""}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+            className={classeInput}
           />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1" htmlFor="email">
+          <label className={classeLabel} htmlFor="email">
             Email
           </label>
           <input
@@ -70,13 +71,13 @@ export function ClienteForm({
             name="email"
             type="email"
             defaultValue={cliente?.email ?? ""}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+            className={classeInput}
           />
         </div>
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1" htmlFor="observacoes">
+        <label className={classeLabel} htmlFor="observacoes">
           Observações
         </label>
         <textarea
@@ -84,13 +85,13 @@ export function ClienteForm({
           name="observacoes"
           defaultValue={cliente?.observacoes ?? ""}
           rows={4}
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+          className={classeInput}
         />
       </div>
 
       <button
         type="submit"
-        className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+        className={classeBotaoPrimario}
       >
         Salvar
       </button>

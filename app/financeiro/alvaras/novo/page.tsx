@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { AlvaraForm } from "@/components/alvara-form";
 import { criarAlvara } from "@/lib/actions/alvaras";
+import { classeTituloSecao } from "@/lib/estilos";
 
 export default async function NovoAlvaraPage({
   searchParams,
@@ -20,7 +21,7 @@ export default async function NovoAlvaraPage({
 
   return (
     <div>
-      <h2 className="text-lg font-medium mb-6">Novo alvará</h2>
+      <h2 className={`${classeTituloSecao} mb-6`}>Novo alvará</h2>
       <AlvaraForm
         processos={processos}
         sucumbencias={sucumbencias}

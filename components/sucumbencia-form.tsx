@@ -3,6 +3,7 @@ import type {
   Processo,
   Cliente,
 } from "@/app/generated/prisma/client";
+import { classeInput, classeLabel, classeBotaoPrimario } from "@/lib/estilos";
 
 type ProcessoComCliente = Pick<Processo, "id" | "numeroProcesso"> & {
   cliente: Pick<Cliente, "nome">;
@@ -29,7 +30,7 @@ export function SucumbenciaForm({
     <form action={action} className="max-w-xl space-y-4">
       {processos && (
         <div>
-          <label className="block text-sm font-medium mb-1" htmlFor="processoId">
+          <label className={classeLabel} htmlFor="processoId">
             Processo
           </label>
           <select
@@ -37,7 +38,7 @@ export function SucumbenciaForm({
             name="processoId"
             required
             defaultValue={processoIdPadrao ?? ""}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+            className={classeInput}
           >
             <option value="" disabled>
               Selecione um processo
@@ -55,7 +56,7 @@ export function SucumbenciaForm({
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label
-            className="block text-sm font-medium mb-1"
+            className={classeLabel}
             htmlFor="valorEstimado"
           >
             Valor estimado (R$)
@@ -67,12 +68,12 @@ export function SucumbenciaForm({
             step="0.01"
             min={0}
             defaultValue={sucumbencia?.valorEstimado ?? ""}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+            className={classeInput}
           />
         </div>
         <div>
           <label
-            className="block text-sm font-medium mb-1"
+            className={classeLabel}
             htmlFor="valorDefinido"
           >
             Valor definido (R$)
@@ -84,14 +85,14 @@ export function SucumbenciaForm({
             step="0.01"
             min={0}
             defaultValue={sucumbencia?.valorDefinido ?? ""}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+            className={classeInput}
           />
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium mb-1" htmlFor="percentual">
+          <label className={classeLabel} htmlFor="percentual">
             Percentual (%)
           </label>
           <input
@@ -102,18 +103,18 @@ export function SucumbenciaForm({
             min={0}
             max={100}
             defaultValue={sucumbencia?.percentual ?? ""}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+            className={classeInput}
           />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1" htmlFor="status">
+          <label className={classeLabel} htmlFor="status">
             Status
           </label>
           <select
             id="status"
             name="status"
             defaultValue={sucumbencia?.status ?? "AGUARDANDO_DECISAO"}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+            className={classeInput}
           >
             <option value="AGUARDANDO_DECISAO">Aguardando decisão</option>
             <option value="DEFINIDO">Definido</option>
@@ -126,7 +127,7 @@ export function SucumbenciaForm({
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label
-            className="block text-sm font-medium mb-1"
+            className={classeLabel}
             htmlFor="formaRecebimento"
           >
             Forma de recebimento
@@ -135,7 +136,7 @@ export function SucumbenciaForm({
             id="formaRecebimento"
             name="formaRecebimento"
             defaultValue={sucumbencia?.formaRecebimento ?? ""}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+            className={classeInput}
           >
             <option value="">—</option>
             <option value="RPV">RPV</option>
@@ -146,7 +147,7 @@ export function SucumbenciaForm({
         </div>
         <div>
           <label
-            className="block text-sm font-medium mb-1"
+            className={classeLabel}
             htmlFor="dataTransitoJulgado"
           >
             Trânsito em julgado
@@ -156,14 +157,14 @@ export function SucumbenciaForm({
             name="dataTransitoJulgado"
             type="date"
             defaultValue={paraInputDate(sucumbencia?.dataTransitoJulgado)}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+            className={classeInput}
           />
         </div>
       </div>
 
       <div>
         <label
-          className="block text-sm font-medium mb-1"
+          className={classeLabel}
           htmlFor="dataRecebimento"
         >
           Data de recebimento
@@ -173,7 +174,7 @@ export function SucumbenciaForm({
           name="dataRecebimento"
           type="date"
           defaultValue={paraInputDate(sucumbencia?.dataRecebimento)}
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+          className={classeInput}
         />
       </div>
 
@@ -188,7 +189,7 @@ export function SucumbenciaForm({
         </label>
         <div>
           <label
-            className="block text-sm font-medium mb-1"
+            className={classeLabel}
             htmlFor="dataEmissaoNf"
           >
             Emissão da NF
@@ -198,13 +199,13 @@ export function SucumbenciaForm({
             name="dataEmissaoNf"
             type="date"
             defaultValue={paraInputDate(sucumbencia?.dataEmissaoNf)}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+            className={classeInput}
           />
         </div>
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1" htmlFor="observacoes">
+        <label className={classeLabel} htmlFor="observacoes">
           Observações
         </label>
         <textarea
@@ -212,13 +213,13 @@ export function SucumbenciaForm({
           name="observacoes"
           defaultValue={sucumbencia?.observacoes ?? ""}
           rows={3}
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+          className={classeInput}
         />
       </div>
 
       <button
         type="submit"
-        className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+        className={classeBotaoPrimario}
       >
         Salvar
       </button>

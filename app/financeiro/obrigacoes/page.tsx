@@ -13,6 +13,15 @@ import {
   criarRetirada,
   excluirRetirada,
 } from "@/lib/actions/obrigacoes";
+import {
+  classeInput,
+  classeBotaoPrimario,
+  classeBotaoSecundario,
+  classeBotaoPerigo,
+  classeCard,
+  classeLabel,
+  classeTituloSecao,
+} from "@/lib/estilos";
 
 export default async function ObrigacoesPage({
   searchParams,
@@ -45,26 +54,24 @@ export default async function ObrigacoesPage({
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-lg font-medium capitalize">
-          {formatarCompetencia(competencia)}
-        </h2>
+        <h2 className={`${classeTituloSecao} capitalize`}>{formatarCompetencia(competencia)}</h2>
         <div className="flex gap-2">
           <Link
             href={`/financeiro/obrigacoes?competencia=${mesAnterior}`}
-            className="rounded-md border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-50"
+            className={classeBotaoSecundario}
           >
             ← Mês anterior
           </Link>
           <Link
             href={`/financeiro/obrigacoes?competencia=${proximoMes}`}
-            className="rounded-md border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-50"
+            className={classeBotaoSecundario}
           >
             Próximo mês →
           </Link>
         </div>
       </div>
 
-      <h3 className="text-base font-medium mb-3">Fechamento do mês</h3>
+      <h3 className={`${classeTituloSecao} !text-base mb-3`}>Fechamento do mês</h3>
       <div className="mb-8">
         <ObrigacoesForm
           competenciaTexto={competenciaStr}
@@ -73,28 +80,27 @@ export default async function ObrigacoesPage({
         />
       </div>
 
-      <h3 className="text-base font-medium mb-3">Retiradas de lucro</h3>
+      <h3 className={`${classeTituloSecao} !text-base mb-3`}>Retiradas de lucro</h3>
       {retiradasDoMes.length === 0 ? (
-        <p className="text-gray-500 mb-4">Nenhuma retirada registrada neste mês.</p>
+        <p className="text-texto-secundario mb-4 text-sm">Nenhuma retirada registrada neste mês.</p>
       ) : (
         <ul className="space-y-2 mb-4">
           {retiradasDoMes.map((retirada) => (
             <li
               key={retirada.id}
-              className="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-3"
+              className={`flex items-center justify-between ${classeCard}`}
             >
               <div>
-                <p className="text-sm font-medium">{formatarMoeda(retirada.valor)}</p>
-                <p className="text-xs text-gray-500">
+                <p className="text-sm font-medium tabular-nums">
+                  {formatarMoeda(retirada.valor)}
+                </p>
+                <p className="text-xs text-texto-secundario tabular-nums">
                   {formatarData(retirada.data)}
                   {retirada.observacoes && ` · ${retirada.observacoes}`}
                 </p>
               </div>
               <form action={excluirRetirada.bind(null, retirada.id, competenciaStr)}>
-                <button
-                  type="submit"
-                  className="rounded-md border border-red-300 px-3 py-1 text-xs text-red-700 hover:bg-red-50"
-                >
+                <button type="submit" className={`${classeBotaoPerigo} !px-3 !py-1 text-xs`}>
                   Excluir
                 </button>
               </form>
@@ -102,17 +108,19 @@ export default async function ObrigacoesPage({
           ))}
         </ul>
       )}
-      <p className="text-sm text-gray-500 mb-4">
+      <p className="text-sm text-texto-secundario mb-4">
         Total de retiradas no mês:{" "}
-        <span className="font-medium text-gray-900">{formatarMoeda(totalRetiradas)}</span>
+        <span className="font-medium tabular-nums text-texto-principal">
+          {formatarMoeda(totalRetiradas)}
+        </span>
       </p>
 
-      <div className="rounded-lg border border-gray-200 bg-white p-4 max-w-md">
+      <div className={`${classeCard} max-w-md`}>
         <p className="text-sm font-medium mb-3">Nova retirada</p>
         <form action={criarRetirada} className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium mb-1" htmlFor="data">
+              <label className={classeLabel} htmlFor="data">
                 Data
               </label>
               <input
@@ -121,11 +129,11 @@ export default async function ObrigacoesPage({
                 type="date"
                 required
                 defaultValue={`${competenciaStr}-01`}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+                className={classeInput}
               />
             </div>
             <div>
-              <label className="block text-xs font-medium mb-1" htmlFor="valor">
+              <label className={classeLabel} htmlFor="valor">
                 Valor (R$)
               </label>
               <input
@@ -135,24 +143,17 @@ export default async function ObrigacoesPage({
                 step="0.01"
                 min={0}
                 required
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+                className={classeInput}
               />
             </div>
           </div>
           <div>
-            <label className="block text-xs font-medium mb-1" htmlFor="observacoes">
+            <label className={classeLabel} htmlFor="observacoes">
               Observações
             </label>
-            <input
-              id="observacoes"
-              name="observacoes"
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-            />
+            <input id="observacoes" name="observacoes" className={classeInput} />
           </div>
-          <button
-            type="submit"
-            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-          >
+          <button type="submit" className={classeBotaoPrimario}>
             Adicionar retirada
           </button>
         </form>

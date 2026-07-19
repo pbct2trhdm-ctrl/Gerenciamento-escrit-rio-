@@ -2,6 +2,10 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { diasRestantes } from "@/lib/prazos";
 import { LABEL_TIPO_PRAZO, formatarData } from "@/lib/formatacao";
+import { tierPorDiasRestantes, TIER_CLASSES } from "@/lib/urgencia";
+import { SeloPrazo } from "@/components/selo-prazo";
+import { EmptyState } from "@/components/empty-state";
+import { classeTituloPagina } from "@/lib/estilos";
 
 export default async function DashboardPage() {
   const prazos = await prisma.prazo.findMany({
@@ -12,58 +16,53 @@ export default async function DashboardPage() {
 
   return (
     <div className="max-w-4xl">
-      <h1 className="text-2xl font-semibold mb-1">Dashboard</h1>
-      <p className="text-gray-500 mb-6">
+      <h1 className={classeTituloPagina}>Dashboard</h1>
+      <p className="text-texto-secundario mb-6">
         Prazos pendentes mais próximos de vencer
       </p>
 
       {prazos.length === 0 ? (
-        <p className="text-gray-500">Nenhum prazo pendente cadastrado.</p>
+        <EmptyState
+          mensagem="Nenhum prazo pendente cadastrado."
+          acaoHref="/prazos/novo"
+          acaoLabel="Adicionar o primeiro prazo"
+        />
       ) : (
-        <ul className="space-y-2">
+        <ul className="space-y-3">
           {prazos.map((prazo) => {
             const restantes = diasRestantes(prazo.dataFinal);
-            const urgente = restantes <= 7;
+            const tier = tierPorDiasRestantes(restantes);
             return (
               <li key={prazo.id}>
                 <Link
                   href={`/processos/${prazo.processoId}`}
-                  className={`block rounded-lg border p-4 transition-colors ${
-                    urgente
-                      ? "border-red-300 bg-red-50 hover:bg-red-100"
-                      : "border-gray-200 bg-white hover:bg-gray-50"
+                  className={`flex items-center gap-4 rounded-lg border bg-superficie p-4 transition-colors hover:bg-fundo ${
+                    tier === "critico" ? "border-critico/30" : "border-gray-200"
                   }`}
                 >
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="min-w-0">
-                      <p className="font-medium truncate">
-                        {prazo.processo.cliente.nome}
-                      </p>
-                      <p className="text-sm text-gray-500 truncate">
-                        {prazo.processo.numeroProcesso ?? "Sem número"} ·{" "}
-                        {LABEL_TIPO_PRAZO[prazo.tipo]}
-                      </p>
-                    </div>
-                    <div className="text-right shrink-0">
-                      <p
-                        className={`font-semibold ${
-                          urgente ? "text-red-700" : "text-gray-900"
-                        }`}
-                      >
-                        {formatarData(prazo.dataFinal)}
-                      </p>
-                      <p
-                        className={`text-sm ${
-                          urgente ? "text-red-600" : "text-gray-500"
-                        }`}
-                      >
-                        {restantes < 0
-                          ? `${Math.abs(restantes)} dia(s) em atraso`
-                          : restantes === 0
-                            ? "Vence hoje"
-                            : `${restantes} dia(s) restante(s)`}
-                      </p>
-                    </div>
+                  <SeloPrazo id={prazo.id} dias={restantes} tier={tier} size={72} />
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium truncate">
+                      {prazo.processo.cliente.nome}
+                    </p>
+                    <p className="text-sm text-texto-secundario truncate">
+                      {prazo.processo.numeroProcesso ?? "Sem número"} ·{" "}
+                      {LABEL_TIPO_PRAZO[prazo.tipo]}
+                    </p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="font-semibold tabular-nums">
+                      {formatarData(prazo.dataFinal)}
+                    </p>
+                    <span
+                      className={`mt-1 inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${TIER_CLASSES[tier]}`}
+                    >
+                      {restantes < 0
+                        ? `${Math.abs(restantes)} dia(s) em atraso`
+                        : restantes === 0
+                          ? "Vence hoje"
+                          : `${restantes} dia(s) restante(s)`}
+                    </span>
                   </div>
                 </Link>
               </li>

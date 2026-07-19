@@ -2,6 +2,15 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { LABEL_AREA, LABEL_STATUS_PROCESSO } from "@/lib/formatacao";
 import type { Prisma } from "@/app/generated/prisma/client";
+import { tierStatus } from "@/lib/urgencia";
+import { Badge } from "@/components/badge";
+import { EmptyState } from "@/components/empty-state";
+import {
+  classeInputAuto,
+  classeBotaoPrimario,
+  classeBotaoSecundario,
+  classeTituloPagina,
+} from "@/lib/estilos";
 
 export default async function ProcessosPage({
   searchParams,
@@ -33,11 +42,8 @@ export default async function ProcessosPage({
   return (
     <div className="max-w-4xl">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-semibold">Processos</h1>
-        <Link
-          href="/processos/novo"
-          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-        >
+        <h1 className={classeTituloPagina}>Processos</h1>
+        <Link href="/processos/novo" className={classeBotaoPrimario}>
           Novo processo
         </Link>
       </div>
@@ -48,65 +54,69 @@ export default async function ProcessosPage({
           name="q"
           placeholder="Buscar por número ou cliente"
           defaultValue={q ?? ""}
-          className="flex-1 min-w-[200px] rounded-md border border-gray-300 px-3 py-2 text-sm"
+          className={`${classeInputAuto} flex-1 min-w-[200px]`}
         />
-        <select
-          name="status"
-          defaultValue={status ?? ""}
-          className="rounded-md border border-gray-300 px-3 py-2 text-sm"
-        >
+        <select name="status" defaultValue={status ?? ""} className={classeInputAuto}>
           <option value="">Todos os status</option>
           <option value="ATIVO">Ativo</option>
           <option value="SUSPENSO">Suspenso</option>
           <option value="ARQUIVADO">Arquivado</option>
           <option value="ENCERRADO">Encerrado</option>
         </select>
-        <select
-          name="area"
-          defaultValue={area ?? ""}
-          className="rounded-md border border-gray-300 px-3 py-2 text-sm"
-        >
+        <select name="area" defaultValue={area ?? ""} className={classeInputAuto}>
           <option value="">Todas as áreas</option>
           <option value="CIVEL">Cível</option>
           <option value="PREVIDENCIARIO">Previdenciário</option>
           <option value="TRIBUTARIO">Tributário</option>
           <option value="OUTRO">Outro</option>
         </select>
-        <button
-          type="submit"
-          className="rounded-md border border-gray-300 px-4 py-2 text-sm hover:bg-gray-50"
-        >
+        <button type="submit" className={classeBotaoSecundario}>
           Filtrar
         </button>
       </form>
 
       {processos.length === 0 ? (
-        <p className="text-gray-500">Nenhum processo encontrado.</p>
+        <EmptyState
+          mensagem="Nenhum processo encontrado."
+          acaoHref="/processos/novo"
+          acaoLabel="Adicionar o primeiro processo"
+        />
       ) : (
-        <ul className="space-y-2">
-          {processos.map((processo) => (
-            <li key={processo.id}>
-              <Link
-                href={`/processos/${processo.id}`}
-                className="block rounded-lg border border-gray-200 bg-white p-4 hover:bg-gray-50"
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">
+        <div className="overflow-x-auto rounded-lg border border-gray-200 bg-superficie">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-gray-200 font-display text-left text-texto-principal">
+                <th className="px-4 py-3 font-medium">Número</th>
+                <th className="px-4 py-3 font-medium">Cliente</th>
+                <th className="px-4 py-3 font-medium">Área</th>
+                <th className="px-4 py-3 font-medium">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {processos.map((processo) => (
+                <tr
+                  key={processo.id}
+                  className="border-b border-gray-100 last:border-0 transition-colors hover:bg-fundo"
+                >
+                  <td className="font-medium">
+                    <Link href={`/processos/${processo.id}`} className="block px-4 py-3">
                       {processo.numeroProcesso ?? "Sem número"}
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      {processo.cliente.nome} · {LABEL_AREA[processo.area]}
-                    </p>
-                  </div>
-                  <p className="text-sm text-gray-500">
-                    {LABEL_STATUS_PROCESSO[processo.status]}
-                  </p>
-                </div>
-              </Link>
-            </li>
-          ))}
-        </ul>
+                    </Link>
+                  </td>
+                  <td className="px-4 py-3 text-texto-secundario">{processo.cliente.nome}</td>
+                  <td className="px-4 py-3 text-texto-secundario">
+                    {LABEL_AREA[processo.area]}
+                  </td>
+                  <td className="px-4 py-3">
+                    <Badge tier={tierStatus(processo.status)}>
+                      {LABEL_STATUS_PROCESSO[processo.status]}
+                    </Badge>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );

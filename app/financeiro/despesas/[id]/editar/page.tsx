@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { DespesaForm } from "@/components/despesa-form";
 import { atualizarDespesa, excluirDespesa } from "@/lib/actions/despesas";
+import { classeBotaoPerigo, classeTituloSecao } from "@/lib/estilos";
 
 export default async function EditarDespesaPage({
   params,
@@ -24,12 +25,9 @@ export default async function EditarDespesaPage({
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-lg font-medium">Editar despesa</h2>
+        <h2 className={classeTituloSecao}>Editar despesa</h2>
         <form action={excluirDespesa.bind(null, despesa.id)}>
-          <button
-            type="submit"
-            className="rounded-md border border-red-300 px-3 py-1.5 text-sm text-red-700 hover:bg-red-50"
-          >
+          <button type="submit" className={classeBotaoPerigo}>
             Excluir
           </button>
         </form>

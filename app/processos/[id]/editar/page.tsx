@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { ProcessoForm } from "@/components/processo-form";
 import { atualizarProcesso } from "@/lib/actions/processos";
+import { classeTituloPagina } from "@/lib/estilos";
 
 export default async function EditarProcessoPage({
   params,
@@ -23,7 +24,7 @@ export default async function EditarProcessoPage({
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold mb-6">Editar processo</h1>
+      <h1 className={`${classeTituloPagina} mb-6`}>Editar processo</h1>
       <ProcessoForm
         processo={processo}
         clientes={clientes}

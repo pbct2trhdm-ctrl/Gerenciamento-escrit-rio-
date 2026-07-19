@@ -1,4 +1,5 @@
 import type { Cliente, Processo } from "@/app/generated/prisma/client";
+import { classeInput, classeLabel, classeBotaoPrimario } from "@/lib/estilos";
 
 export function ProcessoForm({
   processo,
@@ -14,7 +15,7 @@ export function ProcessoForm({
   return (
     <form action={action} className="max-w-xl space-y-4">
       <div>
-        <label className="block text-sm font-medium mb-1" htmlFor="clienteId">
+        <label className={classeLabel} htmlFor="clienteId">
           Cliente
         </label>
         <select
@@ -22,7 +23,7 @@ export function ProcessoForm({
           name="clienteId"
           required
           defaultValue={processo?.clienteId ?? clienteIdPadrao ?? ""}
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+          className={classeInput}
         >
           <option value="" disabled>
             Selecione um cliente
@@ -38,7 +39,7 @@ export function ProcessoForm({
 
       <div>
         <label
-          className="block text-sm font-medium mb-1"
+          className={classeLabel}
           htmlFor="numeroProcesso"
         >
           Número do processo
@@ -48,20 +49,20 @@ export function ProcessoForm({
           name="numeroProcesso"
           defaultValue={processo?.numeroProcesso ?? ""}
           placeholder="Opcional — pode não ter número ainda"
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+          className={classeInput}
         />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium mb-1" htmlFor="area">
+          <label className={classeLabel} htmlFor="area">
             Área
           </label>
           <select
             id="area"
             name="area"
             defaultValue={processo?.area ?? "CIVEL"}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+            className={classeInput}
           >
             <option value="CIVEL">Cível</option>
             <option value="PREVIDENCIARIO">Previdenciário</option>
@@ -70,14 +71,14 @@ export function ProcessoForm({
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1" htmlFor="status">
+          <label className={classeLabel} htmlFor="status">
             Status
           </label>
           <select
             id="status"
             name="status"
             defaultValue={processo?.status ?? "ATIVO"}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+            className={classeInput}
           >
             <option value="ATIVO">Ativo</option>
             <option value="SUSPENSO">Suspenso</option>
@@ -89,7 +90,7 @@ export function ProcessoForm({
 
       <div>
         <label
-          className="block text-sm font-medium mb-1"
+          className={classeLabel}
           htmlFor="varaTribunal"
         >
           Vara/Tribunal
@@ -98,12 +99,12 @@ export function ProcessoForm({
           id="varaTribunal"
           name="varaTribunal"
           defaultValue={processo?.varaTribunal ?? ""}
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+          className={classeInput}
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1" htmlFor="resumo">
+        <label className={classeLabel} htmlFor="resumo">
           Resumo
         </label>
         <textarea
@@ -111,13 +112,13 @@ export function ProcessoForm({
           name="resumo"
           defaultValue={processo?.resumo ?? ""}
           rows={4}
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+          className={classeInput}
         />
       </div>
 
       <button
         type="submit"
-        className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+        className={classeBotaoPrimario}
       >
         Salvar
       </button>
