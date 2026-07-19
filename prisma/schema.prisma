@@ -45,6 +45,57 @@ enum StatusPrazo {
   PERDIDO
 }
 
+enum TipoHonorario {
+  FIXO
+  PARCELADO
+  EXITO
+  MENSALIDADE
+}
+
+enum StatusParcela {
+  PENDENTE
+  PAGO
+  ATRASADO
+}
+
+enum StatusSucumbencia {
+  AGUARDANDO_DECISAO
+  DEFINIDO
+  EM_EXECUCAO
+  RECEBIDO
+}
+
+enum FormaRecebimento {
+  RPV
+  PRECATORIO
+  DEPOSITO_DIRETO
+  OUTRO
+}
+
+enum StatusAlvara {
+  AGUARDANDO_REPASSE
+  REPASSADO
+}
+
+enum CategoriaDespesa {
+  CUSTAS
+  ALUGUEL
+  MATERIAL
+  OUTRO
+}
+
+enum TipoObrigacaoSocietaria {
+  PRO_LABORE
+  DAS
+  INSS_SOCIO
+  CPP_PATRONAL
+}
+
+enum StatusObrigacao {
+  PAGO
+  PENDENTE
+}
+
 model Cliente {
   id           String      @id @default(cuid())
   nome         String
@@ -68,6 +119,10 @@ model Processo {
   resumo          String?
   criadoEm        DateTime       @default(now())
   prazos          Prazo[]
+  honorarios              Honorario[]
+  honorariosSucumbenciais HonorarioSucumbencial[]
+  alvaras                 Alvara[]
+  despesas                Despesa[]
 }
 
 model Prazo {
@@ -82,4 +137,101 @@ model Prazo {
   status       StatusPrazo  @default(PENDENTE)
   observacoes  String?
   criadoEm     DateTime     @default(now())
+}
+
+model Honorario {
+  id               String        @id @default(cuid())
+  processoId       String
+  processo         Processo      @relation(fields: [processoId], references: [id], onDelete: Cascade)
+  tipo             TipoHonorario
+  valorTotal       Float?
+  percentualExito  Float?
+  dataContrato     DateTime
+  observacoes      String?
+  criadoEm         DateTime      @default(now())
+  parcelas         Parcela[]
+}
+
+model Parcela {
+  id                 String        @id @default(cuid())
+  honorarioId         String
+  honorario           Honorario     @relation(fields: [honorarioId], references: [id], onDelete: Cascade)
+  numero              Int
+  valor               Float
+  vencimento          DateTime
+  status              StatusParcela @default(PENDENTE)
+  dataPagamento       DateTime?
+  notaFiscalEmitida   Boolean       @default(false)
+  dataEmissaoNf       DateTime?
+  criadoEm            DateTime      @default(now())
+}
+
+model HonorarioSucumbencial {
+  id                    String            @id @default(cuid())
+  processoId            String
+  processo              Processo          @relation(fields: [processoId], references: [id], onDelete: Cascade)
+  valorEstimado         Float?
+  valorDefinido         Float?
+  percentual            Float?
+  status                StatusSucumbencia @default(AGUARDANDO_DECISAO)
+  formaRecebimento      FormaRecebimento?
+  dataTransitoJulgado   DateTime?
+  dataRecebimento       DateTime?
+  notaFiscalEmitida     Boolean           @default(false)
+  dataEmissaoNf         DateTime?
+  observacoes           String?
+  criadoEm              DateTime          @default(now())
+  alvaras               Alvara[]
+}
+
+model Alvara {
+  id                       String                 @id @default(cuid())
+  processoId               String
+  processo                 Processo               @relation(fields: [processoId], references: [id], onDelete: Cascade)
+  honorarioSucumbencialId  String?
+  honorarioSucumbencial    HonorarioSucumbencial? @relation(fields: [honorarioSucumbencialId], references: [id], onDelete: SetNull)
+  valorTotal               Float
+  valorRetido              Float
+  valorRepassado           Float
+  dataRecebimento          DateTime?
+  dataRepasse              DateTime?
+  status                   StatusAlvara           @default(AGUARDANDO_REPASSE)
+  bancoDestino             String?
+  agenciaDestino           String?
+  contaDestino             String?
+  chavePixDestino          String?
+  observacoes              String?
+  criadoEm                 DateTime               @default(now())
+}
+
+model Despesa {
+  id          String           @id @default(cuid())
+  descricao   String
+  categoria   CategoriaDespesa
+  valor       Float
+  data        DateTime
+  processoId  String?
+  processo    Processo?        @relation(fields: [processoId], references: [id], onDelete: SetNull)
+  criadoEm    DateTime         @default(now())
+}
+
+model ObrigacaoSocietaria {
+  id             String                  @id @default(cuid())
+  competencia    DateTime
+  tipo           TipoObrigacaoSocietaria
+  valor          Float
+  dataPagamento  DateTime?
+  status         StatusObrigacao         @default(PENDENTE)
+  observacoes    String?
+  criadoEm       DateTime                @default(now())
+
+  @@unique([competencia, tipo])
+}
+
+model RetiradaLucro {
+  id           String    @id @default(cuid())
+  data         DateTime
+  valor        Float
+  observacoes  String?
+  criadoEm     DateTime  @default(now())
 }

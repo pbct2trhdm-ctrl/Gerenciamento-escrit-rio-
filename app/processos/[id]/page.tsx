@@ -7,7 +7,11 @@ import {
   LABEL_TIPO_PRAZO,
   LABEL_CONTAGEM,
   LABEL_STATUS_PRAZO,
+  LABEL_TIPO_HONORARIO,
+  LABEL_STATUS_SUCUMBENCIA,
+  LABEL_STATUS_ALVARA,
   formatarData,
+  formatarMoeda,
 } from "@/lib/formatacao";
 import { diasRestantes } from "@/lib/prazos";
 import { excluirProcesso } from "@/lib/actions/processos";
@@ -25,6 +29,9 @@ export default async function ProcessoDetalhePage({
     include: {
       cliente: true,
       prazos: { orderBy: { dataFinal: "asc" } },
+      honorarios: { orderBy: { dataContrato: "desc" } },
+      honorariosSucumbenciais: { orderBy: { criadoEm: "desc" } },
+      alvaras: { orderBy: { criadoEm: "desc" } },
     },
   });
 
@@ -150,6 +157,105 @@ export default async function ProcessoDetalhePage({
           })}
         </ul>
       )}
+
+      <div className="mt-10 space-y-8">
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-medium">Honorários contratuais</h2>
+            <Link
+              href={`/financeiro/honorarios/novo?processoId=${processo.id}`}
+              className="rounded-md border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-50"
+            >
+              Novo honorário
+            </Link>
+          </div>
+          {processo.honorarios.length === 0 ? (
+            <p className="text-gray-500 text-sm">Nenhum honorário cadastrado.</p>
+          ) : (
+            <ul className="space-y-2">
+              {processo.honorarios.map((honorario) => (
+                <li key={honorario.id}>
+                  <Link
+                    href={`/financeiro/honorarios/${honorario.id}`}
+                    className="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-3 text-sm hover:bg-gray-50"
+                  >
+                    <span>{LABEL_TIPO_HONORARIO[honorario.tipo]}</span>
+                    <span>
+                      {honorario.valorTotal != null
+                        ? formatarMoeda(honorario.valorTotal)
+                        : "—"}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-medium">Sucumbência</h2>
+            <Link
+              href={`/financeiro/sucumbencia/novo?processoId=${processo.id}`}
+              className="rounded-md border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-50"
+            >
+              Nova sucumbência
+            </Link>
+          </div>
+          {processo.honorariosSucumbenciais.length === 0 ? (
+            <p className="text-gray-500 text-sm">Nenhum registro cadastrado.</p>
+          ) : (
+            <ul className="space-y-2">
+              {processo.honorariosSucumbenciais.map((s) => (
+                <li key={s.id}>
+                  <Link
+                    href={`/financeiro/sucumbencia/${s.id}/editar`}
+                    className="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-3 text-sm hover:bg-gray-50"
+                  >
+                    <span>{LABEL_STATUS_SUCUMBENCIA[s.status]}</span>
+                    <span>
+                      {s.valorDefinido != null
+                        ? formatarMoeda(s.valorDefinido)
+                        : s.valorEstimado != null
+                          ? `~ ${formatarMoeda(s.valorEstimado)}`
+                          : "—"}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-medium">Alvarás</h2>
+            <Link
+              href={`/financeiro/alvaras/novo?processoId=${processo.id}`}
+              className="rounded-md border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-50"
+            >
+              Novo alvará
+            </Link>
+          </div>
+          {processo.alvaras.length === 0 ? (
+            <p className="text-gray-500 text-sm">Nenhum alvará cadastrado.</p>
+          ) : (
+            <ul className="space-y-2">
+              {processo.alvaras.map((alvara) => (
+                <li key={alvara.id}>
+                  <Link
+                    href={`/financeiro/alvaras/${alvara.id}/editar`}
+                    className="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-3 text-sm hover:bg-gray-50"
+                  >
+                    <span>{LABEL_STATUS_ALVARA[alvara.status]}</span>
+                    <span>{formatarMoeda(alvara.valorTotal)}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

@@ -8,6 +8,7 @@ const itens = [
   { href: "/clientes", label: "Clientes" },
   { href: "/processos", label: "Processos" },
   { href: "/prazos", label: "Prazos/Agenda" },
+  { href: "/financeiro", label: "Financeiro" },
 ];
 
 export function Sidebar() {
