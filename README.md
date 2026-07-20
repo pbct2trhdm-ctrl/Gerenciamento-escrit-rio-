@@ -11,13 +11,16 @@ Aplicativo web para gestão individual do escritório: clientes, processos e con
 ## Como rodar
 
 ```bash
-npm install
+npm install                # também gera o Prisma Client (postinstall)
 cp .env.example .env
-npx prisma migrate deploy   # cria o banco SQLite com o schema
+npx prisma migrate deploy  # cria o banco SQLite com o schema
 npm run dev
 ```
 
 Acesse http://localhost:3000.
+
+> Se aparecer o erro `Module not found: Can't resolve '@/app/generated/prisma/client'`,
+> rode `npx prisma generate` manualmente e reinicie o `npm run dev`.
 
 ## Modelo de dados
 
