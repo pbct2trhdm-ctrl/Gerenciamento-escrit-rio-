@@ -28,6 +28,23 @@ enum AreaProcesso {
   OUTRO
 }
 
+enum Jurisdicao {
+  JUIZADO_ESPECIAL
+  JUSTICA_COMUM
+}
+
+enum Rito {
+  SUMARIO
+  SUMARISSIMO
+  ORDINARIO
+}
+
+enum ModalidadeAudiencia {
+  VIRTUAL
+  HIBRIDA
+  PRESENCIAL
+}
+
 enum Tribunal {
   // Tribunais superiores
   STF
@@ -227,6 +244,8 @@ model Processo {
   numeroProcesso  String?
   area            AreaProcesso
   areaOutraDescricao String?
+  jurisdicao      Jurisdicao?
+  rito            Rito?
   tribunal        Tribunal?
   vara            String?
   comarca         String?
@@ -250,6 +269,9 @@ model Prazo {
   contagem     TipoContagem?
   dataFinal    DateTime
   status       StatusPrazo  @default(PENDENTE)
+  modalidadeAudiencia  ModalidadeAudiencia?
+  linkAudiencia        String?
+  contatoVaraAudiencia String?
   observacoes  String?
   criadoEm     DateTime     @default(now())
 }

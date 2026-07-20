@@ -8,6 +8,7 @@ import type { Prisma } from "@/app/generated/prisma/client";
 
 const TIPOS = ["PETICAO", "RECURSO", "AUDIENCIA", "MANIFESTACAO", "OUTRO"] as const;
 const STATUS = ["PENDENTE", "CUMPRIDO", "PERDIDO"] as const;
+const MODALIDADES_AUDIENCIA = ["VIRTUAL", "HIBRIDA", "PRESENCIAL"] as const;
 
 function validarTipo(valor: FormDataEntryValue | null) {
   const texto = (valor ?? "").toString();
@@ -42,20 +43,49 @@ function parseDataHorario(dataValor: FormDataEntryValue | null, horaValor: FormD
   return new Date(Date.UTC(ano, (mes || 1) - 1, dia || 1, hora || 0, minuto || 0));
 }
 
+function validarModalidadeAudiencia(valor: FormDataEntryValue | null) {
+  const texto = (valor ?? "").toString();
+  return (MODALIDADES_AUDIENCIA as readonly string[]).includes(texto)
+    ? (texto as (typeof MODALIDADES_AUDIENCIA)[number])
+    : null;
+}
+
 /**
  * Audiência não tem contagem em dias úteis/corridos: a data final é a
- * própria data e hora marcadas, sem cálculo de prazo.
+ * própria data e hora marcadas, sem cálculo de prazo. Também carrega a
+ * modalidade e, quando virtual/híbrida, o link e o contato da vara.
  */
 function montarDadosPrazo(
   tipo: (typeof TIPOS)[number],
   formData: FormData
-): Pick<Prisma.PrazoUncheckedCreateInput, "dataBase" | "dias" | "contagem" | "dataFinal"> {
+): Pick<
+  Prisma.PrazoUncheckedCreateInput,
+  | "dataBase"
+  | "dias"
+  | "contagem"
+  | "dataFinal"
+  | "modalidadeAudiencia"
+  | "linkAudiencia"
+  | "contatoVaraAudiencia"
+> {
   if (tipo === "AUDIENCIA") {
     const dataFinal = parseDataHorario(
       formData.get("dataAudiencia"),
       formData.get("horaAudiencia")
     );
-    return { dataBase: null, dias: null, contagem: null, dataFinal };
+    const modalidadeAudiencia = validarModalidadeAudiencia(formData.get("modalidadeAudiencia"));
+    const precisaDeLink = modalidadeAudiencia === "VIRTUAL" || modalidadeAudiencia === "HIBRIDA";
+    return {
+      dataBase: null,
+      dias: null,
+      contagem: null,
+      dataFinal,
+      modalidadeAudiencia,
+      linkAudiencia: precisaDeLink ? textoOuNull(formData.get("linkAudiencia")) : null,
+      contatoVaraAudiencia: precisaDeLink
+        ? textoOuNull(formData.get("contatoVaraAudiencia"))
+        : null,
+    };
   }
 
   const dataBase = parseData(formData.get("dataBase"));
@@ -63,7 +93,15 @@ function montarDadosPrazo(
   const contagem: TipoContagem =
     formData.get("contagem") === "DIAS_CORRIDOS" ? "DIAS_CORRIDOS" : "DIAS_UTEIS";
   const dataFinal = calcularDataFinal(dataBase, dias, contagem);
-  return { dataBase, dias, contagem, dataFinal };
+  return {
+    dataBase,
+    dias,
+    contagem,
+    dataFinal,
+    modalidadeAudiencia: null,
+    linkAudiencia: null,
+    contatoVaraAudiencia: null,
+  };
 }
 
 export async function criarPrazo(formData: FormData) {

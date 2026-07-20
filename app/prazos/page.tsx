@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import {
   LABEL_TIPO_PRAZO,
   LABEL_STATUS_PRAZO,
+  LABEL_MODALIDADE_AUDIENCIA,
   formatarData,
   formatarDataHorario,
 } from "@/lib/formatacao";
@@ -126,6 +127,11 @@ export default async function PrazosPage({
                       <p className="text-sm text-texto-secundario">
                         {LABEL_TIPO_PRAZO[prazo.tipo]}
                       </p>
+                      {ehAudiencia && prazo.modalidadeAudiencia && (
+                        <p className="text-sm text-texto-secundario">
+                          {LABEL_MODALIDADE_AUDIENCIA[prazo.modalidadeAudiencia]}
+                        </p>
+                      )}
                     </div>
                     <div className="text-right shrink-0">
                       <p className="font-semibold tabular-nums">
@@ -138,6 +144,31 @@ export default async function PrazosPage({
                       </div>
                     </div>
                   </div>
+                  {ehAudiencia && (prazo.linkAudiencia || prazo.contatoVaraAudiencia) && (
+                    <div className="mt-3 text-sm space-y-1">
+                      {prazo.linkAudiencia && (
+                        <p>
+                          <span className="text-texto-secundario">Link: </span>
+                          <a
+                            href={prazo.linkAudiencia}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-accent underline break-all"
+                          >
+                            {prazo.linkAudiencia}
+                          </a>
+                        </p>
+                      )}
+                      {prazo.contatoVaraAudiencia && (
+                        <p>
+                          <span className="text-texto-secundario">
+                            Contato da vara (solicitar link):{" "}
+                          </span>
+                          {prazo.contatoVaraAudiencia}
+                        </p>
+                      )}
+                    </div>
+                  )}
                   <div className="flex items-center gap-2 mt-3">
                     <Link
                       href={`/prazos/${prazo.id}/editar`}

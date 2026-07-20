@@ -3,7 +3,11 @@
 import { useMemo, useState } from "react";
 import type { Processo, Prazo } from "@/app/generated/prisma/client";
 import { calcularDataFinal, type TipoContagem } from "@/lib/prazos";
-import { formatarData, formatarDataHorario } from "@/lib/formatacao";
+import {
+  formatarData,
+  formatarDataHorario,
+  LABEL_MODALIDADE_AUDIENCIA,
+} from "@/lib/formatacao";
 import { classeInput, classeLabel, classeBotaoPrimario } from "@/lib/estilos";
 
 type TipoPrazo =
@@ -53,6 +57,10 @@ export function PrazoForm({
   const [horaAudiencia, setHoraAudiencia] = useState(
     prazo?.tipo === "AUDIENCIA" ? paraInputHora(prazo.dataFinal) : ""
   );
+  const [modalidadeAudiencia, setModalidadeAudiencia] = useState(
+    prazo?.modalidadeAudiencia ?? ""
+  );
+  const precisaDeLink = modalidadeAudiencia === "VIRTUAL" || modalidadeAudiencia === "HIBRIDA";
 
   const dataFinal = useMemo(() => {
     const diasNumero = Number(dias);
@@ -158,6 +166,57 @@ export function PrazoForm({
               {dataHoraAudiencia ? formatarDataHorario(dataHoraAudiencia) : "—"}
             </span>
           </div>
+
+          <div>
+            <label className={classeLabel} htmlFor="modalidadeAudiencia">
+              Modalidade
+            </label>
+            <select
+              id="modalidadeAudiencia"
+              name="modalidadeAudiencia"
+              required
+              value={modalidadeAudiencia}
+              onChange={(e) => setModalidadeAudiencia(e.target.value)}
+              className={classeInput}
+            >
+              <option value="" disabled>
+                Selecione a modalidade
+              </option>
+              <option value="VIRTUAL">{LABEL_MODALIDADE_AUDIENCIA.VIRTUAL}</option>
+              <option value="HIBRIDA">{LABEL_MODALIDADE_AUDIENCIA.HIBRIDA}</option>
+              <option value="PRESENCIAL">{LABEL_MODALIDADE_AUDIENCIA.PRESENCIAL}</option>
+            </select>
+          </div>
+
+          {precisaDeLink && (
+            <>
+              <div>
+                <label className={classeLabel} htmlFor="linkAudiencia">
+                  Link da audiência
+                </label>
+                <input
+                  id="linkAudiencia"
+                  name="linkAudiencia"
+                  type="url"
+                  defaultValue={prazo?.linkAudiencia ?? ""}
+                  placeholder="https://..."
+                  className={classeInput}
+                />
+              </div>
+              <div>
+                <label className={classeLabel} htmlFor="contatoVaraAudiencia">
+                  Contato da vara para solicitar o link
+                </label>
+                <input
+                  id="contatoVaraAudiencia"
+                  name="contatoVaraAudiencia"
+                  defaultValue={prazo?.contatoVaraAudiencia ?? ""}
+                  placeholder="Telefone ou email — preencher caso o link ainda não tenha sido fornecido"
+                  className={classeInput}
+                />
+              </div>
+            </>
+          )}
         </>
       ) : (
         <>

@@ -4,7 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { TODOS_TRIBUNAIS } from "@/lib/tribunais";
-import type { Tribunal } from "@/app/generated/prisma/client";
+import { RITOS_POR_JURISDICAO } from "@/lib/formatacao";
+import type { Tribunal, Jurisdicao, Rito } from "@/app/generated/prisma/client";
 
 const AREAS = [
   "CIVEL",
@@ -22,6 +23,8 @@ const AREAS = [
   "OUTRO",
 ] as const;
 const STATUS = ["ATIVO", "SUSPENSO", "ARQUIVADO", "ENCERRADO"] as const;
+const JURISDICOES = ["JUIZADO_ESPECIAL", "JUSTICA_COMUM"] as const;
+const RITOS = ["SUMARIO", "SUMARISSIMO", "ORDINARIO"] as const;
 
 function textoOuNull(valor: FormDataEntryValue | null): string | null {
   const texto = (valor ?? "").toString().trim();
@@ -56,6 +59,24 @@ function dadosArea(formData: FormData) {
   };
 }
 
+function dadosJurisdicaoRito(formData: FormData) {
+  const jurisdicaoTexto = (formData.get("jurisdicao") ?? "").toString();
+  const jurisdicao = (JURISDICOES as readonly string[]).includes(jurisdicaoTexto)
+    ? (jurisdicaoTexto as Jurisdicao)
+    : null;
+
+  const ritoTexto = (formData.get("rito") ?? "").toString();
+  const ritosValidos: readonly string[] = jurisdicao
+    ? RITOS_POR_JURISDICAO[jurisdicao]
+    : RITOS;
+  const rito =
+    (RITOS as readonly string[]).includes(ritoTexto) && ritosValidos.includes(ritoTexto)
+      ? (ritoTexto as Rito)
+      : null;
+
+  return { jurisdicao, rito };
+}
+
 export async function criarProcesso(formData: FormData) {
   const clienteId = (formData.get("clienteId") ?? "").toString();
   if (!clienteId) {
@@ -67,6 +88,7 @@ export async function criarProcesso(formData: FormData) {
       clienteId,
       numeroProcesso: textoOuNull(formData.get("numeroProcesso")),
       ...dadosArea(formData),
+      ...dadosJurisdicaoRito(formData),
       tribunal: validarTribunal(formData.get("tribunal")),
       vara: textoOuNull(formData.get("vara")),
       comarca: textoOuNull(formData.get("comarca")),
@@ -92,6 +114,7 @@ export async function atualizarProcesso(id: string, formData: FormData) {
       clienteId,
       numeroProcesso: textoOuNull(formData.get("numeroProcesso")),
       ...dadosArea(formData),
+      ...dadosJurisdicaoRito(formData),
       tribunal: validarTribunal(formData.get("tribunal")),
       vara: textoOuNull(formData.get("vara")),
       comarca: textoOuNull(formData.get("comarca")),

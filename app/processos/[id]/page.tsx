@@ -9,6 +9,9 @@ import {
   LABEL_TIPO_HONORARIO,
   LABEL_STATUS_SUCUMBENCIA,
   LABEL_STATUS_ALVARA,
+  LABEL_JURISDICAO,
+  LABEL_RITO,
+  LABEL_MODALIDADE_AUDIENCIA,
   formatarArea,
   formatarData,
   formatarDataHorario,
@@ -84,14 +87,18 @@ export default async function ProcessoDetalhePage({
         <Badge tier={tierStatus(processo.status)}>{LABEL_STATUS_PROCESSO[processo.status]}</Badge>
       </p>
 
-      <div className={`grid grid-cols-2 gap-4 mb-8 text-sm ${classeCard}`}>
+      <div className={`grid grid-cols-3 gap-4 mb-8 text-sm ${classeCard}`}>
         <div>
           <p className="text-texto-secundario">Tribunal</p>
           <p>{processo.tribunal ? LABEL_TRIBUNAL[processo.tribunal] : "—"}</p>
         </div>
         <div>
-          <p className="text-texto-secundario">Criado em</p>
-          <p className="tabular-nums">{formatarData(processo.criadoEm)}</p>
+          <p className="text-texto-secundario">Jurisdição</p>
+          <p>{processo.jurisdicao ? LABEL_JURISDICAO[processo.jurisdicao] : "—"}</p>
+        </div>
+        <div>
+          <p className="text-texto-secundario">Rito</p>
+          <p>{processo.rito ? LABEL_RITO[processo.rito] : "—"}</p>
         </div>
         <div>
           <p className="text-texto-secundario">Vara</p>
@@ -101,7 +108,11 @@ export default async function ProcessoDetalhePage({
           <p className="text-texto-secundario">Comarca</p>
           <p>{processo.comarca || "—"}</p>
         </div>
-        <div className="col-span-2">
+        <div>
+          <p className="text-texto-secundario">Criado em</p>
+          <p className="tabular-nums">{formatarData(processo.criadoEm)}</p>
+        </div>
+        <div className="col-span-3">
           <p className="text-texto-secundario">Resumo</p>
           <p className="whitespace-pre-wrap">{processo.resumo || "—"}</p>
         </div>
@@ -147,6 +158,11 @@ export default async function ProcessoDetalhePage({
                           </span>
                         )}
                       </div>
+                      {prazo.tipo === "AUDIENCIA" && prazo.modalidadeAudiencia && (
+                        <p className="text-sm text-texto-secundario">
+                          {LABEL_MODALIDADE_AUDIENCIA[prazo.modalidadeAudiencia]}
+                        </p>
+                      )}
                       {prazo.tipo !== "AUDIENCIA" &&
                         prazo.dataBase &&
                         prazo.dias != null &&
@@ -168,6 +184,31 @@ export default async function ProcessoDetalhePage({
                       </div>
                     </div>
                   </div>
+                  {prazo.tipo === "AUDIENCIA" && (prazo.linkAudiencia || prazo.contatoVaraAudiencia) && (
+                    <div className="mt-3 text-sm space-y-1">
+                      {prazo.linkAudiencia && (
+                        <p>
+                          <span className="text-texto-secundario">Link: </span>
+                          <a
+                            href={prazo.linkAudiencia}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-accent underline break-all"
+                          >
+                            {prazo.linkAudiencia}
+                          </a>
+                        </p>
+                      )}
+                      {prazo.contatoVaraAudiencia && (
+                        <p>
+                          <span className="text-texto-secundario">
+                            Contato da vara (solicitar link):{" "}
+                          </span>
+                          {prazo.contatoVaraAudiencia}
+                        </p>
+                      )}
+                    </div>
+                  )}
                   <div className="flex items-center gap-2 mt-3">
                     <Link
                       href={`/prazos/${prazo.id}/editar`}

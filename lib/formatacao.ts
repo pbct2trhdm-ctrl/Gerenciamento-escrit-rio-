@@ -44,6 +44,29 @@ export function formatarArea(area: string, areaOutraDescricao: string | null): s
   return LABEL_AREA[area] ?? area;
 }
 
+export const LABEL_JURISDICAO: Record<string, string> = {
+  JUIZADO_ESPECIAL: "Juizado Especial",
+  JUSTICA_COMUM: "Justiça Comum",
+};
+
+export const LABEL_RITO: Record<string, string> = {
+  SUMARIO: "Sumário",
+  SUMARISSIMO: "Sumaríssimo",
+  ORDINARIO: "Ordinário",
+};
+
+/** Ritos válidos por jurisdição — o rito sumaríssimo é do juizado; sumário e ordinário, da justiça comum. */
+export const RITOS_POR_JURISDICAO: Record<string, string[]> = {
+  JUIZADO_ESPECIAL: ["SUMARISSIMO"],
+  JUSTICA_COMUM: ["SUMARIO", "ORDINARIO"],
+};
+
+export const LABEL_MODALIDADE_AUDIENCIA: Record<string, string> = {
+  VIRTUAL: "Virtual",
+  HIBRIDA: "Híbrida",
+  PRESENCIAL: "Presencial",
+};
+
 export const LABEL_STATUS_PROCESSO: Record<string, string> = {
   ATIVO: "Ativo",
   SUSPENSO: "Suspenso",
