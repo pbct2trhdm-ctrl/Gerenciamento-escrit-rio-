@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { LABEL_AREA, LABEL_STATUS_PROCESSO } from "@/lib/formatacao";
+import { LABEL_AREA, AREAS_PROCESSO, LABEL_STATUS_PROCESSO, formatarArea } from "@/lib/formatacao";
 import { LABEL_TRIBUNAL, TODOS_TRIBUNAIS } from "@/lib/tribunais";
 import type { Prisma } from "@/app/generated/prisma/client";
 import { tierStatus } from "@/lib/urgencia";
@@ -30,7 +30,7 @@ export default async function ProcessosPage({
   if (["ATIVO", "SUSPENSO", "ARQUIVADO", "ENCERRADO"].includes(status ?? "")) {
     where.status = status as Prisma.ProcessoWhereInput["status"];
   }
-  if (["CIVEL", "PREVIDENCIARIO", "TRIBUTARIO", "OUTRO"].includes(area ?? "")) {
+  if ((AREAS_PROCESSO as readonly string[]).includes(area ?? "")) {
     where.area = area as Prisma.ProcessoWhereInput["area"];
   }
   if (TODOS_TRIBUNAIS.includes(tribunal ?? "")) {
@@ -81,10 +81,11 @@ export default async function ProcessosPage({
         </select>
         <select name="area" defaultValue={area ?? ""} className={classeInputAuto}>
           <option value="">Todas as áreas</option>
-          <option value="CIVEL">Cível</option>
-          <option value="PREVIDENCIARIO">Previdenciário</option>
-          <option value="TRIBUTARIO">Tributário</option>
-          <option value="OUTRO">Outro</option>
+          {AREAS_PROCESSO.map((codigo) => (
+            <option key={codigo} value={codigo}>
+              {LABEL_AREA[codigo]}
+            </option>
+          ))}
         </select>
         {opcoesTribunal.length > 0 && (
           <select name="tribunal" defaultValue={tribunal ?? ""} className={classeInputAuto}>
@@ -132,7 +133,7 @@ export default async function ProcessosPage({
                   </td>
                   <td className="px-4 py-3 text-texto-secundario">{processo.cliente.nome}</td>
                   <td className="px-4 py-3 text-texto-secundario">
-                    {LABEL_AREA[processo.area]}
+                    {formatarArea(processo.area, processo.areaOutraDescricao)}
                   </td>
                   <td className="px-4 py-3 text-texto-secundario">
                     {processo.tribunal ? LABEL_TRIBUNAL[processo.tribunal] : "—"}

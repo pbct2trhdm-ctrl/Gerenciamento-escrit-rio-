@@ -6,7 +6,21 @@ import { revalidatePath } from "next/cache";
 import { TODOS_TRIBUNAIS } from "@/lib/tribunais";
 import type { Tribunal } from "@/app/generated/prisma/client";
 
-const AREAS = ["CIVEL", "PREVIDENCIARIO", "TRIBUTARIO", "OUTRO"] as const;
+const AREAS = [
+  "CIVEL",
+  "TRABALHISTA",
+  "PREVIDENCIARIO",
+  "TRIBUTARIO",
+  "PENAL",
+  "EMPRESARIAL",
+  "FAMILIA_SUCESSOES",
+  "CONSUMIDOR",
+  "ADMINISTRATIVO",
+  "ELEITORAL",
+  "AMBIENTAL",
+  "IMOBILIARIO",
+  "OUTRO",
+] as const;
 const STATUS = ["ATIVO", "SUSPENSO", "ARQUIVADO", "ENCERRADO"] as const;
 
 function textoOuNull(valor: FormDataEntryValue | null): string | null {
@@ -33,6 +47,15 @@ function validarTribunal(valor: FormDataEntryValue | null): Tribunal | null {
   return TODOS_TRIBUNAIS.includes(texto) ? (texto as Tribunal) : null;
 }
 
+function dadosArea(formData: FormData) {
+  const area = validarArea(formData.get("area"));
+  return {
+    area,
+    areaOutraDescricao:
+      area === "OUTRO" ? textoOuNull(formData.get("areaOutraDescricao")) : null,
+  };
+}
+
 export async function criarProcesso(formData: FormData) {
   const clienteId = (formData.get("clienteId") ?? "").toString();
   if (!clienteId) {
@@ -43,7 +66,7 @@ export async function criarProcesso(formData: FormData) {
     data: {
       clienteId,
       numeroProcesso: textoOuNull(formData.get("numeroProcesso")),
-      area: validarArea(formData.get("area")),
+      ...dadosArea(formData),
       tribunal: validarTribunal(formData.get("tribunal")),
       vara: textoOuNull(formData.get("vara")),
       comarca: textoOuNull(formData.get("comarca")),
@@ -68,7 +91,7 @@ export async function atualizarProcesso(id: string, formData: FormData) {
     data: {
       clienteId,
       numeroProcesso: textoOuNull(formData.get("numeroProcesso")),
-      area: validarArea(formData.get("area")),
+      ...dadosArea(formData),
       tribunal: validarTribunal(formData.get("tribunal")),
       vara: textoOuNull(formData.get("vara")),
       comarca: textoOuNull(formData.get("comarca")),

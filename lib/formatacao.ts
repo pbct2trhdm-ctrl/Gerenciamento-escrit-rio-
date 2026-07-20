@@ -5,10 +5,44 @@ export const LABEL_TIPO_CLIENTE: Record<string, string> = {
 
 export const LABEL_AREA: Record<string, string> = {
   CIVEL: "Cível",
+  TRABALHISTA: "Trabalhista",
   PREVIDENCIARIO: "Previdenciário",
   TRIBUTARIO: "Tributário",
+  PENAL: "Penal",
+  EMPRESARIAL: "Empresarial/Societário",
+  FAMILIA_SUCESSOES: "Família e Sucessões",
+  CONSUMIDOR: "Consumidor",
+  ADMINISTRATIVO: "Administrativo",
+  ELEITORAL: "Eleitoral",
+  AMBIENTAL: "Ambiental",
+  IMOBILIARIO: "Imobiliário",
   OUTRO: "Outro",
 };
+
+/** Ordem de exibição das áreas nos selects (Outro sempre por último). */
+export const AREAS_PROCESSO = [
+  "CIVEL",
+  "TRABALHISTA",
+  "PREVIDENCIARIO",
+  "TRIBUTARIO",
+  "PENAL",
+  "EMPRESARIAL",
+  "FAMILIA_SUCESSOES",
+  "CONSUMIDOR",
+  "ADMINISTRATIVO",
+  "ELEITORAL",
+  "AMBIENTAL",
+  "IMOBILIARIO",
+  "OUTRO",
+] as const;
+
+/** Rótulo de exibição da área — para "Outro" mostra o texto informado, se houver. */
+export function formatarArea(area: string, areaOutraDescricao: string | null): string {
+  if (area === "OUTRO" && areaOutraDescricao) {
+    return areaOutraDescricao;
+  }
+  return LABEL_AREA[area] ?? area;
+}
 
 export const LABEL_STATUS_PROCESSO: Record<string, string> = {
   ATIVO: "Ativo",

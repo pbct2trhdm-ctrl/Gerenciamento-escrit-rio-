@@ -2,7 +2,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import {
-  LABEL_AREA,
   LABEL_STATUS_PROCESSO,
   LABEL_TIPO_PRAZO,
   LABEL_CONTAGEM,
@@ -10,6 +9,7 @@ import {
   LABEL_TIPO_HONORARIO,
   LABEL_STATUS_SUCUMBENCIA,
   LABEL_STATUS_ALVARA,
+  formatarArea,
   formatarData,
   formatarDataHorario,
   formatarMoeda,
@@ -77,7 +77,7 @@ export default async function ProcessoDetalhePage({
         <Link href={`/clientes/${processo.cliente.id}`} className="underline">
           {processo.cliente.nome}
         </Link>
-        <span>· {LABEL_AREA[processo.area]}</span>
+        <span>· {formatarArea(processo.area, processo.areaOutraDescricao)}</span>
         {processo.tribunal && (
           <span>· {LABEL_TRIBUNAL[processo.tribunal]}</span>
         )}

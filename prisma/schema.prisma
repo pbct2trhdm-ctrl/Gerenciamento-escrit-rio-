@@ -14,8 +14,17 @@ enum TipoCliente {
 
 enum AreaProcesso {
   CIVEL
+  TRABALHISTA
   PREVIDENCIARIO
   TRIBUTARIO
+  PENAL
+  EMPRESARIAL
+  FAMILIA_SUCESSOES
+  CONSUMIDOR
+  ADMINISTRATIVO
+  ELEITORAL
+  AMBIENTAL
+  IMOBILIARIO
   OUTRO
 }
 
@@ -217,6 +226,7 @@ model Processo {
   cliente         Cliente        @relation(fields: [clienteId], references: [id], onDelete: Cascade)
   numeroProcesso  String?
   area            AreaProcesso
+  areaOutraDescricao String?
   tribunal        Tribunal?
   vara            String?
   comarca         String?

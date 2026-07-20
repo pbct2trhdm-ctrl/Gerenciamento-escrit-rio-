@@ -1,4 +1,8 @@
+"use client";
+
+import { useState } from "react";
 import type { Cliente, Processo } from "@/app/generated/prisma/client";
+import { LABEL_AREA, AREAS_PROCESSO } from "@/lib/formatacao";
 import { classeInput, classeLabel, classeBotaoPrimario } from "@/lib/estilos";
 import { LABEL_TRIBUNAL, GRUPOS_TRIBUNAL } from "@/lib/tribunais";
 
@@ -13,6 +17,8 @@ export function ProcessoForm({
   clienteIdPadrao?: string;
   action: (formData: FormData) => void;
 }) {
+  const [area, setArea] = useState<string>(processo?.area ?? "CIVEL");
+
   return (
     <form action={action} className="max-w-xl space-y-4">
       <div>
@@ -62,13 +68,15 @@ export function ProcessoForm({
           <select
             id="area"
             name="area"
-            defaultValue={processo?.area ?? "CIVEL"}
+            value={area}
+            onChange={(e) => setArea(e.target.value)}
             className={classeInput}
           >
-            <option value="CIVEL">Cível</option>
-            <option value="PREVIDENCIARIO">Previdenciário</option>
-            <option value="TRIBUTARIO">Tributário</option>
-            <option value="OUTRO">Outro</option>
+            {AREAS_PROCESSO.map((codigo) => (
+              <option key={codigo} value={codigo}>
+                {LABEL_AREA[codigo]}
+              </option>
+            ))}
           </select>
         </div>
         <div>
@@ -88,6 +96,22 @@ export function ProcessoForm({
           </select>
         </div>
       </div>
+
+      {area === "OUTRO" && (
+        <div>
+          <label className={classeLabel} htmlFor="areaOutraDescricao">
+            Qual área?
+          </label>
+          <input
+            id="areaOutraDescricao"
+            name="areaOutraDescricao"
+            required
+            defaultValue={processo?.areaOutraDescricao ?? ""}
+            placeholder="Ex.: Propriedade Intelectual"
+            className={classeInput}
+          />
+        </div>
+      )}
 
       <div>
         <label className={classeLabel} htmlFor="tribunal">

@@ -3,8 +3,8 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import {
   LABEL_TIPO_CLIENTE,
-  LABEL_AREA,
   LABEL_STATUS_PROCESSO,
+  formatarArea,
   formatarData,
   formatarVaraComarca,
 } from "@/lib/formatacao";
@@ -101,7 +101,7 @@ export default async function ClienteDetalhePage({
                       {processo.numeroProcesso ?? "Sem número"}
                     </p>
                     <p className="text-sm text-texto-secundario">
-                      {LABEL_AREA[processo.area]}
+                      {formatarArea(processo.area, processo.areaOutraDescricao)}
                       {processo.tribunal ? ` · ${LABEL_TRIBUNAL[processo.tribunal]}` : ""} ·{" "}
                       {formatarVaraComarca(processo.vara, processo.comarca)}
                     </p>
