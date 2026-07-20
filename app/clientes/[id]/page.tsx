@@ -8,6 +8,7 @@ import {
   formatarData,
   formatarVaraComarca,
 } from "@/lib/formatacao";
+import { LABEL_TRIBUNAL } from "@/lib/tribunais";
 import { excluirCliente } from "@/lib/actions/clientes";
 import { tierStatus } from "@/lib/urgencia";
 import { Badge } from "@/components/badge";
@@ -100,7 +101,8 @@ export default async function ClienteDetalhePage({
                       {processo.numeroProcesso ?? "Sem número"}
                     </p>
                     <p className="text-sm text-texto-secundario">
-                      {LABEL_AREA[processo.area]} ·{" "}
+                      {LABEL_AREA[processo.area]}
+                      {processo.tribunal ? ` · ${LABEL_TRIBUNAL[processo.tribunal]}` : ""} ·{" "}
                       {formatarVaraComarca(processo.vara, processo.comarca)}
                     </p>
                   </div>

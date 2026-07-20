@@ -14,6 +14,7 @@ import {
   formatarDataHorario,
   formatarMoeda,
 } from "@/lib/formatacao";
+import { LABEL_TRIBUNAL } from "@/lib/tribunais";
 import { diasRestantes } from "@/lib/prazos";
 import { excluirProcesso } from "@/lib/actions/processos";
 import { marcarPrazoComoCumprido } from "@/lib/actions/prazos";
@@ -77,10 +78,21 @@ export default async function ProcessoDetalhePage({
           {processo.cliente.nome}
         </Link>
         <span>· {LABEL_AREA[processo.area]}</span>
+        {processo.tribunal && (
+          <span>· {LABEL_TRIBUNAL[processo.tribunal]}</span>
+        )}
         <Badge tier={tierStatus(processo.status)}>{LABEL_STATUS_PROCESSO[processo.status]}</Badge>
       </p>
 
-      <div className={`grid grid-cols-3 gap-4 mb-8 text-sm ${classeCard}`}>
+      <div className={`grid grid-cols-2 gap-4 mb-8 text-sm ${classeCard}`}>
+        <div>
+          <p className="text-texto-secundario">Tribunal</p>
+          <p>{processo.tribunal ? LABEL_TRIBUNAL[processo.tribunal] : "—"}</p>
+        </div>
+        <div>
+          <p className="text-texto-secundario">Criado em</p>
+          <p className="tabular-nums">{formatarData(processo.criadoEm)}</p>
+        </div>
         <div>
           <p className="text-texto-secundario">Vara</p>
           <p>{processo.vara || "—"}</p>
@@ -89,11 +101,7 @@ export default async function ProcessoDetalhePage({
           <p className="text-texto-secundario">Comarca</p>
           <p>{processo.comarca || "—"}</p>
         </div>
-        <div>
-          <p className="text-texto-secundario">Criado em</p>
-          <p className="tabular-nums">{formatarData(processo.criadoEm)}</p>
-        </div>
-        <div className="col-span-3">
+        <div className="col-span-2">
           <p className="text-texto-secundario">Resumo</p>
           <p className="whitespace-pre-wrap">{processo.resumo || "—"}</p>
         </div>

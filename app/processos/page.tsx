@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { LABEL_AREA, LABEL_STATUS_PROCESSO } from "@/lib/formatacao";
+import { LABEL_TRIBUNAL, TODOS_TRIBUNAIS } from "@/lib/tribunais";
 import type { Prisma } from "@/app/generated/prisma/client";
 import { tierStatus } from "@/lib/urgencia";
 import { Badge } from "@/components/badge";
@@ -15,9 +16,9 @@ import {
 export default async function ProcessosPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; status?: string; area?: string }>;
+  searchParams: Promise<{ q?: string; status?: string; area?: string; tribunal?: string }>;
 }) {
-  const { q, status, area } = await searchParams;
+  const { q, status, area, tribunal } = await searchParams;
 
   const where: Prisma.ProcessoWhereInput = {};
   if (q) {
@@ -32,12 +33,27 @@ export default async function ProcessosPage({
   if (["CIVEL", "PREVIDENCIARIO", "TRIBUTARIO", "OUTRO"].includes(area ?? "")) {
     where.area = area as Prisma.ProcessoWhereInput["area"];
   }
+  if (TODOS_TRIBUNAIS.includes(tribunal ?? "")) {
+    where.tribunal = tribunal as Prisma.ProcessoWhereInput["tribunal"];
+  }
 
-  const processos = await prisma.processo.findMany({
-    where,
-    orderBy: { criadoEm: "desc" },
-    include: { cliente: true },
-  });
+  const [processos, tribunaisEmUso] = await Promise.all([
+    prisma.processo.findMany({
+      where,
+      orderBy: { criadoEm: "desc" },
+      include: { cliente: true },
+    }),
+    prisma.processo.findMany({
+      where: { tribunal: { not: null } },
+      distinct: ["tribunal"],
+      select: { tribunal: true },
+    }),
+  ]);
+
+  const opcoesTribunal = tribunaisEmUso
+    .map((p) => p.tribunal)
+    .filter((t): t is Exclude<typeof t, null> => t !== null)
+    .sort((a, b) => LABEL_TRIBUNAL[a].localeCompare(LABEL_TRIBUNAL[b]));
 
   return (
     <div className="max-w-4xl">
@@ -70,6 +86,16 @@ export default async function ProcessosPage({
           <option value="TRIBUTARIO">Tributário</option>
           <option value="OUTRO">Outro</option>
         </select>
+        {opcoesTribunal.length > 0 && (
+          <select name="tribunal" defaultValue={tribunal ?? ""} className={classeInputAuto}>
+            <option value="">Todos os tribunais</option>
+            {opcoesTribunal.map((codigo) => (
+              <option key={codigo} value={codigo}>
+                {LABEL_TRIBUNAL[codigo]}
+              </option>
+            ))}
+          </select>
+        )}
         <button type="submit" className={classeBotaoSecundario}>
           Filtrar
         </button>
@@ -89,6 +115,7 @@ export default async function ProcessosPage({
                 <th className="px-4 py-3 font-medium">Número</th>
                 <th className="px-4 py-3 font-medium">Cliente</th>
                 <th className="px-4 py-3 font-medium">Área</th>
+                <th className="px-4 py-3 font-medium">Tribunal</th>
                 <th className="px-4 py-3 font-medium">Status</th>
               </tr>
             </thead>
@@ -106,6 +133,9 @@ export default async function ProcessosPage({
                   <td className="px-4 py-3 text-texto-secundario">{processo.cliente.nome}</td>
                   <td className="px-4 py-3 text-texto-secundario">
                     {LABEL_AREA[processo.area]}
+                  </td>
+                  <td className="px-4 py-3 text-texto-secundario">
+                    {processo.tribunal ? LABEL_TRIBUNAL[processo.tribunal] : "—"}
                   </td>
                   <td className="px-4 py-3">
                     <Badge tier={tierStatus(processo.status)}>

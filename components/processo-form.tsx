@@ -1,5 +1,6 @@
 import type { Cliente, Processo } from "@/app/generated/prisma/client";
 import { classeInput, classeLabel, classeBotaoPrimario } from "@/lib/estilos";
+import { LABEL_TRIBUNAL, GRUPOS_TRIBUNAL } from "@/lib/tribunais";
 
 export function ProcessoForm({
   processo,
@@ -86,6 +87,29 @@ export function ProcessoForm({
             <option value="ENCERRADO">Encerrado</option>
           </select>
         </div>
+      </div>
+
+      <div>
+        <label className={classeLabel} htmlFor="tribunal">
+          Tribunal
+        </label>
+        <select
+          id="tribunal"
+          name="tribunal"
+          defaultValue={processo?.tribunal ?? ""}
+          className={classeInput}
+        >
+          <option value="">Não informado</option>
+          {GRUPOS_TRIBUNAL.map((grupo) => (
+            <optgroup key={grupo.label} label={grupo.label}>
+              {grupo.opcoes.map((codigo) => (
+                <option key={codigo} value={codigo}>
+                  {LABEL_TRIBUNAL[codigo]}
+                </option>
+              ))}
+            </optgroup>
+          ))}
+        </select>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
