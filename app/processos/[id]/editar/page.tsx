@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { ProcessoForm } from "@/components/processo-form";
 import { atualizarProcesso } from "@/lib/actions/processos";
 import { classeTituloPagina } from "@/lib/estilos";
+import { LinkVoltar } from "@/components/link-voltar";
 
 export default async function EditarProcessoPage({
   params,
@@ -24,6 +25,7 @@ export default async function EditarProcessoPage({
 
   return (
     <div>
+      <LinkVoltar href={`/processos/${id}`} label="Voltar" />
       <h1 className={`${classeTituloPagina} mb-6`}>Editar processo</h1>
       <ProcessoForm
         processo={processo}

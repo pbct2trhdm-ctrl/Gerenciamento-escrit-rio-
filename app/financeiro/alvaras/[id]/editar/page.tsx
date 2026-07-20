@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { AlvaraForm } from "@/components/alvara-form";
 import { atualizarAlvara, excluirAlvara } from "@/lib/actions/alvaras";
 import { classeBotaoPerigo, classeTituloSecao } from "@/lib/estilos";
+import { LinkVoltar } from "@/components/link-voltar";
 
 export default async function EditarAlvaraPage({
   params,
@@ -26,6 +27,7 @@ export default async function EditarAlvaraPage({
 
   return (
     <div>
+      <LinkVoltar href="/financeiro/alvaras" label="Voltar para Alvarás" />
       <div className="flex items-center justify-between mb-1">
         <h2 className={classeTituloSecao}>{alvara.processo.cliente.nome}</h2>
         <form action={excluirAlvara.bind(null, alvara.id)}>

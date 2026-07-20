@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { AlvaraForm } from "@/components/alvara-form";
 import { criarAlvara } from "@/lib/actions/alvaras";
 import { classeTituloSecao } from "@/lib/estilos";
+import { LinkVoltar } from "@/components/link-voltar";
 
 export default async function NovoAlvaraPage({
   searchParams,
@@ -21,6 +22,10 @@ export default async function NovoAlvaraPage({
 
   return (
     <div>
+      <LinkVoltar
+        href={processoId ? `/processos/${processoId}` : "/financeiro/alvaras"}
+        label={processoId ? "Voltar para o processo" : "Voltar para Alvarás"}
+      />
       <h2 className={`${classeTituloSecao} mb-6`}>Novo alvará</h2>
       <AlvaraForm
         processos={processos}

@@ -11,6 +11,7 @@ import { excluirCliente } from "@/lib/actions/clientes";
 import { tierStatus } from "@/lib/urgencia";
 import { Badge } from "@/components/badge";
 import { EmptyState } from "@/components/empty-state";
+import { LinkVoltar } from "@/components/link-voltar";
 import {
   classeBotaoPrimario,
   classeBotaoSecundario,
@@ -39,6 +40,7 @@ export default async function ClienteDetalhePage({
 
   return (
     <div className="max-w-4xl">
+      <LinkVoltar href="/clientes" label="Voltar para Clientes" />
       <div className="flex items-center justify-between mb-1">
         <h1 className={classeTituloPagina}>{cliente.nome}</h1>
         <div className="flex gap-2">

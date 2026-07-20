@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { PrazoForm } from "@/components/prazo-form";
 import { atualizarPrazo } from "@/lib/actions/prazos";
 import { classeTituloPagina } from "@/lib/estilos";
+import { LinkVoltar } from "@/components/link-voltar";
 
 export default async function EditarPrazoPage({
   params,
@@ -24,6 +25,7 @@ export default async function EditarPrazoPage({
 
   return (
     <div>
+      <LinkVoltar href="/prazos" label="Voltar para Prazos" />
       <h1 className={`${classeTituloPagina} mb-6`}>Editar prazo</h1>
       <PrazoForm
         prazo={prazo}

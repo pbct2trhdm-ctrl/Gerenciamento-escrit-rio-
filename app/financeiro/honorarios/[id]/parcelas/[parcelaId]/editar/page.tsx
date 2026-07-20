@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { ParcelaForm } from "@/components/parcela-form";
 import { atualizarParcela } from "@/lib/actions/honorarios";
 import { classeTituloSecao } from "@/lib/estilos";
+import { LinkVoltar } from "@/components/link-voltar";
 
 export default async function EditarParcelaPage({
   params,
@@ -18,6 +19,7 @@ export default async function EditarParcelaPage({
 
   return (
     <div className="max-w-xl">
+      <LinkVoltar href={`/financeiro/honorarios/${id}`} label="Voltar" />
       <h2 className={`${classeTituloSecao} mb-6`}>Editar parcela</h2>
       <ParcelaForm
         parcela={parcela}

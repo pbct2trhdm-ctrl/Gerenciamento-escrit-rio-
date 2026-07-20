@@ -20,6 +20,7 @@ import { tierPrazo, tierStatus } from "@/lib/urgencia";
 import { SeloPrazo } from "@/components/selo-prazo";
 import { Badge } from "@/components/badge";
 import { EmptyState } from "@/components/empty-state";
+import { LinkVoltar } from "@/components/link-voltar";
 import {
   classeBotaoPrimario,
   classeBotaoSecundario,
@@ -54,6 +55,7 @@ export default async function ProcessoDetalhePage({
 
   return (
     <div className="max-w-4xl">
+      <LinkVoltar href="/processos" label="Voltar para Processos" />
       <div className="flex items-center justify-between mb-1">
         <h1 className={classeTituloPagina}>
           {processo.numeroProcesso ?? "Processo sem número"}

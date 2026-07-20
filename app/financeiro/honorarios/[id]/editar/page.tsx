@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { HonorarioForm } from "@/components/honorario-form";
 import { atualizarHonorario } from "@/lib/actions/honorarios";
 import { classeTituloSecao } from "@/lib/estilos";
+import { LinkVoltar } from "@/components/link-voltar";
 
 export default async function EditarHonorarioPage({
   params,
@@ -18,6 +19,7 @@ export default async function EditarHonorarioPage({
 
   return (
     <div>
+      <LinkVoltar href={`/financeiro/honorarios/${id}`} label="Voltar" />
       <h2 className={`${classeTituloSecao} mb-6`}>Editar honorário</h2>
       <HonorarioForm
         honorario={honorario}

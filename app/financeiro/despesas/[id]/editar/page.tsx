@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { DespesaForm } from "@/components/despesa-form";
 import { atualizarDespesa, excluirDespesa } from "@/lib/actions/despesas";
 import { classeBotaoPerigo, classeTituloSecao } from "@/lib/estilos";
+import { LinkVoltar } from "@/components/link-voltar";
 
 export default async function EditarDespesaPage({
   params,
@@ -24,6 +25,7 @@ export default async function EditarDespesaPage({
 
   return (
     <div>
+      <LinkVoltar href="/financeiro/despesas" label="Voltar para Despesas" />
       <div className="flex items-center justify-between mb-6">
         <h2 className={classeTituloSecao}>Editar despesa</h2>
         <form action={excluirDespesa.bind(null, despesa.id)}>

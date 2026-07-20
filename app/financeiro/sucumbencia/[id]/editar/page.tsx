@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { SucumbenciaForm } from "@/components/sucumbencia-form";
 import { atualizarSucumbencia, excluirSucumbencia } from "@/lib/actions/sucumbencia";
 import { classeBotaoPerigo, classeTituloSecao } from "@/lib/estilos";
+import { LinkVoltar } from "@/components/link-voltar";
 
 export default async function EditarSucumbenciaPage({
   params,
@@ -22,6 +23,7 @@ export default async function EditarSucumbenciaPage({
 
   return (
     <div>
+      <LinkVoltar href="/financeiro/sucumbencia" label="Voltar para Sucumbência" />
       <div className="flex items-center justify-between mb-1">
         <h2 className={classeTituloSecao}>{sucumbencia.processo.cliente.nome}</h2>
         <form action={excluirSucumbencia.bind(null, sucumbencia.id)}>

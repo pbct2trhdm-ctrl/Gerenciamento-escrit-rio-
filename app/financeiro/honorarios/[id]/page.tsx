@@ -18,6 +18,7 @@ import {
 } from "@/lib/actions/honorarios";
 import { ParcelaForm } from "@/components/parcela-form";
 import { Badge } from "@/components/badge";
+import { LinkVoltar } from "@/components/link-voltar";
 import {
   classeBotaoSecundario,
   classeBotaoPerigo,
@@ -48,6 +49,7 @@ export default async function HonorarioDetalhePage({
 
   return (
     <div className="max-w-3xl">
+      <LinkVoltar href="/financeiro/honorarios" label="Voltar para Honorários" />
       <div className="flex items-center justify-between mb-1">
         <h2 className={classeTituloPagina}>
           {honorario.processo.cliente.nome} — {LABEL_TIPO_HONORARIO[honorario.tipo]}
