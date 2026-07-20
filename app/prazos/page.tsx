@@ -4,11 +4,12 @@ import {
   LABEL_TIPO_PRAZO,
   LABEL_STATUS_PRAZO,
   formatarData,
+  formatarDataHorario,
 } from "@/lib/formatacao";
 import { diasRestantes } from "@/lib/prazos";
 import { marcarPrazoComoCumprido } from "@/lib/actions/prazos";
 import type { Prisma } from "@/app/generated/prisma/client";
-import { tierPrazo } from "@/lib/urgencia";
+import { tierPrazo, CLASSE_BADGE_AUDIENCIA } from "@/lib/urgencia";
 import { SeloPrazo } from "@/components/selo-prazo";
 import { Badge } from "@/components/badge";
 import { EmptyState } from "@/components/empty-state";
@@ -91,32 +92,46 @@ export default async function PrazosPage({
           {prazos.map((prazo) => {
             const restantes = diasRestantes(prazo.dataFinal);
             const tier = tierPrazo(prazo.status, restantes);
+            const ehAudiencia = prazo.tipo === "AUDIENCIA";
             return (
               <li key={prazo.id}>
                 <div
                   className={`rounded-lg border bg-superficie p-4 ${
-                    tier === "critico" && prazo.status === "PENDENTE"
-                      ? "border-critico/30"
-                      : "border-gray-200"
+                    ehAudiencia && prazo.status === "PENDENTE"
+                      ? "border-audiencia/40"
+                      : tier === "critico" && prazo.status === "PENDENTE"
+                        ? "border-critico/30"
+                        : "border-gray-200"
                   }`}
                 >
                   <div className="flex items-center gap-4">
                     <SeloPrazo id={prazo.id} dias={restantes} tier={tier} size={64} />
                     <div className="min-w-0 flex-1">
-                      <Link
-                        href={`/processos/${prazo.processoId}`}
-                        className="font-medium hover:underline"
-                      >
-                        {prazo.processo.cliente.nome} ·{" "}
-                        {prazo.processo.numeroProcesso ?? "Sem número"}
-                      </Link>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Link
+                          href={`/processos/${prazo.processoId}`}
+                          className="font-medium hover:underline"
+                        >
+                          {prazo.processo.cliente.nome} ·{" "}
+                          {prazo.processo.numeroProcesso ?? "Sem número"}
+                        </Link>
+                        {ehAudiencia && (
+                          <span
+                            className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium shrink-0 ${CLASSE_BADGE_AUDIENCIA}`}
+                          >
+                            Audiência
+                          </span>
+                        )}
+                      </div>
                       <p className="text-sm text-texto-secundario">
                         {LABEL_TIPO_PRAZO[prazo.tipo]}
                       </p>
                     </div>
                     <div className="text-right shrink-0">
                       <p className="font-semibold tabular-nums">
-                        {formatarData(prazo.dataFinal)}
+                        {ehAudiencia
+                          ? formatarDataHorario(prazo.dataFinal)
+                          : formatarData(prazo.dataFinal)}
                       </p>
                       <div className="mt-1">
                         <Badge tier={tier}>{LABEL_STATUS_PRAZO[prazo.status]}</Badge>

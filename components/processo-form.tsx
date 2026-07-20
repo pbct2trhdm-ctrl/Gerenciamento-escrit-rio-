@@ -88,19 +88,31 @@ export function ProcessoForm({
         </div>
       </div>
 
-      <div>
-        <label
-          className={classeLabel}
-          htmlFor="varaTribunal"
-        >
-          Vara/Tribunal
-        </label>
-        <input
-          id="varaTribunal"
-          name="varaTribunal"
-          defaultValue={processo?.varaTribunal ?? ""}
-          className={classeInput}
-        />
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className={classeLabel} htmlFor="vara">
+            Vara
+          </label>
+          <input
+            id="vara"
+            name="vara"
+            defaultValue={processo?.vara ?? ""}
+            placeholder="Ex.: 1ª Vara Cível"
+            className={classeInput}
+          />
+        </div>
+        <div>
+          <label className={classeLabel} htmlFor="comarca">
+            Comarca
+          </label>
+          <input
+            id="comarca"
+            name="comarca"
+            defaultValue={processo?.comarca ?? ""}
+            placeholder="Ex.: Belém"
+            className={classeInput}
+          />
+        </div>
       </div>
 
       <div>

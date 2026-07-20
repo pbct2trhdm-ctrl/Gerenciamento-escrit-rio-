@@ -11,12 +11,13 @@ import {
   LABEL_STATUS_SUCUMBENCIA,
   LABEL_STATUS_ALVARA,
   formatarData,
+  formatarDataHorario,
   formatarMoeda,
 } from "@/lib/formatacao";
 import { diasRestantes } from "@/lib/prazos";
 import { excluirProcesso } from "@/lib/actions/processos";
 import { marcarPrazoComoCumprido } from "@/lib/actions/prazos";
-import { tierPrazo, tierStatus } from "@/lib/urgencia";
+import { tierPrazo, tierStatus, CLASSE_BADGE_AUDIENCIA } from "@/lib/urgencia";
 import { SeloPrazo } from "@/components/selo-prazo";
 import { Badge } from "@/components/badge";
 import { EmptyState } from "@/components/empty-state";
@@ -79,16 +80,20 @@ export default async function ProcessoDetalhePage({
         <Badge tier={tierStatus(processo.status)}>{LABEL_STATUS_PROCESSO[processo.status]}</Badge>
       </p>
 
-      <div className={`grid grid-cols-2 gap-4 mb-8 text-sm ${classeCard}`}>
+      <div className={`grid grid-cols-3 gap-4 mb-8 text-sm ${classeCard}`}>
         <div>
-          <p className="text-texto-secundario">Vara/Tribunal</p>
-          <p>{processo.varaTribunal || "—"}</p>
+          <p className="text-texto-secundario">Vara</p>
+          <p>{processo.vara || "—"}</p>
+        </div>
+        <div>
+          <p className="text-texto-secundario">Comarca</p>
+          <p>{processo.comarca || "—"}</p>
         </div>
         <div>
           <p className="text-texto-secundario">Criado em</p>
           <p className="tabular-nums">{formatarData(processo.criadoEm)}</p>
         </div>
-        <div className="col-span-2">
+        <div className="col-span-3">
           <p className="text-texto-secundario">Resumo</p>
           <p className="whitespace-pre-wrap">{processo.resumo || "—"}</p>
         </div>
@@ -124,15 +129,31 @@ export default async function ProcessoDetalhePage({
                   <div className="flex items-center gap-4">
                     <SeloPrazo id={prazo.id} dias={restantes} tier={tier} size={64} />
                     <div className="flex-1">
-                      <p className="font-medium">{LABEL_TIPO_PRAZO[prazo.tipo]}</p>
-                      <p className="text-sm text-texto-secundario">
-                        {formatarData(prazo.dataBase)} + {prazo.dias} dia(s) (
-                        {LABEL_CONTAGEM[prazo.contagem]})
-                      </p>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="font-medium">{LABEL_TIPO_PRAZO[prazo.tipo]}</p>
+                        {prazo.tipo === "AUDIENCIA" && (
+                          <span
+                            className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${CLASSE_BADGE_AUDIENCIA}`}
+                          >
+                            Audiência
+                          </span>
+                        )}
+                      </div>
+                      {prazo.tipo !== "AUDIENCIA" &&
+                        prazo.dataBase &&
+                        prazo.dias != null &&
+                        prazo.contagem && (
+                          <p className="text-sm text-texto-secundario tabular-nums">
+                            {formatarData(prazo.dataBase)} + {prazo.dias} dia(s) (
+                            {LABEL_CONTAGEM[prazo.contagem]})
+                          </p>
+                        )}
                     </div>
                     <div className="text-right">
                       <p className="font-semibold tabular-nums">
-                        {formatarData(prazo.dataFinal)}
+                        {prazo.tipo === "AUDIENCIA"
+                          ? formatarDataHorario(prazo.dataFinal)
+                          : formatarData(prazo.dataFinal)}
                       </p>
                       <div className="mt-1">
                         <Badge tier={tier}>{LABEL_STATUS_PRAZO[prazo.status]}</Badge>

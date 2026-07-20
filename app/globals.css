@@ -11,6 +11,7 @@
   --color-critico: #b33a3a;
   --color-atencao: #c9a227;
   --color-tranquilo: #3f7550;
+  --color-audiencia: #4a3f7a;
 
   --font-display: var(--font-playfair-display), Georgia, "Times New Roman", serif;
   --font-sans: var(--font-inter), Arial, Helvetica, sans-serif;

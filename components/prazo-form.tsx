@@ -3,12 +3,24 @@
 import { useMemo, useState } from "react";
 import type { Processo, Prazo } from "@/app/generated/prisma/client";
 import { calcularDataFinal, type TipoContagem } from "@/lib/prazos";
-import { formatarData } from "@/lib/formatacao";
+import { formatarData, formatarDataHorario } from "@/lib/formatacao";
 import { classeInput, classeLabel, classeBotaoPrimario } from "@/lib/estilos";
+
+type TipoPrazo =
+  | "PETICAO"
+  | "RECURSO"
+  | "AUDIENCIA"
+  | "MANIFESTACAO"
+  | "OUTRO";
 
 function paraInputDate(data: Date | string): string {
   const d = typeof data === "string" ? new Date(data) : data;
   return d.toISOString().slice(0, 10);
+}
+
+function paraInputHora(data: Date | string): string {
+  const d = typeof data === "string" ? new Date(data) : data;
+  return d.toISOString().slice(11, 16);
 }
 
 export function PrazoForm({
@@ -22,12 +34,24 @@ export function PrazoForm({
   processoIdPadrao?: string;
   action: (formData: FormData) => void;
 }) {
+  const [tipo, setTipo] = useState<TipoPrazo>(
+    (prazo?.tipo as TipoPrazo) ?? "PETICAO"
+  );
+  const ehAudiencia = tipo === "AUDIENCIA";
+
   const [dataBase, setDataBase] = useState(
-    prazo ? paraInputDate(prazo.dataBase) : ""
+    prazo?.dataBase ? paraInputDate(prazo.dataBase) : ""
   );
   const [dias, setDias] = useState(prazo?.dias?.toString() ?? "");
   const [contagem, setContagem] = useState<TipoContagem>(
     (prazo?.contagem as TipoContagem) ?? "DIAS_UTEIS"
+  );
+
+  const [dataAudiencia, setDataAudiencia] = useState(
+    prazo?.tipo === "AUDIENCIA" ? paraInputDate(prazo.dataFinal) : ""
+  );
+  const [horaAudiencia, setHoraAudiencia] = useState(
+    prazo?.tipo === "AUDIENCIA" ? paraInputHora(prazo.dataFinal) : ""
   );
 
   const dataFinal = useMemo(() => {
@@ -39,6 +63,13 @@ export function PrazoForm({
     const base = new Date(Date.UTC(ano, mes - 1, dia));
     return calcularDataFinal(base, diasNumero, contagem);
   }, [dataBase, dias, contagem]);
+
+  const dataHoraAudiencia = useMemo(() => {
+    if (!dataAudiencia || !horaAudiencia) return null;
+    const [ano, mes, dia] = dataAudiencia.split("-").map(Number);
+    const [hora, minuto] = horaAudiencia.split(":").map(Number);
+    return new Date(Date.UTC(ano, mes - 1, dia, hora, minuto));
+  }, [dataAudiencia, horaAudiencia]);
 
   return (
     <form action={action} className="max-w-xl space-y-4">
@@ -71,7 +102,8 @@ export function PrazoForm({
         <select
           id="tipo"
           name="tipo"
-          defaultValue={prazo?.tipo ?? "PETICAO"}
+          value={tipo}
+          onChange={(e) => setTipo(e.target.value as TipoPrazo)}
           className={classeInput}
         >
           <option value="PETICAO">Petição</option>
@@ -82,60 +114,109 @@ export function PrazoForm({
         </select>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className={classeLabel} htmlFor="dataBase">
-            Data base
-          </label>
-          <input
-            id="dataBase"
-            name="dataBase"
-            type="date"
-            required
-            value={dataBase}
-            onChange={(e) => setDataBase(e.target.value)}
-            className={classeInput}
-          />
-        </div>
-        <div>
-          <label className={classeLabel} htmlFor="dias">
-            Dias
-          </label>
-          <input
-            id="dias"
-            name="dias"
-            type="number"
-            min={1}
-            required
-            value={dias}
-            onChange={(e) => setDias(e.target.value)}
-            className={classeInput}
-          />
-        </div>
-      </div>
+      {ehAudiencia ? (
+        <>
+          <div className="rounded-md border border-audiencia/30 bg-audiencia/10 px-3 py-2 text-sm text-audiencia">
+            Audiência não tem contagem em dias — informe diretamente a data e
+            o horário marcados.
+          </div>
 
-      <div>
-        <label className={classeLabel} htmlFor="contagem">
-          Tipo de contagem
-        </label>
-        <select
-          id="contagem"
-          name="contagem"
-          value={contagem}
-          onChange={(e) => setContagem(e.target.value as TipoContagem)}
-          className={classeInput}
-        >
-          <option value="DIAS_UTEIS">Dias úteis</option>
-          <option value="DIAS_CORRIDOS">Dias corridos</option>
-        </select>
-      </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className={classeLabel} htmlFor="dataAudiencia">
+                Data da audiência
+              </label>
+              <input
+                id="dataAudiencia"
+                name="dataAudiencia"
+                type="date"
+                required
+                value={dataAudiencia}
+                onChange={(e) => setDataAudiencia(e.target.value)}
+                className={classeInput}
+              />
+            </div>
+            <div>
+              <label className={classeLabel} htmlFor="horaAudiencia">
+                Horário
+              </label>
+              <input
+                id="horaAudiencia"
+                name="horaAudiencia"
+                type="time"
+                required
+                value={horaAudiencia}
+                onChange={(e) => setHoraAudiencia(e.target.value)}
+                className={classeInput}
+              />
+            </div>
+          </div>
 
-      <div className="rounded-md bg-fundo border border-gray-200 px-3 py-2 text-sm">
-        <span className="text-texto-secundario">Data final calculada: </span>
-        <span className="font-semibold tabular-nums">
-          {dataFinal ? formatarData(dataFinal) : "—"}
-        </span>
-      </div>
+          <div className="rounded-md bg-fundo border border-gray-200 px-3 py-2 text-sm">
+            <span className="text-texto-secundario">Audiência marcada para: </span>
+            <span className="font-semibold tabular-nums">
+              {dataHoraAudiencia ? formatarDataHorario(dataHoraAudiencia) : "—"}
+            </span>
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className={classeLabel} htmlFor="dataBase">
+                Data base
+              </label>
+              <input
+                id="dataBase"
+                name="dataBase"
+                type="date"
+                required
+                value={dataBase}
+                onChange={(e) => setDataBase(e.target.value)}
+                className={classeInput}
+              />
+            </div>
+            <div>
+              <label className={classeLabel} htmlFor="dias">
+                Dias
+              </label>
+              <input
+                id="dias"
+                name="dias"
+                type="number"
+                min={1}
+                required
+                value={dias}
+                onChange={(e) => setDias(e.target.value)}
+                className={classeInput}
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className={classeLabel} htmlFor="contagem">
+              Tipo de contagem
+            </label>
+            <select
+              id="contagem"
+              name="contagem"
+              value={contagem}
+              onChange={(e) => setContagem(e.target.value as TipoContagem)}
+              className={classeInput}
+            >
+              <option value="DIAS_UTEIS">Dias úteis</option>
+              <option value="DIAS_CORRIDOS">Dias corridos</option>
+            </select>
+          </div>
+
+          <div className="rounded-md bg-fundo border border-gray-200 px-3 py-2 text-sm">
+            <span className="text-texto-secundario">Data final calculada: </span>
+            <span className="font-semibold tabular-nums">
+              {dataFinal ? formatarData(dataFinal) : "—"}
+            </span>
+          </div>
+        </>
+      )}
 
       {prazo && (
         <div>

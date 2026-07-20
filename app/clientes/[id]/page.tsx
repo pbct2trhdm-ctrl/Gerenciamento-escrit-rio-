@@ -6,6 +6,7 @@ import {
   LABEL_AREA,
   LABEL_STATUS_PROCESSO,
   formatarData,
+  formatarVaraComarca,
 } from "@/lib/formatacao";
 import { excluirCliente } from "@/lib/actions/clientes";
 import { tierStatus } from "@/lib/urgencia";
@@ -100,7 +101,7 @@ export default async function ClienteDetalhePage({
                     </p>
                     <p className="text-sm text-texto-secundario">
                       {LABEL_AREA[processo.area]} ·{" "}
-                      {processo.varaTribunal ?? "Vara não informada"}
+                      {formatarVaraComarca(processo.vara, processo.comarca)}
                     </p>
                   </div>
                   <div className="text-right">

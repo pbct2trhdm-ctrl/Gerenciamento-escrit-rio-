@@ -114,7 +114,8 @@ model Processo {
   cliente         Cliente        @relation(fields: [clienteId], references: [id], onDelete: Cascade)
   numeroProcesso  String?
   area            AreaProcesso
-  varaTribunal    String?
+  vara            String?
+  comarca         String?
   status          StatusProcesso @default(ATIVO)
   resumo          String?
   criadoEm        DateTime       @default(now())
@@ -130,9 +131,9 @@ model Prazo {
   processoId   String
   processo     Processo     @relation(fields: [processoId], references: [id], onDelete: Cascade)
   tipo         TipoPrazo
-  dataBase     DateTime
-  dias         Int
-  contagem     TipoContagem
+  dataBase     DateTime?
+  dias         Int?
+  contagem     TipoContagem?
   dataFinal    DateTime
   status       StatusPrazo  @default(PENDENTE)
   observacoes  String?

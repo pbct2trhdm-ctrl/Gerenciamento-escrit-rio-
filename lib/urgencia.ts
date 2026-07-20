@@ -46,6 +46,14 @@ export function tierPrazo(status: string, diasRestantes: number): Tier {
   return tierPorDiasRestantes(diasRestantes);
 }
 
+/**
+ * Destaque de audiência: sinalização própria, independente das faixas de
+ * urgência acima — audiências têm hora marcada e merecem chamar atenção
+ * de forma diferente de um prazo comum, mesmo quando "em dia".
+ */
+export const CLASSE_BADGE_AUDIENCIA =
+  "bg-audiencia/10 text-audiencia border-audiencia/30";
+
 const STATUS_TIER: Record<string, Tier> = {
   PAGO: "tranquilo",
   ATRASADO: "critico",

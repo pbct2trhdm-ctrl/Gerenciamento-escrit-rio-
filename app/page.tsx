@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { diasRestantes } from "@/lib/prazos";
-import { LABEL_TIPO_PRAZO, formatarData } from "@/lib/formatacao";
-import { tierPorDiasRestantes, TIER_CLASSES } from "@/lib/urgencia";
+import { LABEL_TIPO_PRAZO, formatarData, formatarDataHorario } from "@/lib/formatacao";
+import { tierPorDiasRestantes, TIER_CLASSES, CLASSE_BADGE_AUDIENCIA } from "@/lib/urgencia";
 import { SeloPrazo } from "@/components/selo-prazo";
 import { EmptyState } from "@/components/empty-state";
 import { classeTituloPagina } from "@/lib/estilos";
@@ -32,19 +32,33 @@ export default async function DashboardPage() {
           {prazos.map((prazo) => {
             const restantes = diasRestantes(prazo.dataFinal);
             const tier = tierPorDiasRestantes(restantes);
+            const ehAudiencia = prazo.tipo === "AUDIENCIA";
             return (
               <li key={prazo.id}>
                 <Link
                   href={`/processos/${prazo.processoId}`}
                   className={`flex items-center gap-4 rounded-lg border bg-superficie p-4 transition-colors hover:bg-fundo ${
-                    tier === "critico" ? "border-critico/30" : "border-gray-200"
+                    ehAudiencia
+                      ? "border-audiencia/40"
+                      : tier === "critico"
+                        ? "border-critico/30"
+                        : "border-gray-200"
                   }`}
                 >
                   <SeloPrazo id={prazo.id} dias={restantes} tier={tier} size={72} />
                   <div className="min-w-0 flex-1">
-                    <p className="font-medium truncate">
-                      {prazo.processo.cliente.nome}
-                    </p>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="font-medium truncate">
+                        {prazo.processo.cliente.nome}
+                      </p>
+                      {ehAudiencia && (
+                        <span
+                          className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium shrink-0 ${CLASSE_BADGE_AUDIENCIA}`}
+                        >
+                          Audiência
+                        </span>
+                      )}
+                    </div>
                     <p className="text-sm text-texto-secundario truncate">
                       {prazo.processo.numeroProcesso ?? "Sem número"} ·{" "}
                       {LABEL_TIPO_PRAZO[prazo.tipo]}
@@ -52,7 +66,9 @@ export default async function DashboardPage() {
                   </div>
                   <div className="text-right shrink-0">
                     <p className="font-semibold tabular-nums">
-                      {formatarData(prazo.dataFinal)}
+                      {ehAudiencia
+                        ? formatarDataHorario(prazo.dataFinal)
+                        : formatarData(prazo.dataFinal)}
                     </p>
                     <span
                       className={`mt-1 inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${TIER_CLASSES[tier]}`}

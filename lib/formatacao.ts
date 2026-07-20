@@ -92,6 +92,29 @@ export function formatarData(data: Date | string): string {
   return d.toLocaleDateString("pt-BR", { timeZone: "UTC" });
 }
 
+export function formatarHorario(data: Date | string): string {
+  const d = typeof data === "string" ? new Date(data) : data;
+  return d.toLocaleTimeString("pt-BR", {
+    timeZone: "UTC",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+export function formatarDataHorario(data: Date | string): string {
+  return `${formatarData(data)} às ${formatarHorario(data)}`;
+}
+
+export function formatarVaraComarca(
+  vara: string | null,
+  comarca: string | null
+): string {
+  if (vara && comarca) return `${vara} — ${comarca}`;
+  if (vara) return vara;
+  if (comarca) return comarca;
+  return "Vara/comarca não informada";
+}
+
 export function formatarMoeda(valor: number): string {
   return valor.toLocaleString("pt-BR", {
     style: "currency",
