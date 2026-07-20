@@ -109,10 +109,10 @@ export default async function ProcessosPage({
           acaoLabel="Adicionar o primeiro processo"
         />
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-gray-200 bg-superficie">
+        <div className="overflow-x-auto rounded-lg border border-slate-200 bg-superficie">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-200 font-display text-left text-texto-principal">
+              <tr className="border-b border-slate-200 font-display text-left text-texto-principal">
                 <th className="px-4 py-3 font-medium">Número</th>
                 <th className="px-4 py-3 font-medium">Cliente</th>
                 <th className="px-4 py-3 font-medium">Área</th>
@@ -124,7 +124,7 @@ export default async function ProcessosPage({
               {processos.map((processo) => (
                 <tr
                   key={processo.id}
-                  className="border-b border-gray-100 last:border-0 transition-colors hover:bg-fundo"
+                  className="border-b border-slate-100 last:border-0 transition-colors hover:bg-fundo"
                 >
                   <td className="font-medium">
                     <Link href={`/processos/${processo.id}`} className="block px-4 py-3">

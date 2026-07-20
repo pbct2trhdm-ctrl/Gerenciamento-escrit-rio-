@@ -139,10 +139,10 @@ export default async function ProcessoDetalhePage({
             return (
               <li key={prazo.id}>
                 <div
-                  className={`rounded-lg border bg-superficie p-4 ${
+                  className={`rounded-xl border bg-superficie p-4 shadow-xs ${
                     tier === "critico" && prazo.status === "PENDENTE"
                       ? "border-critico/30"
-                      : "border-gray-200"
+                      : "border-slate-200"
                   }`}
                 >
                   <div className="flex items-center gap-4">

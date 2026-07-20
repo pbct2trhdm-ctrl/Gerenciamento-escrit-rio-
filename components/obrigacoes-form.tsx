@@ -54,7 +54,7 @@ export function ObrigacoesForm({
   return (
     <form action={action} className="space-y-4">
       <input type="hidden" name="competencia" value={competenciaTexto} />
-      <div className="rounded-lg border border-gray-200 bg-superficie divide-y divide-gray-100">
+      <div className="rounded-lg border border-slate-200 bg-superficie divide-y divide-slate-100">
         {LINHAS.map((linha) => {
           const existente = obrigacoes[linha.tipo];
           return (

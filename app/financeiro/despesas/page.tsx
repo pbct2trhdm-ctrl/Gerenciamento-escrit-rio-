@@ -91,10 +91,10 @@ export default async function DespesasPage({
           acaoLabel="Adicionar a primeira despesa"
         />
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-gray-200 bg-superficie">
+        <div className="overflow-x-auto rounded-lg border border-slate-200 bg-superficie">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-200 font-display text-left text-texto-principal">
+              <tr className="border-b border-slate-200 font-display text-left text-texto-principal">
                 <th className="px-4 py-3 font-medium">Descrição</th>
                 <th className="px-4 py-3 font-medium">Categoria</th>
                 <th className="px-4 py-3 font-medium">Data</th>
@@ -105,7 +105,7 @@ export default async function DespesasPage({
               {despesas.map((despesa) => (
                 <tr
                   key={despesa.id}
-                  className="border-b border-gray-100 last:border-0 transition-colors hover:bg-fundo"
+                  className="border-b border-slate-100 last:border-0 transition-colors hover:bg-fundo"
                 >
                   <td className="font-medium">
                     <Link

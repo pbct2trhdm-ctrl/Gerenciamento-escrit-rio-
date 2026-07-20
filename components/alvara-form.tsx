@@ -207,7 +207,7 @@ export function AlvaraForm({
         />
       </div>
 
-      <fieldset className="rounded-md border border-gray-200 p-3 space-y-3">
+      <fieldset className="rounded-md border border-slate-200 p-3 space-y-3">
         <legend className="font-display text-sm font-medium px-1 text-texto-principal">Dados bancários de destino</legend>
         <div className="grid grid-cols-3 gap-3">
           <div>

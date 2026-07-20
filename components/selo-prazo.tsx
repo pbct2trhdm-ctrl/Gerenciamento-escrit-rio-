@@ -1,9 +1,9 @@
-import { TIER_COR, type Tier } from "@/lib/urgencia";
+import { TIER_COR, TIER_COR_FUNDO, type Tier } from "@/lib/urgencia";
 
 const TEXTO_SELO: Record<Tier, string> = {
   critico: "URGENTE",
-  atencao: "PRAZO BREVE",
-  tranquilo: "DENTRO DO PRAZO",
+  atencao: "ATENÇÃO",
+  tranquilo: "EM DIA",
   neutro: "PRAZO",
 };
 
@@ -24,6 +24,7 @@ export function SeloPrazo({
   size?: number;
 }) {
   const cor = TIER_COR[tier];
+  const corFundo = TIER_COR_FUNDO[tier];
   const arcoId = `selo-arco-${id}`;
   const atrasado = dias < 0;
 
@@ -37,8 +38,17 @@ export function SeloPrazo({
       }`}
     >
       <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full">
-        <circle cx="50" cy="50" r="47" fill="none" stroke={cor} strokeWidth="1.5" />
-        <circle cx="50" cy="50" r="41" fill="none" stroke={cor} strokeWidth="1" />
+        {/* Anel externo pontilhado, estilo carimbo notarial */}
+        <circle
+          cx="50"
+          cy="50"
+          r="47"
+          fill="none"
+          stroke={cor}
+          strokeWidth="1.5"
+          strokeDasharray="3 2"
+        />
+        <circle cx="50" cy="50" r="41" fill={corFundo} stroke={cor} strokeWidth="1" />
         <path id={arcoId} d="M 14 55 A 36 36 0 1 1 86 55" fill="none" />
         <text fontSize="7.5" fontWeight="700" letterSpacing="1.5" fill={cor}>
           <textPath href={`#${arcoId}`} startOffset="50%" textAnchor="middle">

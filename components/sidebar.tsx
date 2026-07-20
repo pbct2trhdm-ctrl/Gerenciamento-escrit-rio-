@@ -41,10 +41,10 @@ export function Sidebar() {
             <li key={item.href}>
               <Link
                 href={item.href}
-                className={`flex items-center gap-3 mx-3 mb-1 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                className={`flex items-center gap-3 mx-3 mb-1 rounded-md py-2 text-sm transition-colors ${
                   ativo
-                    ? "bg-accent text-base-escura"
-                    : "text-white/75 hover:bg-white/10 hover:text-white"
+                    ? "border-l-[3px] border-accent bg-accent/10 pl-[9px] pr-3 font-semibold text-accent"
+                    : "px-3 font-medium text-slate-400 hover:bg-white/5 hover:text-slate-100"
                 }`}
               >
                 <item.Icone />

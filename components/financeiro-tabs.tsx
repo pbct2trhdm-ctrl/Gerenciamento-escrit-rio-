@@ -16,7 +16,7 @@ export function FinanceiroTabs() {
   const pathname = usePathname();
 
   return (
-    <div className="border-b border-gray-200 mb-6">
+    <div className="border-b border-slate-200 mb-6">
       <nav className="flex flex-wrap gap-1 -mb-px">
         {abas.map((aba) => {
           const ativo =

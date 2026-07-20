@@ -97,12 +97,12 @@ export default async function PrazosPage({
             return (
               <li key={prazo.id}>
                 <div
-                  className={`rounded-lg border bg-superficie p-4 ${
+                  className={`rounded-xl border bg-superficie p-4 shadow-xs ${
                     ehAudiencia && prazo.status === "PENDENTE"
                       ? "border-audiencia/40"
                       : tier === "critico" && prazo.status === "PENDENTE"
                         ? "border-critico/30"
-                        : "border-gray-200"
+                        : "border-slate-200"
                   }`}
                 >
                   <div className="flex items-center gap-4">

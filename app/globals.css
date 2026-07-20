@@ -1,19 +1,34 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-base-escura: #1c2b39;
-  --color-fundo: #f7f6f3;
+  /* Cores base e superfícies */
+  --color-base-escura: #0f172a;
+  --color-fundo: #f8fafc;
   --color-superficie: #ffffff;
-  --color-accent: #b8863b;
-  --color-texto-principal: #1c2b39;
-  --color-texto-secundario: #6b7280;
 
-  --color-critico: #b33a3a;
-  --color-atencao: #c9a227;
-  --color-tranquilo: #3f7550;
-  --color-audiencia: #4a3f7a;
+  /* Cor de destaque (dourado) */
+  --color-accent: #c59b27;
+  --color-accent-hover: #a37f1e;
 
-  --font-display: var(--font-playfair-display), Georgia, "Times New Roman", serif;
+  /* Tipografia e texto */
+  --color-texto-principal: #0f172a;
+  --color-texto-secundario: #64748b;
+  --color-borda-suave: #e2e8f0;
+
+  /* Cores semânticas de urgência e status, com tom de fundo suave para cada uma */
+  --color-critico: #991b1b;
+  --color-critico-fundo: #fef2f2;
+
+  --color-atencao: #92400e;
+  --color-atencao-fundo: #fffbeb;
+
+  --color-tranquilo: #166534;
+  --color-tranquilo-fundo: #f0fdf4;
+
+  --color-audiencia: #6b21a8;
+  --color-audiencia-fundo: #f3e8ff;
+
+  --font-display: var(--font-cinzel), Georgia, "Times New Roman", serif;
   --font-sans: var(--font-inter), Arial, Helvetica, sans-serif;
 }
 
@@ -27,12 +42,10 @@ body {
   background: color-mix(in srgb, var(--color-accent) 35%, white);
 }
 
-/* Foco visível consistente em todos os elementos navegáveis por teclado */
+/* Foco visível consistente em links, botões e elementos sem indicador próprio.
+   Inputs/selects/textareas usam o anel de foco definido em classeInput. */
 a:focus-visible,
 button:focus-visible,
-input:focus-visible,
-select:focus-visible,
-textarea:focus-visible,
 [tabindex]:focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;

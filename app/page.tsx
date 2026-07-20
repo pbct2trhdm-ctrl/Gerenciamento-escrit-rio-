@@ -38,23 +38,26 @@ export default async function DashboardPage() {
             const restantes = diasRestantes(prazo.dataFinal);
             const tier = tierPorDiasRestantes(restantes);
             const ehAudiencia = prazo.tipo === "AUDIENCIA";
+            const varaComarca = [prazo.processo.vara, prazo.processo.comarca]
+              .filter(Boolean)
+              .join(" — ");
+            const bordaUrgencia = ehAudiencia
+              ? "border-audiencia/40 hover:border-audiencia/70"
+              : tier === "critico"
+                ? "border-critico/30 hover:border-critico/60"
+                : tier === "atencao"
+                  ? "border-atencao/30 hover:border-atencao/60"
+                  : "border-tranquilo/30 hover:border-tranquilo/60";
             return (
               <li key={prazo.id}>
-                <Link
-                  href={`/processos/${prazo.processoId}`}
-                  className={`flex items-center gap-4 rounded-lg border bg-superficie p-4 transition-colors hover:bg-fundo ${
-                    ehAudiencia
-                      ? "border-audiencia/40"
-                      : tier === "critico"
-                        ? "border-critico/30"
-                        : "border-gray-200"
-                  }`}
+                <div
+                  className={`flex items-center gap-5 rounded-xl border bg-superficie p-4 shadow-xs transition-all ${bordaUrgencia}`}
                 >
                   <SeloPrazo id={prazo.id} dias={restantes} tier={tier} size={72} />
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <p className="font-medium truncate">
-                        {prazo.processo.cliente.nome}
+                    <div className="flex items-center gap-2 flex-wrap mb-1">
+                      <p className="font-semibold text-texto-principal truncate">
+                        {LABEL_TIPO_PRAZO[prazo.tipo]}
                       </p>
                       {ehAudiencia && (
                         <span
@@ -64,22 +67,25 @@ export default async function DashboardPage() {
                         </span>
                       )}
                     </div>
-                    <p className="text-sm text-texto-secundario truncate">
-                      {prazo.processo.numeroProcesso ?? "Sem número"} ·{" "}
-                      {LABEL_TIPO_PRAZO[prazo.tipo]}
+                    <p className="text-xs text-texto-secundario font-mono truncate mb-1">
+                      Proc. nº {prazo.processo.numeroProcesso ?? "não informado"}
+                      {varaComarca && (
+                        <span className="font-sans"> • {varaComarca}</span>
+                      )}
+                    </p>
+                    <p className="text-xs text-texto-secundario truncate">
+                      <span className="font-medium text-texto-principal">
+                        {prazo.processo.cliente.nome}
+                      </span>{" "}
+                      · {ehAudiencia ? formatarDataHorario(prazo.dataFinal) : formatarData(prazo.dataFinal)}
                       {ehAudiencia && prazo.modalidadeAudiencia && (
                         <> · {LABEL_MODALIDADE_AUDIENCIA[prazo.modalidadeAudiencia]}</>
                       )}
                     </p>
                   </div>
-                  <div className="text-right shrink-0">
-                    <p className="font-semibold tabular-nums">
-                      {ehAudiencia
-                        ? formatarDataHorario(prazo.dataFinal)
-                        : formatarData(prazo.dataFinal)}
-                    </p>
+                  <div className="flex flex-col items-end gap-2 shrink-0">
                     <span
-                      className={`mt-1 inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${TIER_CLASSES[tier]}`}
+                      className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${TIER_CLASSES[tier]}`}
                     >
                       {restantes < 0
                         ? `${Math.abs(restantes)} dia(s) em atraso`
@@ -87,8 +93,14 @@ export default async function DashboardPage() {
                           ? "Vence hoje"
                           : `${restantes} dia(s) restante(s)`}
                     </span>
+                    <Link
+                      href={`/processos/${prazo.processoId}`}
+                      className="inline-flex items-center rounded-md bg-base-escura px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-slate-800"
+                    >
+                      Ver processo →
+                    </Link>
                   </div>
-                </Link>
+                </div>
               </li>
             );
           })}

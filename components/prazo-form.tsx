@@ -160,7 +160,7 @@ export function PrazoForm({
             </div>
           </div>
 
-          <div className="rounded-md bg-fundo border border-gray-200 px-3 py-2 text-sm">
+          <div className="rounded-md bg-fundo border border-slate-200 px-3 py-2 text-sm">
             <span className="text-texto-secundario">Audiência marcada para: </span>
             <span className="font-semibold tabular-nums">
               {dataHoraAudiencia ? formatarDataHorario(dataHoraAudiencia) : "—"}
@@ -268,7 +268,7 @@ export function PrazoForm({
             </select>
           </div>
 
-          <div className="rounded-md bg-fundo border border-gray-200 px-3 py-2 text-sm">
+          <div className="rounded-md bg-fundo border border-slate-200 px-3 py-2 text-sm">
             <span className="text-texto-secundario">Data final calculada: </span>
             <span className="font-semibold tabular-nums">
               {dataFinal ? formatarData(dataFinal) : "—"}

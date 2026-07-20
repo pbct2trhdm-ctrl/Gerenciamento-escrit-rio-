@@ -16,18 +16,26 @@ export const TIER_LABEL: Record<Tier, string> = {
 };
 
 export const TIER_COR: Record<Tier, string> = {
-  critico: "#B33A3A",
-  atencao: "#C9A227",
-  tranquilo: "#3F7550",
-  neutro: "#6B7280",
+  critico: "#991B1B",
+  atencao: "#92400E",
+  tranquilo: "#166534",
+  neutro: "#64748B",
 };
 
-/** classes utilitárias para badges/selos — bg suave + texto/borda na cor cheia do tier */
+/** tom de fundo suave correspondente a cada cor de TIER_COR — usado no preenchimento do Selo de Prazo */
+export const TIER_COR_FUNDO: Record<Tier, string> = {
+  critico: "#FEF2F2",
+  atencao: "#FFFBEB",
+  tranquilo: "#F0FDF4",
+  neutro: "#F1F5F9",
+};
+
+/** classes utilitárias para badges/selos — fundo suave + texto/borda na cor cheia do tier */
 export const TIER_CLASSES: Record<Tier, string> = {
-  critico: "bg-critico/10 text-critico border-critico/30",
-  atencao: "bg-atencao/10 text-atencao border-atencao/40",
-  tranquilo: "bg-tranquilo/10 text-tranquilo border-tranquilo/30",
-  neutro: "bg-gray-100 text-texto-secundario border-gray-200",
+  critico: "bg-critico-fundo text-critico border-critico/30",
+  atencao: "bg-atencao-fundo text-atencao border-atencao/40",
+  tranquilo: "bg-tranquilo-fundo text-tranquilo border-tranquilo/30",
+  neutro: "bg-slate-100 text-texto-secundario border-borda-suave",
 };
 
 /**
@@ -52,7 +60,7 @@ export function tierPrazo(status: string, diasRestantes: number): Tier {
  * de forma diferente de um prazo comum, mesmo quando "em dia".
  */
 export const CLASSE_BADGE_AUDIENCIA =
-  "bg-audiencia/10 text-audiencia border-audiencia/30";
+  "bg-audiencia-fundo text-audiencia border-audiencia/30";
 
 const STATUS_TIER: Record<string, Tier> = {
   PAGO: "tranquilo",

@@ -42,7 +42,7 @@ export default async function AlvarasPage() {
               <li key={alvara.id}>
                 <div
                   className={`rounded-lg border bg-superficie p-4 ${
-                    tier === "critico" ? "border-critico/30" : "border-gray-200"
+                    tier === "critico" ? "border-critico/30" : "border-slate-200"
                   }`}
                 >
                   <div className="flex items-center justify-between gap-4">
