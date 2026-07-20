@@ -1,7 +1,12 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { diasRestantes } from "@/lib/prazos";
-import { LABEL_TIPO_PRAZO, formatarData, formatarDataHorario } from "@/lib/formatacao";
+import {
+  LABEL_TIPO_PRAZO,
+  LABEL_MODALIDADE_AUDIENCIA,
+  formatarData,
+  formatarDataHorario,
+} from "@/lib/formatacao";
 import { tierPorDiasRestantes, TIER_CLASSES, CLASSE_BADGE_AUDIENCIA } from "@/lib/urgencia";
 import { SeloPrazo } from "@/components/selo-prazo";
 import { EmptyState } from "@/components/empty-state";
@@ -62,6 +67,9 @@ export default async function DashboardPage() {
                     <p className="text-sm text-texto-secundario truncate">
                       {prazo.processo.numeroProcesso ?? "Sem número"} ·{" "}
                       {LABEL_TIPO_PRAZO[prazo.tipo]}
+                      {ehAudiencia && prazo.modalidadeAudiencia && (
+                        <> · {LABEL_MODALIDADE_AUDIENCIA[prazo.modalidadeAudiencia]}</>
+                      )}
                     </p>
                   </div>
                   <div className="text-right shrink-0">
