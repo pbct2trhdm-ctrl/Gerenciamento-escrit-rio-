@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Template de agendamento (launchd) para rodar "npm run backup" todo dia.
+
+  Como usar (veja o passo a passo completo na resposta do chat):
+    1. Copie este arquivo para ~/Library/LaunchAgents/com.pastanamota.backup.plist
+    2. Nele, substitua:
+       - CAMINHO_DO_NODE   -> saída de `which node`
+       - CAMINHO_DO_PROJETO -> pasta onde este repositório está clonado
+       - SEU_USUARIO        -> resultado de `whoami`
+    3. Carregue com:
+       launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.pastanamota.backup.plist
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.pastanamota.backup</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>CAMINHO_DO_NODE</string>
+        <string>scripts/backup.mjs</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>CAMINHO_DO_PROJETO</string>
+
+    <!-- Roda todo dia às 20h. Se o Mac estiver dormindo/desligado nesse
+         horário, o launchd executa assim que ele voltar a ligar. -->
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>20</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+
+    <key>StandardOutPath</key>
+    <string>/Users/SEU_USUARIO/Library/Logs/pastana-mota-backup.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/SEU_USUARIO/Library/Logs/pastana-mota-backup.log</string>
+
+    <key>RunAtLoad</key>
+    <false/>
+</dict>
+</plist>
