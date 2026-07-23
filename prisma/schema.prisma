@@ -163,6 +163,17 @@ enum TipoPrazo {
   OUTRO
 }
 
+enum TipoAndamento {
+  DESPACHO
+  DECISAO
+  SENTENCA
+  AUDIENCIA_REALIZADA
+  PUBLICACAO
+  INTIMACAO
+  MANIFESTACAO_PROTOCOLADA
+  OUTRO
+}
+
 enum TipoContagem {
   DIAS_UTEIS
   DIAS_CORRIDOS
@@ -253,6 +264,7 @@ model Processo {
   resumo          String?
   criadoEm        DateTime       @default(now())
   prazos          Prazo[]
+  andamentos              Andamento[]
   honorarios              Honorario[]
   honorariosSucumbenciais HonorarioSucumbencial[]
   alvaras                 Alvara[]
@@ -272,8 +284,26 @@ model Prazo {
   modalidadeAudiencia  ModalidadeAudiencia?
   linkAudiencia        String?
   contatoVaraAudiencia String?
+  origemAndamentoId    String?
+  origemAndamento      Andamento?   @relation(fields: [origemAndamentoId], references: [id], onDelete: SetNull)
   observacoes  String?
   criadoEm     DateTime     @default(now())
+}
+
+/// Log manual de andamentos processuais, com anexo opcional e atalho para
+/// gerar um Prazo vinculado (via Prazo.origemAndamentoId) a partir do registro.
+model Andamento {
+  id              String        @id @default(cuid())
+  processoId      String
+  processo        Processo      @relation(fields: [processoId], references: [id], onDelete: Cascade)
+  data            DateTime
+  tipo            TipoAndamento
+  descricao       String
+  arquivoNome     String?
+  arquivoCaminho  String?
+  arquivoTipo     String?
+  criadoEm        DateTime      @default(now())
+  prazosGerados   Prazo[]
 }
 
 model Honorario {

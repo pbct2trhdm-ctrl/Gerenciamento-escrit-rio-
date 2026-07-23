@@ -16,7 +16,10 @@ export default async function DashboardPage() {
   const prazos = await prisma.prazo.findMany({
     where: { status: "PENDENTE" },
     orderBy: { dataFinal: "asc" },
-    include: { processo: { include: { cliente: true } } },
+    include: {
+      processo: { include: { cliente: true } },
+      origemAndamento: { select: { data: true } },
+    },
   });
 
   return (
@@ -82,6 +85,11 @@ export default async function DashboardPage() {
                         <> · {LABEL_MODALIDADE_AUDIENCIA[prazo.modalidadeAudiencia]}</>
                       )}
                     </p>
+                    {prazo.origemAndamento && (
+                      <p className="text-xs text-texto-secundario italic truncate">
+                        Gerado a partir de andamento de {formatarData(prazo.origemAndamento.data)}
+                      </p>
+                    )}
                   </div>
                   <div className="flex flex-col items-end gap-2 shrink-0">
                     <span

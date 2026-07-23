@@ -82,6 +82,29 @@ export const LABEL_TIPO_PRAZO: Record<string, string> = {
   OUTRO: "Outro",
 };
 
+export const LABEL_TIPO_ANDAMENTO: Record<string, string> = {
+  DESPACHO: "Despacho",
+  DECISAO: "Decisão",
+  SENTENCA: "Sentença",
+  AUDIENCIA_REALIZADA: "Audiência realizada",
+  PUBLICACAO: "Publicação",
+  INTIMACAO: "Intimação",
+  MANIFESTACAO_PROTOCOLADA: "Manifestação protocolada",
+  OUTRO: "Outro",
+};
+
+/** Ordem de exibição no select (Outro sempre por último). */
+export const TIPOS_ANDAMENTO = [
+  "DESPACHO",
+  "DECISAO",
+  "SENTENCA",
+  "AUDIENCIA_REALIZADA",
+  "PUBLICACAO",
+  "INTIMACAO",
+  "MANIFESTACAO_PROTOCOLADA",
+  "OUTRO",
+] as const;
+
 export const LABEL_CONTAGEM: Record<string, string> = {
   DIAS_UTEIS: "Dias úteis",
   DIAS_CORRIDOS: "Dias corridos",

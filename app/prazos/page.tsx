@@ -41,7 +41,10 @@ export default async function PrazosPage({
     prisma.prazo.findMany({
       where,
       orderBy: { dataFinal: "asc" },
-      include: { processo: { include: { cliente: true } } },
+      include: {
+        processo: { include: { cliente: true } },
+        origemAndamento: { select: { data: true } },
+      },
     }),
     prisma.processo.findMany({
       orderBy: { criadoEm: "desc" },
@@ -168,6 +171,11 @@ export default async function PrazosPage({
                         </p>
                       )}
                     </div>
+                  )}
+                  {prazo.origemAndamento && (
+                    <p className="mt-2 text-xs text-texto-secundario italic">
+                      Gerado a partir de andamento de {formatarData(prazo.origemAndamento.data)}
+                    </p>
                   )}
                   <div className="flex items-center gap-2 mt-3">
                     <Link

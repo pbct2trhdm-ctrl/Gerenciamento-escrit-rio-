@@ -46,3 +46,7 @@ next-env.d.ts
 # sqlite database (dados locais do usuário)
 *.db
 *.db-journal
+
+# anexos de andamentos e backups locais (dados do usuário, não versionados)
+/storage/anexos
+/backups

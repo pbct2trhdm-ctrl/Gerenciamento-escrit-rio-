@@ -12,6 +12,7 @@ import {
   LABEL_JURISDICAO,
   LABEL_RITO,
   LABEL_MODALIDADE_AUDIENCIA,
+  LABEL_TIPO_ANDAMENTO,
   formatarArea,
   formatarData,
   formatarDataHorario,
@@ -21,6 +22,7 @@ import { LABEL_TRIBUNAL } from "@/lib/tribunais";
 import { diasRestantes } from "@/lib/prazos";
 import { excluirProcesso } from "@/lib/actions/processos";
 import { marcarPrazoComoCumprido } from "@/lib/actions/prazos";
+import { excluirAndamento } from "@/lib/actions/andamentos";
 import { tierPrazo, tierStatus, CLASSE_BADGE_AUDIENCIA } from "@/lib/urgencia";
 import { SeloPrazo } from "@/components/selo-prazo";
 import { Badge } from "@/components/badge";
@@ -32,6 +34,7 @@ import {
   classeBotaoPerigo,
   classeBotaoConfirma,
   classeCard,
+  classeBadgeNeutro,
   classeTituloPagina,
   classeTituloSecao,
 } from "@/lib/estilos";
@@ -47,7 +50,11 @@ export default async function ProcessoDetalhePage({
     where: { id },
     include: {
       cliente: true,
-      prazos: { orderBy: { dataFinal: "asc" } },
+      prazos: {
+        orderBy: { dataFinal: "asc" },
+        include: { origemAndamento: { select: { data: true } } },
+      },
+      andamentos: { orderBy: { data: "desc" } },
       honorarios: { orderBy: { dataContrato: "desc" } },
       honorariosSucumbenciais: { orderBy: { criadoEm: "desc" } },
       alvaras: { orderBy: { criadoEm: "desc" } },
@@ -57,6 +64,12 @@ export default async function ProcessoDetalhePage({
   if (!processo) {
     notFound();
   }
+
+  const andamentosComPrazoGerado = new Set(
+    processo.prazos
+      .map((prazo) => prazo.origemAndamentoId)
+      .filter((idOrigem): idOrigem is string => idOrigem !== null)
+  );
 
   return (
     <div className="max-w-4xl">
@@ -209,6 +222,11 @@ export default async function ProcessoDetalhePage({
                       )}
                     </div>
                   )}
+                  {prazo.origemAndamento && (
+                    <p className="mt-2 text-xs text-texto-secundario italic">
+                      Gerado a partir de andamento de {formatarData(prazo.origemAndamento.data)}
+                    </p>
+                  )}
                   <div className="flex items-center gap-2 mt-3">
                     <Link
                       href={`/prazos/${prazo.id}/editar`}
@@ -233,6 +251,80 @@ export default async function ProcessoDetalhePage({
           })}
         </ul>
       )}
+
+      <div className="mt-10">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className={classeTituloSecao}>Andamentos</h2>
+          <Link
+            href={`/processos/${processo.id}/andamentos/novo`}
+            className={classeBotaoPrimario}
+          >
+            Registrar andamento
+          </Link>
+        </div>
+
+        {processo.andamentos.length === 0 ? (
+          <EmptyState
+            mensagem="Nenhum andamento registrado."
+            acaoHref={`/processos/${processo.id}/andamentos/novo`}
+            acaoLabel="Registrar o primeiro andamento"
+          />
+        ) : (
+          <ul className="space-y-3">
+            {processo.andamentos.map((andamento) => (
+              <li key={andamento.id}>
+                <div className={`text-sm ${classeCard}`}>
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-medium tabular-nums">
+                        {formatarData(andamento.data)}
+                      </span>
+                      <span className={classeBadgeNeutro}>
+                        {LABEL_TIPO_ANDAMENTO[andamento.tipo]}
+                      </span>
+                      {andamentosComPrazoGerado.has(andamento.id) && (
+                        <span className={classeBadgeNeutro}>Prazo gerado</span>
+                      )}
+                    </div>
+                    <form action={excluirAndamento.bind(null, andamento.id)}>
+                      <button
+                        type="submit"
+                        className={`${classeBotaoPerigo} !px-2 !py-0.5 text-xs`}
+                      >
+                        Excluir
+                      </button>
+                    </form>
+                  </div>
+                  <p className="mt-2 whitespace-pre-wrap">{andamento.descricao}</p>
+                  {andamento.arquivoCaminho && (
+                    <a
+                      href={`/anexos/${andamento.id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-2 inline-flex items-center gap-1 text-accent underline"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.75"
+                        className="w-4 h-4"
+                      >
+                        <path
+                          d="M17 8.5 9.5 16a3 3 0 0 1-4.24-4.24L13 4a2 2 0 0 1 2.83 2.83l-7.42 7.42a1 1 0 0 1-1.41-1.42L14 6"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                      {andamento.arquivoNome ?? "Anexo"}
+                    </a>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
 
       <div className="mt-10 space-y-8">
         <div>
