@@ -10,6 +10,7 @@ const abas = [
   { href: "/financeiro/alvaras", label: "Alvarás" },
   { href: "/financeiro/despesas", label: "Despesas" },
   { href: "/financeiro/obrigacoes", label: "Obrigações do Sócio" },
+  { href: "/financeiro/relatorios", label: "Relatórios" },
 ];
 
 export function FinanceiroTabs() {
