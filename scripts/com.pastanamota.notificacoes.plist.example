@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Template de agendamento (launchd) que chama, a cada 15 minutos, a rota
+  interna /api/notificacoes/verificar. Essa rota só age de fato a partir do
+  horário configurado em Configurações → Notificações (e não duplica envios
+  se chamada de novo no mesmo dia) — por isso pode ficar rodando o dia
+  inteiro com segurança.
+
+  IMPORTANTE: isso só funciona enquanto o app estiver rodando (`npm run dev`
+  ou `npm start`) na porta 3000. Se você não deixa o app rodando o tempo
+  todo, as notificações não serão verificadas.
+
+  Como usar (veja o passo a passo completo na resposta do chat):
+    1. Copie este arquivo para ~/Library/LaunchAgents/com.pastanamota.notificacoes.plist
+    2. Nele, substitua SEU_TOKEN_AQUI pelo mesmo valor de
+       NOTIFICACOES_CRON_SECRET definido no .env do projeto.
+    3. Carregue com:
+       launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.pastanamota.notificacoes.plist
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.pastanamota.notificacoes</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/bin/curl</string>
+        <string>-fsS</string>
+        <string>-H</string>
+        <string>Authorization: Bearer SEU_TOKEN_AQUI</string>
+        <string>http://localhost:3000/api/notificacoes/verificar</string>
+    </array>
+
+    <key>StartInterval</key>
+    <integer>900</integer>
+
+    <key>StandardOutPath</key>
+    <string>/tmp/pastana-mota-notificacoes.log</string>
+    <key>StandardErrorPath</key>
+    <string>/tmp/pastana-mota-notificacoes.log</string>
+
+    <key>RunAtLoad</key>
+    <false/>
+</dict>
+</plist>

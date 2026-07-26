@@ -185,6 +185,16 @@ enum StatusPrazo {
   PERDIDO
 }
 
+enum ProvedorNotificacao {
+  EVOLUTION_API
+  Z_API
+}
+
+enum StatusNotificacao {
+  ENVIADO
+  FALHA
+}
+
 enum TipoHonorario {
   FIXO
   PARCELADO
@@ -286,8 +296,39 @@ model Prazo {
   contatoVaraAudiencia String?
   origemAndamentoId    String?
   origemAndamento      Andamento?   @relation(fields: [origemAndamentoId], references: [id], onDelete: SetNull)
+  /// Sobrescreve, só para este prazo, os dias de antecedência do alerta de WhatsApp.
+  /// Quando nulo, usa ConfiguracaoNotificacao.antecedenciaPadraoDias.
+  diasAntecedenciaNotificacao Int?
   observacoes  String?
   criadoEm     DateTime     @default(now())
+  notificacoes Notificacao[]
+}
+
+/// Log de envios de alerta de prazo via WhatsApp (Evolution API ou Z-API).
+model Notificacao {
+  id               String            @id @default(cuid())
+  prazoId          String
+  prazo            Prazo             @relation(fields: [prazoId], references: [id], onDelete: Cascade)
+  dataEnvio        DateTime          @default(now())
+  status           StatusNotificacao
+  mensagemEnviada  String
+}
+
+/// Configuração única (linha id=1) da rotina de notificação de prazos por WhatsApp.
+model ConfiguracaoNotificacao {
+  id                     Int                  @id @default(1)
+  numeroWhatsapp         String?
+  antecedenciaPadraoDias Int                  @default(3)
+  /// Horário de disparo da rotina diária, formato "HH:MM" (hora local do computador que roda o app).
+  horarioDisparo         String               @default("08:00")
+  provedor               ProvedorNotificacao?
+  /// URL do servidor Evolution API self-hosted (não usada pela Z-API, que tem endpoint fixo).
+  urlBaseApi             String?
+  /// Nome da instância (Evolution API) ou ID da instância (Z-API).
+  instanciaId            String?
+  /// apikey (Evolution API) ou token (Z-API).
+  credencialApi          String?
+  atualizadoEm           DateTime             @updatedAt
 }
 
 /// Log manual de andamentos processuais, com anexo opcional e atalho para

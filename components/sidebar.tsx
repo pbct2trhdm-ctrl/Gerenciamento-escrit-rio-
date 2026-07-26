@@ -8,6 +8,7 @@ import {
   IconeProcessos,
   IconePrazos,
   IconeFinanceiro,
+  IconeConfiguracoes,
 } from "@/components/icones";
 
 const itens = [
@@ -16,6 +17,7 @@ const itens = [
   { href: "/processos", label: "Processos", Icone: IconeProcessos },
   { href: "/prazos", label: "Prazos/Agenda", Icone: IconePrazos },
   { href: "/financeiro", label: "Financeiro", Icone: IconeFinanceiro },
+  { href: "/configuracoes", label: "Configurações", Icone: IconeConfiguracoes },
 ];
 
 export function Sidebar() {

@@ -116,6 +116,16 @@ export const LABEL_STATUS_PRAZO: Record<string, string> = {
   PERDIDO: "Perdido",
 };
 
+export const LABEL_PROVEDOR_NOTIFICACAO: Record<string, string> = {
+  EVOLUTION_API: "Evolution API",
+  Z_API: "Z-API",
+};
+
+export const LABEL_STATUS_NOTIFICACAO: Record<string, string> = {
+  ENVIADO: "Enviado",
+  FALHA: "Falha",
+};
+
 export const LABEL_TIPO_HONORARIO: Record<string, string> = {
   FIXO: "Fixo",
   PARCELADO: "Parcelado",

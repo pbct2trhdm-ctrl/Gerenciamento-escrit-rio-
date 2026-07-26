@@ -50,6 +50,13 @@ function validarModalidadeAudiencia(valor: FormDataEntryValue | null) {
     : null;
 }
 
+function parseDiasAntecedencia(valor: FormDataEntryValue | null): number | null {
+  const texto = (valor ?? "").toString().trim();
+  if (texto === "") return null;
+  const numero = Number(texto);
+  return Number.isFinite(numero) && numero >= 0 ? numero : null;
+}
+
 /**
  * Audiência não tem contagem em dias úteis/corridos: a data final é a
  * própria data e hora marcadas, sem cálculo de prazo. Também carrega a
@@ -117,6 +124,9 @@ export async function criarPrazo(formData: FormData) {
       processoId,
       tipo,
       ...montarDadosPrazo(tipo, formData),
+      diasAntecedenciaNotificacao: parseDiasAntecedencia(
+        formData.get("diasAntecedenciaNotificacao")
+      ),
       observacoes: textoOuNull(formData.get("observacoes")),
     },
   });
@@ -141,6 +151,9 @@ export async function atualizarPrazo(id: string, formData: FormData) {
       processoId,
       tipo,
       ...montarDadosPrazo(tipo, formData),
+      diasAntecedenciaNotificacao: parseDiasAntecedencia(
+        formData.get("diasAntecedenciaNotificacao")
+      ),
       status: validarStatus(formData.get("status")),
       observacoes: textoOuNull(formData.get("observacoes")),
     },

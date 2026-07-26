@@ -296,6 +296,21 @@ export function PrazoForm({
       )}
 
       <div>
+        <label className={classeLabel} htmlFor="diasAntecedenciaNotificacao">
+          Antecedência do alerta de WhatsApp (dias)
+        </label>
+        <input
+          id="diasAntecedenciaNotificacao"
+          name="diasAntecedenciaNotificacao"
+          type="number"
+          min={0}
+          defaultValue={prazo?.diasAntecedenciaNotificacao ?? ""}
+          placeholder="Deixe em branco para usar o padrão das Configurações"
+          className={classeInput}
+        />
+      </div>
+
+      <div>
         <label className={classeLabel} htmlFor="observacoes">
           Observações
         </label>
