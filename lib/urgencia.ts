@@ -75,11 +75,26 @@ const STATUS_TIER: Record<string, Tier> = {
   SUSPENSO: "atencao",
   ARQUIVADO: "neutro",
   ENCERRADO: "neutro",
+  AGUARDANDO_REMESSA: "neutro",
+  EM_TRAMITACAO_2_GRAU: "atencao",
+  JULGADO: "tranquilo",
 };
 
 /** Mapeamento fixo de status → faixa, usado por padrão em badges de status. */
 export function tierStatus(status: string): Tier {
   return STATUS_TIER[status] ?? "neutro";
+}
+
+const RESULTADO_RECURSO_TIER: Record<string, Tier> = {
+  PROVIDO: "tranquilo",
+  PARCIALMENTE_PROVIDO: "atencao",
+  IMPROVIDO: "critico",
+  NAO_CONHECIDO: "neutro",
+};
+
+/** Faixa de cor do resultado de um recurso julgado — provido é bom, improvido é ruim. */
+export function tierResultadoRecurso(resultado: string): Tier {
+  return RESULTADO_RECURSO_TIER[resultado] ?? "neutro";
 }
 
 export function tierParcela(

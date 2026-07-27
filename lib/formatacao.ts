@@ -90,6 +90,8 @@ export const LABEL_TIPO_ANDAMENTO: Record<string, string> = {
   PUBLICACAO: "Publicação",
   INTIMACAO: "Intimação",
   MANIFESTACAO_PROTOCOLADA: "Manifestação protocolada",
+  REMESSA_2_GRAU: "Remessa ao 2º grau",
+  JULGAMENTO_RECURSO: "Julgamento de recurso",
   OUTRO: "Outro",
 };
 
@@ -102,7 +104,49 @@ export const TIPOS_ANDAMENTO = [
   "PUBLICACAO",
   "INTIMACAO",
   "MANIFESTACAO_PROTOCOLADA",
+  "REMESSA_2_GRAU",
+  "JULGAMENTO_RECURSO",
   "OUTRO",
+] as const;
+
+export const LABEL_TIPO_RECURSO: Record<string, string> = {
+  APELACAO: "Apelação",
+  AGRAVO_INSTRUMENTO: "Agravo de instrumento",
+  RECURSO_ESPECIAL: "Recurso especial",
+  RECURSO_EXTRAORDINARIO: "Recurso extraordinário",
+  EMBARGOS_DECLARACAO: "Embargos de declaração",
+  OUTRO: "Outro",
+};
+
+/** Ordem de exibição no select (Outro sempre por último). */
+export const TIPOS_RECURSO = [
+  "APELACAO",
+  "AGRAVO_INSTRUMENTO",
+  "RECURSO_ESPECIAL",
+  "RECURSO_EXTRAORDINARIO",
+  "EMBARGOS_DECLARACAO",
+  "OUTRO",
+] as const;
+
+export const LABEL_STATUS_RECURSO: Record<string, string> = {
+  AGUARDANDO_REMESSA: "Aguardando remessa",
+  EM_TRAMITACAO_2_GRAU: "Em tramitação no 2º grau",
+  JULGADO: "Julgado",
+};
+
+export const LABEL_RESULTADO_RECURSO: Record<string, string> = {
+  PROVIDO: "Provido",
+  IMPROVIDO: "Improvido",
+  PARCIALMENTE_PROVIDO: "Parcialmente provido",
+  NAO_CONHECIDO: "Não conhecido",
+};
+
+/** Ordem de exibição no select. */
+export const RESULTADOS_RECURSO = [
+  "PROVIDO",
+  "IMPROVIDO",
+  "PARCIALMENTE_PROVIDO",
+  "NAO_CONHECIDO",
 ] as const;
 
 export const LABEL_CONTAGEM: Record<string, string> = {

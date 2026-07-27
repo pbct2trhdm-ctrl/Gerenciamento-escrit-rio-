@@ -1,7 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { TIPOS_ANDAMENTO, LABEL_TIPO_ANDAMENTO } from "@/lib/formatacao";
+import type { Recurso } from "@/app/generated/prisma/client";
+import {
+  TIPOS_ANDAMENTO,
+  LABEL_TIPO_ANDAMENTO,
+  LABEL_TIPO_RECURSO,
+  RESULTADOS_RECURSO,
+  LABEL_RESULTADO_RECURSO,
+  formatarData,
+} from "@/lib/formatacao";
 import { classeInput, classeLabel, classeBotaoPrimario } from "@/lib/estilos";
 
 const TIPOS_PRAZO_RAPIDO = ["PETICAO", "RECURSO", "MANIFESTACAO", "OUTRO"] as const;
@@ -14,15 +22,21 @@ const LABEL_TIPO_PRAZO_RAPIDO: Record<string, string> = {
 
 export function AndamentoForm({
   processoId,
+  recursos,
   action,
 }: {
   processoId: string;
+  recursos: Pick<Recurso, "id" | "tipoRecurso" | "dataInterposicao">[];
   action: (formData: FormData) => void;
 }) {
   const [data, setData] = useState("");
+  const [tipo, setTipo] = useState("");
+  const [recursoId, setRecursoId] = useState("");
   const [geraPrazo, setGeraPrazo] = useState(false);
   const [prazoDataBase, setPrazoDataBase] = useState("");
   const [prazoDataBaseTocado, setPrazoDataBaseTocado] = useState(false);
+
+  const precisaDeResultado = tipo === "JULGAMENTO_RECURSO" && recursoId !== "";
 
   function alterarData(valor: string) {
     setData(valor);
@@ -59,7 +73,14 @@ export function AndamentoForm({
           <label className={classeLabel} htmlFor="tipo">
             Tipo
           </label>
-          <select id="tipo" name="tipo" required defaultValue="" className={classeInput}>
+          <select
+            id="tipo"
+            name="tipo"
+            required
+            value={tipo}
+            onChange={(e) => setTipo(e.target.value)}
+            className={classeInput}
+          >
             <option value="" disabled>
               Selecione o tipo
             </option>
@@ -71,6 +92,44 @@ export function AndamentoForm({
           </select>
         </div>
       </div>
+
+      <div>
+        <label className={classeLabel} htmlFor="recursoId">
+          Recurso vinculado (opcional)
+        </label>
+        <select
+          id="recursoId"
+          name="recursoId"
+          value={recursoId}
+          onChange={(e) => setRecursoId(e.target.value)}
+          className={classeInput}
+        >
+          <option value="">Nenhum</option>
+          {recursos.map((recurso) => (
+            <option key={recurso.id} value={recurso.id}>
+              {LABEL_TIPO_RECURSO[recurso.tipoRecurso]} ({formatarData(recurso.dataInterposicao)})
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {precisaDeResultado && (
+        <div>
+          <label className={classeLabel} htmlFor="resultado">
+            Resultado do julgamento
+          </label>
+          <select id="resultado" name="resultado" required defaultValue="" className={classeInput}>
+            <option value="" disabled>
+              Selecione o resultado
+            </option>
+            {RESULTADOS_RECURSO.map((codigo) => (
+              <option key={codigo} value={codigo}>
+                {LABEL_RESULTADO_RECURSO[codigo]}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       <div>
         <label className={classeLabel} htmlFor="descricao">

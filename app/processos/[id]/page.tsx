@@ -13,6 +13,9 @@ import {
   LABEL_RITO,
   LABEL_MODALIDADE_AUDIENCIA,
   LABEL_TIPO_ANDAMENTO,
+  LABEL_TIPO_RECURSO,
+  LABEL_STATUS_RECURSO,
+  LABEL_RESULTADO_RECURSO,
   formatarArea,
   formatarData,
   formatarDataHorario,
@@ -23,7 +26,13 @@ import { diasRestantes } from "@/lib/prazos";
 import { excluirProcesso } from "@/lib/actions/processos";
 import { marcarPrazoComoCumprido } from "@/lib/actions/prazos";
 import { excluirAndamento } from "@/lib/actions/andamentos";
-import { tierPrazo, tierStatus, CLASSE_BADGE_AUDIENCIA } from "@/lib/urgencia";
+import { excluirRecurso } from "@/lib/actions/recursos";
+import {
+  tierPrazo,
+  tierStatus,
+  tierResultadoRecurso,
+  CLASSE_BADGE_AUDIENCIA,
+} from "@/lib/urgencia";
 import { SeloPrazo } from "@/components/selo-prazo";
 import { Badge } from "@/components/badge";
 import { EmptyState } from "@/components/empty-state";
@@ -55,6 +64,10 @@ export default async function ProcessoDetalhePage({
         include: { origemAndamento: { select: { data: true } } },
       },
       andamentos: { orderBy: { data: "desc" } },
+      recursos: {
+        orderBy: { dataInterposicao: "desc" },
+        include: { andamentos: { orderBy: { data: "desc" } } },
+      },
       honorarios: { orderBy: { dataContrato: "desc" } },
       honorariosSucumbenciais: { orderBy: { criadoEm: "desc" } },
       alvaras: { orderBy: { criadoEm: "desc" } },
@@ -318,6 +331,116 @@ export default async function ProcessoDetalhePage({
                       </svg>
                       {andamento.arquivoNome ?? "Anexo"}
                     </a>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      <div className="mt-10">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className={classeTituloSecao}>Recursos</h2>
+          <Link
+            href={`/processos/${processo.id}/recursos/novo`}
+            className={classeBotaoPrimario}
+          >
+            Novo recurso
+          </Link>
+        </div>
+
+        {processo.recursos.length === 0 ? (
+          <EmptyState
+            mensagem="Nenhum recurso registrado."
+            acaoHref={`/processos/${processo.id}/recursos/novo`}
+            acaoLabel="Registrar o primeiro recurso"
+          />
+        ) : (
+          <ul className="space-y-3">
+            {processo.recursos.map((recurso) => (
+              <li key={recurso.id}>
+                <div className={`text-sm ${classeCard}`}>
+                  <div className="flex items-center justify-between gap-3 flex-wrap">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-medium">{LABEL_TIPO_RECURSO[recurso.tipoRecurso]}</span>
+                      <Badge tier={tierStatus(recurso.status)}>
+                        {LABEL_STATUS_RECURSO[recurso.status]}
+                      </Badge>
+                      {recurso.resultado && (
+                        <Badge tier={tierResultadoRecurso(recurso.resultado)}>
+                          {LABEL_RESULTADO_RECURSO[recurso.resultado]}
+                        </Badge>
+                      )}
+                    </div>
+                    <form action={excluirRecurso.bind(null, recurso.id)}>
+                      <button
+                        type="submit"
+                        className={`${classeBotaoPerigo} !px-2 !py-0.5 text-xs`}
+                      >
+                        Excluir
+                      </button>
+                    </form>
+                  </div>
+
+                  <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-texto-secundario">
+                    <p>
+                      Interposto em{" "}
+                      <span className="text-texto-principal tabular-nums">
+                        {formatarData(recurso.dataInterposicao)}
+                      </span>
+                    </p>
+                    {recurso.tribunal2Grau && (
+                      <p>
+                        Tribunal:{" "}
+                        <span className="text-texto-principal">
+                          {LABEL_TRIBUNAL[recurso.tribunal2Grau]}
+                        </span>
+                      </p>
+                    )}
+                    {recurso.orgaoJulgador && (
+                      <p>
+                        Órgão julgador:{" "}
+                        <span className="text-texto-principal">{recurso.orgaoJulgador}</span>
+                      </p>
+                    )}
+                    {recurso.relator && (
+                      <p>
+                        Relator: <span className="text-texto-principal">{recurso.relator}</span>
+                      </p>
+                    )}
+                    {recurso.dataJulgamento && (
+                      <p>
+                        Julgado em{" "}
+                        <span className="text-texto-principal tabular-nums">
+                          {formatarData(recurso.dataJulgamento)}
+                        </span>
+                      </p>
+                    )}
+                  </div>
+
+                  {recurso.observacoes && (
+                    <p className="mt-2 whitespace-pre-wrap">{recurso.observacoes}</p>
+                  )}
+
+                  {recurso.andamentos.length > 0 && (
+                    <div className="mt-3 border-t border-slate-200 pt-2">
+                      <p className="text-xs font-medium text-texto-secundario mb-1.5">
+                        Andamentos deste recurso
+                      </p>
+                      <ul className="space-y-1">
+                        {recurso.andamentos.map((andamento) => (
+                          <li
+                            key={andamento.id}
+                            className="flex items-center gap-2 text-xs text-texto-secundario"
+                          >
+                            <span className="tabular-nums">{formatarData(andamento.data)}</span>
+                            <span>·</span>
+                            <span>{LABEL_TIPO_ANDAMENTO[andamento.tipo]}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   )}
                 </div>
               </li>

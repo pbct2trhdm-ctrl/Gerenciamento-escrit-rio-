@@ -171,7 +171,31 @@ enum TipoAndamento {
   PUBLICACAO
   INTIMACAO
   MANIFESTACAO_PROTOCOLADA
+  REMESSA_2_GRAU
+  JULGAMENTO_RECURSO
   OUTRO
+}
+
+enum TipoRecurso {
+  APELACAO
+  AGRAVO_INSTRUMENTO
+  RECURSO_ESPECIAL
+  RECURSO_EXTRAORDINARIO
+  EMBARGOS_DECLARACAO
+  OUTRO
+}
+
+enum StatusRecurso {
+  AGUARDANDO_REMESSA
+  EM_TRAMITACAO_2_GRAU
+  JULGADO
+}
+
+enum ResultadoRecurso {
+  PROVIDO
+  IMPROVIDO
+  PARCIALMENTE_PROVIDO
+  NAO_CONHECIDO
 }
 
 enum TipoContagem {
@@ -275,6 +299,7 @@ model Processo {
   criadoEm        DateTime       @default(now())
   prazos          Prazo[]
   andamentos              Andamento[]
+  recursos                Recurso[]
   honorarios              Honorario[]
   honorariosSucumbenciais HonorarioSucumbencial[]
   alvaras                 Alvara[]
@@ -343,8 +368,31 @@ model Andamento {
   arquivoNome     String?
   arquivoCaminho  String?
   arquivoTipo     String?
+  recursoId       String?
+  recurso         Recurso?      @relation(fields: [recursoId], references: [id], onDelete: SetNull)
   criadoEm        DateTime      @default(now())
   prazosGerados   Prazo[]
+}
+
+/// Recurso de 2º grau vinculado ao Processo. Status e resultado são
+/// atualizados automaticamente a partir de Andamentos do tipo "remessa ao 2º
+/// grau" e "julgamento de recurso" vinculados a este registro (ver
+/// lib/actions/andamentos.ts).
+model Recurso {
+  id               String            @id @default(cuid())
+  processoId       String
+  processo         Processo          @relation(fields: [processoId], references: [id], onDelete: Cascade)
+  tipoRecurso      TipoRecurso
+  dataInterposicao DateTime
+  tribunal2Grau    Tribunal?
+  orgaoJulgador    String?
+  relator          String?
+  status           StatusRecurso     @default(AGUARDANDO_REMESSA)
+  resultado        ResultadoRecurso?
+  dataJulgamento   DateTime?
+  observacoes      String?
+  criadoEm         DateTime          @default(now())
+  andamentos       Andamento[]
 }
 
 model Honorario {

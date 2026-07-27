@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { calcularDataFinal, type TipoContagem } from "@/lib/prazos";
 import { salvarAnexo, removerAnexo } from "@/lib/anexos";
-import { TIPOS_ANDAMENTO } from "@/lib/formatacao";
+import { TIPOS_ANDAMENTO, RESULTADOS_RECURSO } from "@/lib/formatacao";
 
 const TIPOS_PRAZO_RAPIDO = ["PETICAO", "RECURSO", "MANIFESTACAO", "OUTRO"] as const;
 
@@ -14,6 +14,18 @@ function validarTipoAndamento(valor: FormDataEntryValue | null) {
   return (TIPOS_ANDAMENTO as readonly string[]).includes(texto)
     ? (texto as (typeof TIPOS_ANDAMENTO)[number])
     : "OUTRO";
+}
+
+function textoOuNull(valor: FormDataEntryValue | null): string | null {
+  const texto = (valor ?? "").toString().trim();
+  return texto === "" ? null : texto;
+}
+
+function validarResultadoRecurso(valor: FormDataEntryValue | null) {
+  const texto = (valor ?? "").toString();
+  return (RESULTADOS_RECURSO as readonly string[]).includes(texto)
+    ? (texto as (typeof RESULTADOS_RECURSO)[number])
+    : null;
 }
 
 function parseData(valor: FormDataEntryValue | null): Date {
@@ -39,6 +51,8 @@ export async function criarAndamento(formData: FormData) {
   const dadosArquivo =
     arquivo instanceof File && arquivo.size > 0 ? await salvarAnexo(arquivo) : null;
 
+  const recursoId = textoOuNull(formData.get("recursoId"));
+
   const andamento = await prisma.andamento.create({
     data: {
       processoId,
@@ -48,8 +62,27 @@ export async function criarAndamento(formData: FormData) {
       arquivoNome: dadosArquivo?.nome ?? null,
       arquivoCaminho: dadosArquivo?.caminho ?? null,
       arquivoTipo: dadosArquivo?.tipo ?? null,
+      recursoId,
     },
   });
+
+  if (recursoId && tipo === "REMESSA_2_GRAU") {
+    await prisma.recurso.update({
+      where: { id: recursoId },
+      data: { status: "EM_TRAMITACAO_2_GRAU" },
+    });
+  }
+
+  if (recursoId && tipo === "JULGAMENTO_RECURSO") {
+    const resultado = validarResultadoRecurso(formData.get("resultado"));
+    if (!resultado) {
+      throw new Error("Resultado é obrigatório para julgamento de recurso");
+    }
+    await prisma.recurso.update({
+      where: { id: recursoId },
+      data: { status: "JULGADO", resultado, dataJulgamento: data },
+    });
+  }
 
   const geraPrazo = formData.get("geraPrazo") === "on";
   if (geraPrazo) {
