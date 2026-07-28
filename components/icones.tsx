@@ -50,6 +50,17 @@ export function IconeFinanceiro({ className = base }: IconeProps) {
   );
 }
 
+export function IconeProcessosAdministrativos({ className = base }: IconeProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" className={className}>
+      <rect x="5" y="3.5" width="14" height="17" rx="1.5" />
+      <path d="M9 3.5v-.5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v.5" strokeLinecap="round" />
+      <path d="m8.5 12.5 2 2 4.5-4.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M8 16.5h8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export function IconeConfiguracoes({ className = base }: IconeProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" className={className}>

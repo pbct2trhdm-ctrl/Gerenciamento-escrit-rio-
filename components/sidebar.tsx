@@ -8,6 +8,7 @@ import {
   IconeProcessos,
   IconePrazos,
   IconeFinanceiro,
+  IconeProcessosAdministrativos,
   IconeConfiguracoes,
 } from "@/components/icones";
 
@@ -15,6 +16,11 @@ const itens = [
   { href: "/", label: "Dashboard", Icone: IconeDashboard },
   { href: "/clientes", label: "Clientes", Icone: IconeClientes },
   { href: "/processos", label: "Processos", Icone: IconeProcessos },
+  {
+    href: "/processos-administrativos",
+    label: "Processos Administrativos",
+    Icone: IconeProcessosAdministrativos,
+  },
   { href: "/prazos", label: "Prazos/Agenda", Icone: IconePrazos },
   { href: "/financeiro", label: "Financeiro", Icone: IconeFinanceiro },
   { href: "/configuracoes", label: "Configurações", Icone: IconeConfiguracoes },

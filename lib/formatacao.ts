@@ -92,10 +92,11 @@ export const LABEL_TIPO_ANDAMENTO: Record<string, string> = {
   MANIFESTACAO_PROTOCOLADA: "Manifestação protocolada",
   REMESSA_2_GRAU: "Remessa ao 2º grau",
   JULGAMENTO_RECURSO: "Julgamento de recurso",
+  REMESSA_RECURSO_ADMINISTRATIVO: "Remessa para análise recursal",
   OUTRO: "Outro",
 };
 
-/** Ordem de exibição no select (Outro sempre por último). */
+/** Ordem de exibição no select, para andamentos de Processo (judicial). Outro sempre por último. */
 export const TIPOS_ANDAMENTO = [
   "DESPACHO",
   "DECISAO",
@@ -105,6 +106,22 @@ export const TIPOS_ANDAMENTO = [
   "INTIMACAO",
   "MANIFESTACAO_PROTOCOLADA",
   "REMESSA_2_GRAU",
+  "JULGAMENTO_RECURSO",
+  "OUTRO",
+] as const;
+
+/**
+ * Ordem de exibição no select, para andamentos de ProcessoAdministrativo —
+ * exclui os tipos exclusivos do contexto judicial (sentença, audiência,
+ * remessa ao 2º grau) e usa a remessa recursal administrativa no lugar.
+ */
+export const TIPOS_ANDAMENTO_ADMINISTRATIVO = [
+  "DESPACHO",
+  "DECISAO",
+  "PUBLICACAO",
+  "INTIMACAO",
+  "MANIFESTACAO_PROTOCOLADA",
+  "REMESSA_RECURSO_ADMINISTRATIVO",
   "JULGAMENTO_RECURSO",
   "OUTRO",
 ] as const;
@@ -147,6 +164,74 @@ export const RESULTADOS_RECURSO = [
   "IMPROVIDO",
   "PARCIALMENTE_PROVIDO",
   "NAO_CONHECIDO",
+] as const;
+
+export const LABEL_ORGAO_PROCESSO_ADMINISTRATIVO: Record<string, string> = {
+  INSS: "INSS",
+  RECEITA_FEDERAL: "Receita Federal",
+};
+
+export const ORGAOS_PROCESSO_ADMINISTRATIVO = ["INSS", "RECEITA_FEDERAL"] as const;
+
+export const LABEL_TIPO_PROCESSO_ADMINISTRATIVO: Record<string, string> = {
+  REQUERIMENTO_BENEFICIO: "Requerimento de benefício",
+  REVISAO_BENEFICIO: "Revisão de benefício",
+  IMPUGNACAO: "Impugnação",
+  PARCELAMENTO: "Parcelamento",
+  RESTITUICAO: "Restituição",
+  OUTRO: "Outro",
+};
+
+/** Tipos válidos por órgão — mesmo padrão de RITOS_POR_JURISDICAO acima. */
+export const TIPOS_POR_ORGAO_ADMINISTRATIVO: Record<string, string[]> = {
+  INSS: ["REQUERIMENTO_BENEFICIO", "REVISAO_BENEFICIO", "OUTRO"],
+  RECEITA_FEDERAL: ["IMPUGNACAO", "PARCELAMENTO", "RESTITUICAO", "OUTRO"],
+};
+
+export const LABEL_STATUS_PROCESSO_ADMINISTRATIVO: Record<string, string> = {
+  EM_ANALISE: "Em análise",
+  EXIGENCIA_PENDENTE: "Exigência pendente",
+  DEFERIDO: "Deferido",
+  INDEFERIDO: "Indeferido",
+  RECURSO_INTERPOSTO: "Recurso interposto",
+  ENCERRADO: "Encerrado",
+};
+
+export const STATUS_PROCESSO_ADMINISTRATIVO = [
+  "EM_ANALISE",
+  "EXIGENCIA_PENDENTE",
+  "DEFERIDO",
+  "INDEFERIDO",
+  "RECURSO_INTERPOSTO",
+  "ENCERRADO",
+] as const;
+
+export const LABEL_ORGAO_RECURSAL: Record<string, string> = {
+  CRPS: "CRPS",
+  CARF: "CARF",
+  OUTRO: "Outro",
+};
+
+export const ORGAOS_RECURSAL = ["CRPS", "CARF", "OUTRO"] as const;
+
+export const LABEL_STATUS_RECURSO_ADMINISTRATIVO: Record<string, string> = {
+  AGUARDANDO_ANALISE: "Aguardando análise",
+  EM_TRAMITACAO: "Em tramitação",
+  JULGADO: "Julgado",
+};
+
+export const LABEL_RESULTADO_RECURSO_ADMINISTRATIVO: Record<string, string> = {
+  PROVIDO: "Provido",
+  IMPROVIDO: "Improvido",
+  PARCIALMENTE_PROVIDO: "Parcialmente provido",
+  OUTRO: "Outro",
+};
+
+export const RESULTADOS_RECURSO_ADMINISTRATIVO = [
+  "PROVIDO",
+  "IMPROVIDO",
+  "PARCIALMENTE_PROVIDO",
+  "OUTRO",
 ] as const;
 
 export const LABEL_CONTAGEM: Record<string, string> = {

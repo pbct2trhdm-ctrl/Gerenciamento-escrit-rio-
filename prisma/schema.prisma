@@ -173,6 +173,7 @@ enum TipoAndamento {
   MANIFESTACAO_PROTOCOLADA
   REMESSA_2_GRAU
   JULGAMENTO_RECURSO
+  REMESSA_RECURSO_ADMINISTRATIVO
   OUTRO
 }
 
@@ -196,6 +197,49 @@ enum ResultadoRecurso {
   IMPROVIDO
   PARCIALMENTE_PROVIDO
   NAO_CONHECIDO
+}
+
+enum OrgaoProcessoAdministrativo {
+  INSS
+  RECEITA_FEDERAL
+}
+
+/// Valores válidos por órgão — ver TIPOS_POR_ORGAO_ADMINISTRATIVO em lib/formatacao.ts.
+enum TipoProcessoAdministrativo {
+  REQUERIMENTO_BENEFICIO
+  REVISAO_BENEFICIO
+  IMPUGNACAO
+  PARCELAMENTO
+  RESTITUICAO
+  OUTRO
+}
+
+enum StatusProcessoAdministrativo {
+  EM_ANALISE
+  EXIGENCIA_PENDENTE
+  DEFERIDO
+  INDEFERIDO
+  RECURSO_INTERPOSTO
+  ENCERRADO
+}
+
+enum OrgaoRecursal {
+  CRPS
+  CARF
+  OUTRO
+}
+
+enum StatusRecursoAdministrativo {
+  AGUARDANDO_ANALISE
+  EM_TRAMITACAO
+  JULGADO
+}
+
+enum ResultadoRecursoAdministrativo {
+  PROVIDO
+  IMPROVIDO
+  PARCIALMENTE_PROVIDO
+  OUTRO
 }
 
 enum TipoContagem {
@@ -280,6 +324,7 @@ model Cliente {
   observacoes  String?
   criadoEm     DateTime    @default(now())
   processos    Processo[]
+  processosAdministrativos ProcessoAdministrativo[]
 }
 
 model Processo {
@@ -304,6 +349,7 @@ model Processo {
   honorariosSucumbenciais HonorarioSucumbencial[]
   alvaras                 Alvara[]
   despesas                Despesa[]
+  processosAdministrativosVinculados ProcessoAdministrativo[]
 }
 
 model Prazo {
@@ -356,12 +402,17 @@ model ConfiguracaoNotificacao {
   atualizadoEm           DateTime             @updatedAt
 }
 
-/// Log manual de andamentos processuais, com anexo opcional e atalho para
-/// gerar um Prazo vinculado (via Prazo.origemAndamentoId) a partir do registro.
+/// Log manual de andamentos, compartilhado entre Processo (judicial) e
+/// ProcessoAdministrativo — vincula-se a exatamente um dos dois (nunca os
+/// dois, regra aplicada em lib/actions/andamentos.ts, não no schema). Mesma
+/// lógica para o vínculo com Recurso/RecursoAdministrativo. Anexo opcional e
+/// atalho para gerar um Prazo vinculado (só no contexto judicial).
 model Andamento {
   id              String        @id @default(cuid())
-  processoId      String
-  processo        Processo      @relation(fields: [processoId], references: [id], onDelete: Cascade)
+  processoId      String?
+  processo        Processo?     @relation(fields: [processoId], references: [id], onDelete: Cascade)
+  processoAdministrativoId String?
+  processoAdministrativo   ProcessoAdministrativo? @relation(fields: [processoAdministrativoId], references: [id], onDelete: Cascade)
   data            DateTime
   tipo            TipoAndamento
   descricao       String
@@ -370,6 +421,8 @@ model Andamento {
   arquivoTipo     String?
   recursoId       String?
   recurso         Recurso?      @relation(fields: [recursoId], references: [id], onDelete: SetNull)
+  recursoAdministrativoId String?
+  recursoAdministrativo   RecursoAdministrativo? @relation(fields: [recursoAdministrativoId], references: [id], onDelete: SetNull)
   criadoEm        DateTime      @default(now())
   prazosGerados   Prazo[]
 }
@@ -393,6 +446,46 @@ model Recurso {
   observacoes      String?
   criadoEm         DateTime          @default(now())
   andamentos       Andamento[]
+}
+
+/// Processo administrativo junto a INSS ou Receita Federal — entidade
+/// independente de Processo (judicial), com vínculo opcional a um Processo
+/// quando o caso evolui para ação judicial.
+model ProcessoAdministrativo {
+  id                 String                       @id @default(cuid())
+  clienteId          String
+  cliente            Cliente                      @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  processoJudicialId String?
+  processoJudicial   Processo?                    @relation(fields: [processoJudicialId], references: [id], onDelete: SetNull)
+  orgao              OrgaoProcessoAdministrativo
+  tipo               TipoProcessoAdministrativo
+  numeroProtocolo    String?
+  status             StatusProcessoAdministrativo @default(EM_ANALISE)
+  dataAbertura       DateTime
+  dataDecisao        DateTime?
+  resumo             String?
+  observacoes        String?
+  criadoEm           DateTime                     @default(now())
+  andamentos         Andamento[]
+  recursos           RecursoAdministrativo[]
+}
+
+/// Recurso administrativo (CRPS/CARF) vinculado a um ProcessoAdministrativo.
+/// Status e resultado são atualizados automaticamente a partir de Andamentos
+/// de remessa/julgamento vinculados a este registro, mesma lógica do Recurso
+/// judicial (ver lib/actions/andamentos.ts).
+model RecursoAdministrativo {
+  id                       String                          @id @default(cuid())
+  processoAdministrativoId String
+  processoAdministrativo   ProcessoAdministrativo          @relation(fields: [processoAdministrativoId], references: [id], onDelete: Cascade)
+  orgaoRecursal            OrgaoRecursal
+  dataInterposicao         DateTime
+  status                   StatusRecursoAdministrativo     @default(AGUARDANDO_ANALISE)
+  resultado                ResultadoRecursoAdministrativo?
+  dataJulgamento           DateTime?
+  observacoes              String?
+  criadoEm                 DateTime                        @default(now())
+  andamentos               Andamento[]
 }
 
 model Honorario {

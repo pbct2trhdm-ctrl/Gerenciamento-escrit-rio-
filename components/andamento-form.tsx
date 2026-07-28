@@ -1,13 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import type { Recurso } from "@/app/generated/prisma/client";
+import type { Recurso, RecursoAdministrativo } from "@/app/generated/prisma/client";
 import {
   TIPOS_ANDAMENTO,
+  TIPOS_ANDAMENTO_ADMINISTRATIVO,
   LABEL_TIPO_ANDAMENTO,
   LABEL_TIPO_RECURSO,
+  LABEL_ORGAO_RECURSAL,
   RESULTADOS_RECURSO,
   LABEL_RESULTADO_RECURSO,
+  RESULTADOS_RECURSO_ADMINISTRATIVO,
+  LABEL_RESULTADO_RECURSO_ADMINISTRATIVO,
   formatarData,
 } from "@/lib/formatacao";
 import { classeInput, classeLabel, classeBotaoPrimario } from "@/lib/estilos";
@@ -20,23 +24,46 @@ const LABEL_TIPO_PRAZO_RAPIDO: Record<string, string> = {
   OUTRO: "Outro",
 };
 
+type Contexto = "judicial" | "administrativo";
+
 export function AndamentoForm({
+  contexto,
   processoId,
+  processoAdministrativoId,
   recursos,
+  recursosAdministrativos,
   action,
 }: {
-  processoId: string;
-  recursos: Pick<Recurso, "id" | "tipoRecurso" | "dataInterposicao">[];
+  contexto: Contexto;
+  processoId?: string;
+  processoAdministrativoId?: string;
+  recursos?: Pick<Recurso, "id" | "tipoRecurso" | "dataInterposicao">[];
+  recursosAdministrativos?: Pick<RecursoAdministrativo, "id" | "orgaoRecursal" | "dataInterposicao">[];
   action: (formData: FormData) => void;
 }) {
   const [data, setData] = useState("");
   const [tipo, setTipo] = useState("");
-  const [recursoId, setRecursoId] = useState("");
+  const [recursoSelecionado, setRecursoSelecionado] = useState("");
   const [geraPrazo, setGeraPrazo] = useState(false);
   const [prazoDataBase, setPrazoDataBase] = useState("");
   const [prazoDataBaseTocado, setPrazoDataBaseTocado] = useState(false);
 
-  const precisaDeResultado = tipo === "JULGAMENTO_RECURSO" && recursoId !== "";
+  const precisaDeResultado = tipo === "JULGAMENTO_RECURSO" && recursoSelecionado !== "";
+  const tiposDisponiveis = contexto === "judicial" ? TIPOS_ANDAMENTO : TIPOS_ANDAMENTO_ADMINISTRATIVO;
+  const opcoesRecurso =
+    contexto === "judicial"
+      ? (recursos ?? []).map((r) => ({
+          id: r.id,
+          label: `${LABEL_TIPO_RECURSO[r.tipoRecurso]} (${formatarData(r.dataInterposicao)})`,
+        }))
+      : (recursosAdministrativos ?? []).map((r) => ({
+          id: r.id,
+          label: `${LABEL_ORGAO_RECURSAL[r.orgaoRecursal]} (${formatarData(r.dataInterposicao)})`,
+        }));
+  const resultadosDisponiveis =
+    contexto === "judicial" ? RESULTADOS_RECURSO : RESULTADOS_RECURSO_ADMINISTRATIVO;
+  const labelResultado =
+    contexto === "judicial" ? LABEL_RESULTADO_RECURSO : LABEL_RESULTADO_RECURSO_ADMINISTRATIVO;
 
   function alterarData(valor: string) {
     setData(valor);
@@ -52,7 +79,15 @@ export function AndamentoForm({
 
   return (
     <form action={action} className="max-w-xl space-y-4">
-      <input type="hidden" name="processoId" value={processoId} />
+      {contexto === "judicial" ? (
+        <input type="hidden" name="processoId" value={processoId} />
+      ) : (
+        <input
+          type="hidden"
+          name="processoAdministrativoId"
+          value={processoAdministrativoId}
+        />
+      )}
 
       <div className="grid grid-cols-2 gap-4">
         <div>
@@ -84,7 +119,7 @@ export function AndamentoForm({
             <option value="" disabled>
               Selecione o tipo
             </option>
-            {TIPOS_ANDAMENTO.map((codigo) => (
+            {tiposDisponiveis.map((codigo) => (
               <option key={codigo} value={codigo}>
                 {LABEL_TIPO_ANDAMENTO[codigo]}
               </option>
@@ -94,20 +129,20 @@ export function AndamentoForm({
       </div>
 
       <div>
-        <label className={classeLabel} htmlFor="recursoId">
+        <label className={classeLabel} htmlFor="recursoSelecionado">
           Recurso vinculado (opcional)
         </label>
         <select
-          id="recursoId"
-          name="recursoId"
-          value={recursoId}
-          onChange={(e) => setRecursoId(e.target.value)}
+          id="recursoSelecionado"
+          name={contexto === "judicial" ? "recursoId" : "recursoAdministrativoId"}
+          value={recursoSelecionado}
+          onChange={(e) => setRecursoSelecionado(e.target.value)}
           className={classeInput}
         >
           <option value="">Nenhum</option>
-          {recursos.map((recurso) => (
-            <option key={recurso.id} value={recurso.id}>
-              {LABEL_TIPO_RECURSO[recurso.tipoRecurso]} ({formatarData(recurso.dataInterposicao)})
+          {opcoesRecurso.map((opcao) => (
+            <option key={opcao.id} value={opcao.id}>
+              {opcao.label}
             </option>
           ))}
         </select>
@@ -122,9 +157,9 @@ export function AndamentoForm({
             <option value="" disabled>
               Selecione o resultado
             </option>
-            {RESULTADOS_RECURSO.map((codigo) => (
+            {resultadosDisponiveis.map((codigo) => (
               <option key={codigo} value={codigo}>
-                {LABEL_RESULTADO_RECURSO[codigo]}
+                {labelResultado[codigo]}
               </option>
             ))}
           </select>
@@ -157,21 +192,23 @@ export function AndamentoForm({
         />
       </div>
 
-      <div className="flex items-center gap-2">
-        <input
-          id="geraPrazo"
-          name="geraPrazo"
-          type="checkbox"
-          checked={geraPrazo}
-          onChange={(e) => setGeraPrazo(e.target.checked)}
-          className="h-4 w-4 rounded border-slate-300 text-accent focus:ring-accent"
-        />
-        <label htmlFor="geraPrazo" className="text-sm font-medium text-texto-principal">
-          Este andamento gera um prazo?
-        </label>
-      </div>
+      {contexto === "judicial" && (
+        <div className="flex items-center gap-2">
+          <input
+            id="geraPrazo"
+            name="geraPrazo"
+            type="checkbox"
+            checked={geraPrazo}
+            onChange={(e) => setGeraPrazo(e.target.checked)}
+            className="h-4 w-4 rounded border-slate-300 text-accent focus:ring-accent"
+          />
+          <label htmlFor="geraPrazo" className="text-sm font-medium text-texto-principal">
+            Este andamento gera um prazo?
+          </label>
+        </div>
+      )}
 
-      {geraPrazo && (
+      {contexto === "judicial" && geraPrazo && (
         <div className="rounded-md border border-slate-200 bg-fundo p-4 space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
