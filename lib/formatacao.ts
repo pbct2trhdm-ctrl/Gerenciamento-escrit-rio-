@@ -93,6 +93,7 @@ export const LABEL_TIPO_ANDAMENTO: Record<string, string> = {
   REMESSA_2_GRAU: "Remessa ao 2º grau",
   JULGAMENTO_RECURSO: "Julgamento de recurso",
   REMESSA_RECURSO_ADMINISTRATIVO: "Remessa para análise recursal",
+  REDESIGNACAO_AUDIENCIA: "Redesignação de audiência",
   OUTRO: "Outro",
 };
 
@@ -107,6 +108,7 @@ export const TIPOS_ANDAMENTO = [
   "MANIFESTACAO_PROTOCOLADA",
   "REMESSA_2_GRAU",
   "JULGAMENTO_RECURSO",
+  "REDESIGNACAO_AUDIENCIA",
   "OUTRO",
 ] as const;
 

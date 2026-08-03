@@ -61,7 +61,10 @@ export default async function ProcessoDetalhePage({
       cliente: true,
       prazos: {
         orderBy: { dataFinal: "asc" },
-        include: { origemAndamento: { select: { data: true } } },
+        include: {
+          origemAndamento: { select: { data: true } },
+          _count: { select: { redesignacoes: true } },
+        },
       },
       andamentos: { orderBy: { data: "desc" } },
       recursos: {
@@ -183,6 +186,11 @@ export default async function ProcessoDetalhePage({
                             Audiência
                           </span>
                         )}
+                        {prazo._count.redesignacoes > 0 && (
+                          <span className={classeBadgeNeutro}>
+                            Redesignada {prazo._count.redesignacoes}x
+                          </span>
+                        )}
                       </div>
                       {prazo.tipo === "AUDIENCIA" && prazo.modalidadeAudiencia && (
                         <p className="text-sm text-texto-secundario">
@@ -241,6 +249,12 @@ export default async function ProcessoDetalhePage({
                     </p>
                   )}
                   <div className="flex items-center gap-2 mt-3">
+                    <Link
+                      href={`/prazos/${prazo.id}`}
+                      className={`${classeBotaoSecundario} !px-3 !py-1 text-xs`}
+                    >
+                      Detalhes
+                    </Link>
                     <Link
                       href={`/prazos/${prazo.id}/editar`}
                       className={`${classeBotaoSecundario} !px-3 !py-1 text-xs`}
