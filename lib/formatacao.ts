@@ -257,6 +257,17 @@ export const LABEL_STATUS_NOTIFICACAO: Record<string, string> = {
   FALHA: "Falha",
 };
 
+export const LABEL_STATUS_VINCULO_PUBLICACAO: Record<string, string> = {
+  VINCULADA: "Vinculada",
+  ORFA: "Órfã",
+};
+
+export const UFS_BRASIL = [
+  "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO",
+  "MA", "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI",
+  "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO",
+] as const;
+
 export const LABEL_TIPO_HONORARIO: Record<string, string> = {
   FIXO: "Fixo",
   PARCELADO: "Parcelado",

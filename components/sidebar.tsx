@@ -9,6 +9,7 @@ import {
   IconePrazos,
   IconeFinanceiro,
   IconeProcessosAdministrativos,
+  IconePublicacoes,
   IconeConfiguracoes,
 } from "@/components/icones";
 
@@ -22,11 +23,12 @@ const itens = [
     Icone: IconeProcessosAdministrativos,
   },
   { href: "/prazos", label: "Prazos/Agenda", Icone: IconePrazos },
+  { href: "/publicacoes", label: "Publicações", Icone: IconePublicacoes },
   { href: "/financeiro", label: "Financeiro", Icone: IconeFinanceiro },
   { href: "/configuracoes", label: "Configurações", Icone: IconeConfiguracoes },
 ];
 
-export function Sidebar() {
+export function Sidebar({ publicacoesNaoLidas = 0 }: { publicacoesNaoLidas?: number }) {
   const pathname = usePathname();
 
   return (
@@ -56,7 +58,12 @@ export function Sidebar() {
                 }`}
               >
                 <item.Icone />
-                {item.label}
+                <span className="flex-1">{item.label}</span>
+                {item.href === "/publicacoes" && publicacoesNaoLidas > 0 && (
+                  <span className="inline-flex items-center justify-center rounded-full bg-accent px-1.5 py-0.5 text-xs font-semibold text-white min-w-[1.25rem] text-center">
+                    {publicacoesNaoLidas}
+                  </span>
+                )}
               </Link>
             </li>
           );

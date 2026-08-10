@@ -85,6 +85,8 @@ const STATUS_TIER: Record<string, Tier> = {
   RECURSO_INTERPOSTO: "atencao",
   AGUARDANDO_ANALISE: "neutro",
   EM_TRAMITACAO: "atencao",
+  VINCULADA: "tranquilo",
+  ORFA: "atencao",
 };
 
 /** Mapeamento fixo de status → faixa, usado por padrão em badges de status. */

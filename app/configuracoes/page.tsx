@@ -5,19 +5,22 @@ import {
   formatarData,
 } from "@/lib/formatacao";
 import { NotificacaoConfigForm } from "@/components/notificacao-config-form";
+import { ConfiguracaoPublicacoesForm } from "@/components/configuracao-publicacoes-form";
 import { salvarConfiguracaoNotificacoes } from "@/lib/actions/notificacoes";
+import { salvarConfiguracaoPublicacoes } from "@/lib/actions/publicacoes";
 import { Badge } from "@/components/badge";
 import { EmptyState } from "@/components/empty-state";
 import { classeCard, classeTituloPagina, classeTituloSecao } from "@/lib/estilos";
 
 export default async function ConfiguracoesPage() {
-  const [configuracao, notificacoes] = await Promise.all([
+  const [configuracao, notificacoes, configuracaoPublicacoes] = await Promise.all([
     prisma.configuracaoNotificacao.findUnique({ where: { id: 1 } }),
     prisma.notificacao.findMany({
       orderBy: { dataEnvio: "desc" },
       take: 20,
       include: { prazo: { include: { processo: { include: { cliente: true } } } } },
     }),
+    prisma.configuracaoPublicacoes.findUnique({ where: { id: 1 } }),
   ]);
 
   return (
@@ -34,6 +37,20 @@ export default async function ConfiguracoesPage() {
         <NotificacaoConfigForm
           configuracao={configuracao}
           action={salvarConfiguracaoNotificacoes}
+        />
+      </div>
+
+      <h2 className={`${classeTituloSecao} mb-3`}>Publicações (DJEN)</h2>
+      <p className="text-sm text-texto-secundario mb-4">
+        Uma vez por dia, no horário abaixo, o sistema busca novas publicações no Diário
+        de Justiça Eletrônico Nacional para a OAB/seccional informadas, tenta vincular
+        automaticamente a um processo cadastrado e avisa por WhatsApp (configuração
+        acima) quando houver publicações novas.
+      </p>
+      <div className={`${classeCard} mb-10`}>
+        <ConfiguracaoPublicacoesForm
+          configuracao={configuracaoPublicacoes}
+          action={salvarConfiguracaoPublicacoes}
         />
       </div>
 

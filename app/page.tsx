@@ -13,14 +13,17 @@ import { EmptyState } from "@/components/empty-state";
 import { classeTituloPagina } from "@/lib/estilos";
 
 export default async function DashboardPage() {
-  const prazos = await prisma.prazo.findMany({
-    where: { status: "PENDENTE" },
-    orderBy: { dataFinal: "asc" },
-    include: {
-      processo: { include: { cliente: true } },
-      origemAndamento: { select: { data: true } },
-    },
-  });
+  const [prazos, publicacoesNaoLidas] = await Promise.all([
+    prisma.prazo.findMany({
+      where: { status: "PENDENTE" },
+      orderBy: { dataFinal: "asc" },
+      include: {
+        processo: { include: { cliente: true } },
+        origemAndamento: { select: { data: true } },
+      },
+    }),
+    prisma.publicacao.count({ where: { lida: false } }),
+  ]);
 
   return (
     <div className="max-w-4xl">
@@ -28,6 +31,22 @@ export default async function DashboardPage() {
       <p className="text-texto-secundario mb-6">
         Prazos pendentes mais próximos de vencer
       </p>
+
+      {publicacoesNaoLidas > 0 && (
+        <Link
+          href="/publicacoes"
+          className="mb-6 flex items-center justify-between rounded-lg border border-accent/30 bg-accent/10 px-4 py-3 text-sm hover:bg-accent/15 transition-colors"
+        >
+          <span className="text-texto-principal">
+            <span className="font-semibold text-accent">
+              {publicacoesNaoLidas} nova{publicacoesNaoLidas === 1 ? "" : "s"} publicaç
+              {publicacoesNaoLidas === 1 ? "ão" : "ões"}
+            </span>{" "}
+            encontrada{publicacoesNaoLidas === 1 ? "" : "s"} no DJEN
+          </span>
+          <span className="text-accent">Ver publicações →</span>
+        </Link>
+      )}
 
       {prazos.length === 0 ? (
         <EmptyState
