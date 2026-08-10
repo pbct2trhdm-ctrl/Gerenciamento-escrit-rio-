@@ -6,6 +6,7 @@ import type { Prisma } from "@/app/generated/prisma/client";
 import { tierStatus } from "@/lib/urgencia";
 import { Badge } from "@/components/badge";
 import { EmptyState } from "@/components/empty-state";
+import { FiltroComarcaVara } from "@/components/filtro-comarca-vara";
 import {
   classeInputAuto,
   classeBotaoPrimario,
@@ -16,15 +17,24 @@ import {
 export default async function ProcessosPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; status?: string; area?: string; tribunal?: string }>;
+  searchParams: Promise<{
+    q?: string;
+    status?: string;
+    area?: string;
+    tribunal?: string;
+    comarca?: string;
+    vara?: string;
+  }>;
 }) {
-  const { q, status, area, tribunal } = await searchParams;
+  const { q, status, area, tribunal, comarca, vara } = await searchParams;
 
   const where: Prisma.ProcessoWhereInput = {};
   if (q) {
     where.OR = [
       { numeroProcesso: { contains: q } },
       { cliente: { nome: { contains: q } } },
+      { comarca: { contains: q } },
+      { vara: { contains: q } },
     ];
   }
   if (["ATIVO", "SUSPENSO", "ARQUIVADO", "ENCERRADO"].includes(status ?? "")) {
@@ -36,8 +46,14 @@ export default async function ProcessosPage({
   if (TODOS_TRIBUNAIS.includes(tribunal ?? "")) {
     where.tribunal = tribunal as Prisma.ProcessoWhereInput["tribunal"];
   }
+  if (comarca) {
+    where.comarca = comarca;
+  }
+  if (vara) {
+    where.vara = vara;
+  }
 
-  const [processos, tribunaisEmUso] = await Promise.all([
+  const [processos, tribunaisEmUso, comarcaVaraEmUso] = await Promise.all([
     prisma.processo.findMany({
       where,
       orderBy: { criadoEm: "desc" },
@@ -47,6 +63,11 @@ export default async function ProcessosPage({
       where: { tribunal: { not: null } },
       distinct: ["tribunal"],
       select: { tribunal: true },
+    }),
+    prisma.processo.findMany({
+      where: { OR: [{ comarca: { not: null } }, { vara: { not: null } }] },
+      distinct: ["comarca", "vara"],
+      select: { comarca: true, vara: true },
     }),
   ]);
 
@@ -68,7 +89,7 @@ export default async function ProcessosPage({
         <input
           type="text"
           name="q"
-          placeholder="Buscar por número ou cliente"
+          placeholder="Buscar por número, cliente, comarca ou vara"
           defaultValue={q ?? ""}
           className={`${classeInputAuto} flex-1 min-w-[200px]`}
         />
@@ -96,6 +117,13 @@ export default async function ProcessosPage({
               </option>
             ))}
           </select>
+        )}
+        {comarcaVaraEmUso.length > 0 && (
+          <FiltroComarcaVara
+            pares={comarcaVaraEmUso}
+            comarcaSelecionada={comarca ?? ""}
+            varaSelecionada={vara ?? ""}
+          />
         )}
         <button type="submit" className={classeBotaoSecundario}>
           Filtrar
