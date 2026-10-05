@@ -99,3 +99,16 @@ export async function enviarWhatsapp(
     };
   }
 }
+
+/**
+ * Converte o telefone do cadastro do cliente (ex.: "(91) 98100-9204") para o
+ * formato aceito pelos provedores: só dígitos, com código do país. Números
+ * brasileiros sem o 55 (10 ou 11 dígitos com DDD) recebem o prefixo.
+ * Retorna null quando não há dígitos suficientes para um número válido.
+ */
+export function normalizarTelefoneWhatsapp(telefone: string | null): string | null {
+  const digitos = (telefone ?? "").replace(/\D/g, "");
+  if (digitos.length === 10 || digitos.length === 11) return `55${digitos}`;
+  if (digitos.length >= 12 && digitos.length <= 13) return digitos;
+  return null;
+}

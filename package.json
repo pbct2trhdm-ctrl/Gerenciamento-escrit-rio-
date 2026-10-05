@@ -11,10 +11,12 @@
     "backup": "node scripts/backup.mjs"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.131.0",
     "@prisma/adapter-better-sqlite3": "^7.8.0",
     "@prisma/client": "^7.8.0",
     "@react-pdf/renderer": "^4.5.1",
     "next": "^16.2.11",
+    "nodemailer": "^10.0.15",
     "prisma": "^7.8.0",
     "react": "19.2.4",
     "react-dom": "19.2.4"
@@ -23,6 +25,7 @@
     "@tailwindcss/postcss": "^4",
     "@types/archiver": "^8.0.0",
     "@types/node": "^20",
+    "@types/nodemailer": "^8.0.2",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "archiver": "^8.0.0",

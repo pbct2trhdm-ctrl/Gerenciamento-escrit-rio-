@@ -352,6 +352,7 @@ model Processo {
   despesas                Despesa[]
   processosAdministrativosVinculados ProcessoAdministrativo[]
   publicacoes             Publicacao[]
+  atualizacoesCliente     AtualizacaoCliente[]
 }
 
 model Prazo {
@@ -634,4 +635,31 @@ model RetiradaLucro {
   valor        Float
   observacoes  String?
   criadoEm     DateTime  @default(now())
+}
+
+/// Atualização enviada ao cliente a partir de um PDF do processo anexado: a
+/// IA lê o PDF e redige a mensagem em linguagem simples (WhatsApp e e-mail),
+/// que fica salva para revisão antes do envio — nada sai sem clique manual.
+/// erroGeracao guarda a falha da IA (se houver) para a mensagem ser escrita à mão.
+model AtualizacaoCliente {
+  id                String    @id @default(cuid())
+  processoId        String
+  processo          Processo  @relation(fields: [processoId], references: [id], onDelete: Cascade)
+  arquivoNome       String
+  arquivoCaminho    String
+  arquivoTipo       String
+  /// Instruções opcionais da advogada para a IA (ex.: "foque na sentença").
+  orientacoes       String?
+  /// Resumo técnico curto para a advogada conferir o que a IA identificou — não vai ao cliente.
+  resumoInterno     String?
+  mensagemWhatsapp  String    @default("")
+  assuntoEmail      String    @default("")
+  corpoEmail        String    @default("")
+  erroGeracao       String?
+  whatsappEnviadoEm DateTime?
+  whatsappErro      String?
+  emailEnviadoEm    DateTime?
+  emailErro         String?
+  criadoEm          DateTime  @default(now())
+  atualizadoEm      DateTime  @updatedAt
 }

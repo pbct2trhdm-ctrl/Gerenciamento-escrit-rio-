@@ -43,6 +43,7 @@ import {
   classeBotaoPerigo,
   classeBotaoConfirma,
   classeCard,
+  classeCardHover,
   classeBadgeNeutro,
   classeTituloPagina,
   classeTituloSecao,
@@ -74,6 +75,7 @@ export default async function ProcessoDetalhePage({
       honorarios: { orderBy: { dataContrato: "desc" } },
       honorariosSucumbenciais: { orderBy: { criadoEm: "desc" } },
       alvaras: { orderBy: { criadoEm: "desc" } },
+      atualizacoesCliente: { orderBy: { criadoEm: "desc" } },
     },
   });
 
@@ -95,6 +97,12 @@ export default async function ProcessoDetalhePage({
           {processo.numeroProcesso ?? "Processo sem número"}
         </h1>
         <div className="flex gap-2">
+          <Link
+            href={`/processos/${processo.id}/atualizacoes/nova`}
+            className={classeBotaoPrimario}
+          >
+            Atualizar cliente
+          </Link>
           <Link href={`/processos/${processo.id}/editar`} className={classeBotaoSecundario}>
             Editar
           </Link>
@@ -278,6 +286,57 @@ export default async function ProcessoDetalhePage({
           })}
         </ul>
       )}
+
+      <div className="mt-10">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className={classeTituloSecao}>Atualizações ao cliente</h2>
+          <Link
+            href={`/processos/${processo.id}/atualizacoes/nova`}
+            className={classeBotaoPrimario}
+          >
+            Nova atualização
+          </Link>
+        </div>
+
+        {processo.atualizacoesCliente.length === 0 ? (
+          <EmptyState
+            mensagem="Nenhuma atualização enviada ao cliente. Anexe o PDF do processo e a IA redige a mensagem."
+            acaoHref={`/processos/${processo.id}/atualizacoes/nova`}
+            acaoLabel="Gerar a primeira atualização"
+          />
+        ) : (
+          <ul className="space-y-3">
+            {processo.atualizacoesCliente.map((atualizacao) => (
+              <li key={atualizacao.id}>
+                <Link
+                  href={`/processos/${processo.id}/atualizacoes/${atualizacao.id}`}
+                  className={`block text-sm ${classeCardHover}`}
+                >
+                  <div className="flex items-center justify-between gap-3 flex-wrap">
+                    <span className="font-medium tabular-nums">
+                      {formatarData(atualizacao.criadoEm)}
+                    </span>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Badge tier={atualizacao.whatsappEnviadoEm ? "tranquilo" : "neutro"}>
+                        WhatsApp {atualizacao.whatsappEnviadoEm ? "enviado" : "pendente"}
+                      </Badge>
+                      <Badge tier={atualizacao.emailEnviadoEm ? "tranquilo" : "neutro"}>
+                        E-mail {atualizacao.emailEnviadoEm ? "enviado" : "pendente"}
+                      </Badge>
+                    </div>
+                  </div>
+                  <p className="mt-2 line-clamp-2 text-texto-secundario">
+                    {atualizacao.resumoInterno ||
+                      atualizacao.mensagemWhatsapp ||
+                      atualizacao.erroGeracao ||
+                      atualizacao.arquivoNome}
+                  </p>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
 
       <div className="mt-10">
         <div className="flex items-center justify-between mb-3">

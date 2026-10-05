@@ -54,10 +54,15 @@ Regras de composição do dashboard financeiro (ver `lib/financeiro.ts` e `app/f
 - "Saldo do mês" desconta despesas operacionais, obrigações societárias pagas e retiradas de lucro do total recebido.
 - Alertas: pagamentos (parcelas/sucumbência) sem nota fiscal emitida, e alvarás aguardando repasse há mais de 7 dias.
 
+### Atualizações ao cliente (IA)
+
+Na tela do processo, **Atualizar cliente**: anexe o PDF baixado do processo (até 22 MB / 600 páginas). A IA (Claude, da Anthropic) identifica a movimentação mais recente e redige, em linguagem simples, uma mensagem de WhatsApp e um e-mail para o cliente, além de um resumo técnico para conferência. Nada é enviado automaticamente: o texto fica editável e só sai ao clicar em **Enviar por WhatsApp** (provedor configurado em Configurações, para o telefone do cadastro do cliente) ou **Enviar por e-mail** (conta Gmail, para o e-mail do cadastro). O PDF fica guardado no processo e não é enviado ao cliente. Há também "Copiar texto" e "Abrir no WhatsApp Web" como alternativa sem provedor configurado.
+
+Configuração no `.env` (ver `.env.example`): `ANTHROPIC_API_KEY` para a IA; `GMAIL_USUARIO` e `GMAIL_SENHA_APP` (senha de app do Google) para o e-mail. O conteúdo do PDF é enviado à API da Anthropic para gerar a mensagem.
+
 ## Fora de escopo (v1)
 
 - Módulo de documentos/modelos de petições
 - Multiusuário/autenticação
-- Notificações por email/push
 
 O modelo de dados não possui campos de usuário/autenticação, mas foi desenhado para permitir adicionar isso depois sem reestruturação (basta incluir uma tabela de usuários e um `usuarioId` opcional nas entidades).

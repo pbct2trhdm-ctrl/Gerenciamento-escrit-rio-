@@ -9,6 +9,8 @@ import { ConfiguracaoPublicacoesForm } from "@/components/configuracao-publicaco
 import { salvarConfiguracaoNotificacoes } from "@/lib/actions/notificacoes";
 import { salvarConfiguracaoPublicacoes } from "@/lib/actions/publicacoes";
 import { Badge } from "@/components/badge";
+import { iaConfigurada } from "@/lib/ia-atualizacao";
+import { emailConfigurado } from "@/lib/email";
 import { EmptyState } from "@/components/empty-state";
 import { classeCard, classeTituloPagina, classeTituloSecao } from "@/lib/estilos";
 
@@ -52,6 +54,36 @@ export default async function ConfiguracoesPage() {
           configuracao={configuracaoPublicacoes}
           action={salvarConfiguracaoPublicacoes}
         />
+      </div>
+
+      <h2 className={`${classeTituloSecao} mb-3`}>Atualizações ao cliente</h2>
+      <p className="text-sm text-texto-secundario mb-4">
+        Na tela de um processo, em &quot;Atualizar cliente&quot;, você anexa o PDF e a IA
+        redige a mensagem para o cliente. O WhatsApp usa o provedor configurado acima. A
+        IA e o e-mail são configurados no arquivo <code>.env</code> do app (instruções em{" "}
+        <code>.env.example</code>). Depois de editar, reinicie o app.
+      </p>
+      <div className={`${classeCard} mb-10 text-sm space-y-3`}>
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="font-medium">IA para redigir as mensagens</p>
+            <p className="text-xs text-texto-secundario">ANTHROPIC_API_KEY</p>
+          </div>
+          <Badge tier={iaConfigurada() ? "tranquilo" : "atencao"}>
+            {iaConfigurada() ? "Configurada" : "Não configurada"}
+          </Badge>
+        </div>
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="font-medium">E-mail (Gmail)</p>
+            <p className="text-xs text-texto-secundario">
+              GMAIL_USUARIO e GMAIL_SENHA_APP (senha de app do Google)
+            </p>
+          </div>
+          <Badge tier={emailConfigurado() ? "tranquilo" : "atencao"}>
+            {emailConfigurado() ? "Configurado" : "Não configurado"}
+          </Badge>
+        </div>
       </div>
 
       <h2 className={`${classeTituloSecao} mb-3`}>Últimos envios</h2>
