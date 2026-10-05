@@ -477,6 +477,7 @@ model Andamento {
   recursoAdministrativo   RecursoAdministrativo? @relation(fields: [recursoAdministrativoId], references: [id], onDelete: SetNull)
   criadoEm        DateTime      @default(now())
   prazosGerados   Prazo[]
+  atualizacaoCliente AtualizacaoCliente?
 }
 
 /// Recurso de 2º grau vinculado ao Processo. Status e resultado são
@@ -520,6 +521,7 @@ model ProcessoAdministrativo {
   criadoEm           DateTime                     @default(now())
   andamentos         Andamento[]
   recursos           RecursoAdministrativo[]
+  atualizacoesCliente AtualizacaoCliente[]
 }
 
 /// Recurso administrativo (CRPS/CARF) vinculado a um ProcessoAdministrativo.
@@ -640,26 +642,37 @@ model RetiradaLucro {
 /// Atualização enviada ao cliente a partir de um PDF do processo anexado: a
 /// IA lê o PDF e redige a mensagem em linguagem simples (WhatsApp e e-mail),
 /// que fica salva para revisão antes do envio — nada sai sem clique manual.
+/// Vincula-se a exatamente um entre Processo (judicial) e ProcessoAdministrativo
+/// (regra aplicada em lib/actions/atualizacoes-cliente.ts, não no schema).
 /// erroGeracao guarda a falha da IA (se houver) para a mensagem ser escrita à mão.
 model AtualizacaoCliente {
-  id                String    @id @default(cuid())
-  processoId        String
-  processo          Processo  @relation(fields: [processoId], references: [id], onDelete: Cascade)
-  arquivoNome       String
-  arquivoCaminho    String
-  arquivoTipo       String
+  id                       String                  @id @default(cuid())
+  processoId               String?
+  processo                 Processo?               @relation(fields: [processoId], references: [id], onDelete: Cascade)
+  processoAdministrativoId String?
+  processoAdministrativo   ProcessoAdministrativo? @relation(fields: [processoAdministrativoId], references: [id], onDelete: Cascade)
+  arquivoNome              String
+  arquivoCaminho           String
+  arquivoTipo              String
   /// Instruções opcionais da advogada para a IA (ex.: "foque na sentença").
-  orientacoes       String?
-  /// Resumo técnico curto para a advogada conferir o que a IA identificou — não vai ao cliente.
-  resumoInterno     String?
-  mensagemWhatsapp  String    @default("")
-  assuntoEmail      String    @default("")
-  corpoEmail        String    @default("")
-  erroGeracao       String?
-  whatsappEnviadoEm DateTime?
-  whatsappErro      String?
-  emailEnviadoEm    DateTime?
-  emailErro         String?
-  criadoEm          DateTime  @default(now())
-  atualizadoEm      DateTime  @updatedAt
+  orientacoes              String?
+  /// Resumo técnico para a advogada conferir o que a IA identificou — não vai
+  /// ao cliente; é a descrição do andamento registrado a partir desta atualização.
+  resumoInterno            String?
+  /// Tipo e data da movimentação identificada no PDF, sugeridos pela IA.
+  tipoAndamento            TipoAndamento?
+  dataMovimentacao         DateTime?
+  mensagemWhatsapp         String                  @default("")
+  assuntoEmail             String                  @default("")
+  corpoEmail               String                  @default("")
+  erroGeracao              String?
+  whatsappEnviadoEm        DateTime?
+  whatsappErro             String?
+  emailEnviadoEm           DateTime?
+  emailErro                String?
+  /// Andamento registrado no processo a partir desta atualização (compartilha o PDF).
+  andamentoId              String?                 @unique
+  andamento                Andamento?              @relation(fields: [andamentoId], references: [id], onDelete: SetNull)
+  criadoEm                 DateTime                @default(now())
+  atualizadoEm             DateTime                @updatedAt
 }

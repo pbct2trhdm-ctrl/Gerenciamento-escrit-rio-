@@ -165,7 +165,14 @@ export async function criarAndamento(formData: FormData) {
 
 export async function excluirAndamento(id: string) {
   const andamento = await prisma.andamento.delete({ where: { id } });
-  if (andamento.arquivoCaminho) {
+  // Andamentos registrados a partir de uma atualização ao cliente compartilham
+  // o PDF com ela — enquanto a atualização existir, o arquivo fica.
+  const atualizacaoUsaArquivo = andamento.arquivoCaminho
+    ? await prisma.atualizacaoCliente.count({
+        where: { arquivoCaminho: andamento.arquivoCaminho },
+      })
+    : 0;
+  if (andamento.arquivoCaminho && atualizacaoUsaArquivo === 0) {
     await removerAnexo(andamento.arquivoCaminho);
   }
 

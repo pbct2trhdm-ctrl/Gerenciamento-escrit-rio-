@@ -18,6 +18,7 @@ import { tierStatus, tierResultadoRecurso } from "@/lib/urgencia";
 import { Badge } from "@/components/badge";
 import { EmptyState } from "@/components/empty-state";
 import { LinkVoltar } from "@/components/link-voltar";
+import { SecaoAtualizacoesCliente } from "@/components/secao-atualizacoes-cliente";
 import {
   classeBotaoPrimario,
   classeBotaoSecundario,
@@ -40,11 +41,15 @@ export default async function ProcessoAdministrativoDetalhePage({
     include: {
       cliente: true,
       processoJudicial: { select: { id: true, numeroProcesso: true } },
-      andamentos: { orderBy: { data: "desc" } },
+      andamentos: {
+        orderBy: { data: "desc" },
+        include: { atualizacaoCliente: { select: { id: true } } },
+      },
       recursos: {
         orderBy: { dataInterposicao: "desc" },
         include: { andamentos: { orderBy: { data: "desc" } } },
       },
+      atualizacoesCliente: { orderBy: { criadoEm: "desc" } },
     },
   });
 
@@ -60,6 +65,12 @@ export default async function ProcessoAdministrativoDetalhePage({
           {processo.numeroProtocolo ?? "Sem protocolo"}
         </h1>
         <div className="flex gap-2">
+          <Link
+            href={`/processos-administrativos/${processo.id}/atualizacoes/nova`}
+            className={classeBotaoPrimario}
+          >
+            Atualizar cliente
+          </Link>
           <Link
             href={`/processos-administrativos/${processo.id}/editar`}
             className={classeBotaoSecundario}
@@ -137,7 +148,12 @@ export default async function ProcessoAdministrativoDetalhePage({
         )}
       </div>
 
-      <div>
+      <SecaoAtualizacoesCliente
+        caminhoProcesso={`/processos-administrativos/${processo.id}`}
+        atualizacoes={processo.atualizacoesCliente}
+      />
+
+      <div className="mt-10">
         <div className="flex items-center justify-between mb-3">
           <h2 className={classeTituloSecao}>Andamentos</h2>
           <Link
@@ -167,6 +183,14 @@ export default async function ProcessoAdministrativoDetalhePage({
                       <span className={classeBadgeNeutro}>
                         {LABEL_TIPO_ANDAMENTO[andamento.tipo]}
                       </span>
+                      {andamento.atualizacaoCliente && (
+                        <Link
+                          href={`/processos-administrativos/${processo.id}/atualizacoes/${andamento.atualizacaoCliente.id}`}
+                          className={`${classeBadgeNeutro} hover:text-accent`}
+                        >
+                          Cliente atualizado
+                        </Link>
+                      )}
                     </div>
                     <form action={excluirAndamento.bind(null, andamento.id)}>
                       <button

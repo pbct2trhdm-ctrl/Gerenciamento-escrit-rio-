@@ -37,13 +37,13 @@ import { SeloPrazo } from "@/components/selo-prazo";
 import { Badge } from "@/components/badge";
 import { EmptyState } from "@/components/empty-state";
 import { LinkVoltar } from "@/components/link-voltar";
+import { SecaoAtualizacoesCliente } from "@/components/secao-atualizacoes-cliente";
 import {
   classeBotaoPrimario,
   classeBotaoSecundario,
   classeBotaoPerigo,
   classeBotaoConfirma,
   classeCard,
-  classeCardHover,
   classeBadgeNeutro,
   classeTituloPagina,
   classeTituloSecao,
@@ -67,7 +67,10 @@ export default async function ProcessoDetalhePage({
           _count: { select: { redesignacoes: true } },
         },
       },
-      andamentos: { orderBy: { data: "desc" } },
+      andamentos: {
+        orderBy: { data: "desc" },
+        include: { atualizacaoCliente: { select: { id: true } } },
+      },
       recursos: {
         orderBy: { dataInterposicao: "desc" },
         include: { andamentos: { orderBy: { data: "desc" } } },
@@ -287,56 +290,10 @@ export default async function ProcessoDetalhePage({
         </ul>
       )}
 
-      <div className="mt-10">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className={classeTituloSecao}>Atualizações ao cliente</h2>
-          <Link
-            href={`/processos/${processo.id}/atualizacoes/nova`}
-            className={classeBotaoPrimario}
-          >
-            Nova atualização
-          </Link>
-        </div>
-
-        {processo.atualizacoesCliente.length === 0 ? (
-          <EmptyState
-            mensagem="Nenhuma atualização enviada ao cliente. Anexe o PDF do processo e a IA redige a mensagem."
-            acaoHref={`/processos/${processo.id}/atualizacoes/nova`}
-            acaoLabel="Gerar a primeira atualização"
-          />
-        ) : (
-          <ul className="space-y-3">
-            {processo.atualizacoesCliente.map((atualizacao) => (
-              <li key={atualizacao.id}>
-                <Link
-                  href={`/processos/${processo.id}/atualizacoes/${atualizacao.id}`}
-                  className={`block text-sm ${classeCardHover}`}
-                >
-                  <div className="flex items-center justify-between gap-3 flex-wrap">
-                    <span className="font-medium tabular-nums">
-                      {formatarData(atualizacao.criadoEm)}
-                    </span>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <Badge tier={atualizacao.whatsappEnviadoEm ? "tranquilo" : "neutro"}>
-                        WhatsApp {atualizacao.whatsappEnviadoEm ? "enviado" : "pendente"}
-                      </Badge>
-                      <Badge tier={atualizacao.emailEnviadoEm ? "tranquilo" : "neutro"}>
-                        E-mail {atualizacao.emailEnviadoEm ? "enviado" : "pendente"}
-                      </Badge>
-                    </div>
-                  </div>
-                  <p className="mt-2 line-clamp-2 text-texto-secundario">
-                    {atualizacao.resumoInterno ||
-                      atualizacao.mensagemWhatsapp ||
-                      atualizacao.erroGeracao ||
-                      atualizacao.arquivoNome}
-                  </p>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+      <SecaoAtualizacoesCliente
+        caminhoProcesso={`/processos/${processo.id}`}
+        atualizacoes={processo.atualizacoesCliente}
+      />
 
       <div className="mt-10">
         <div className="flex items-center justify-between mb-3">
@@ -370,6 +327,14 @@ export default async function ProcessoDetalhePage({
                       </span>
                       {andamentosComPrazoGerado.has(andamento.id) && (
                         <span className={classeBadgeNeutro}>Prazo gerado</span>
+                      )}
+                      {andamento.atualizacaoCliente && (
+                        <Link
+                          href={`/processos/${processo.id}/atualizacoes/${andamento.atualizacaoCliente.id}`}
+                          className={`${classeBadgeNeutro} hover:text-accent`}
+                        >
+                          Cliente atualizado
+                        </Link>
                       )}
                     </div>
                     <form action={excluirAndamento.bind(null, andamento.id)}>

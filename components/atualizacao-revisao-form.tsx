@@ -8,19 +8,28 @@ import {
   classeBotaoSecundario,
 } from "@/lib/estilos";
 import { BotaoEnvio } from "@/components/botao-envio";
+import { LABEL_TIPO_ANDAMENTO } from "@/lib/formatacao";
 
 export function AtualizacaoRevisaoForm({
   atualizacao,
+  tiposAndamento,
+  andamentoRegistrado,
   telefoneWhatsapp,
   emailCliente,
   action,
 }: {
   atualizacao: {
     id: string;
+    resumoInterno: string;
+    tipoAndamento: string;
+    /** AAAA-MM-DD ou "" quando a IA não identificou a data. */
+    dataMovimentacao: string;
     mensagemWhatsapp: string;
     assuntoEmail: string;
     corpoEmail: string;
   };
+  tiposAndamento: readonly string[];
+  andamentoRegistrado: boolean;
   /** Telefone do cliente já normalizado (só dígitos, com 55) ou null. */
   telefoneWhatsapp: string | null;
   emailCliente: string | null;
@@ -48,6 +57,73 @@ export function AtualizacaoRevisaoForm({
   return (
     <form action={action} className="space-y-8">
       <input type="hidden" name="id" value={atualizacao.id} />
+
+      <section>
+        <p className={`${classeLabel} mb-1`}>Andamento do processo</p>
+        <p className="text-xs text-texto-secundario mb-3">
+          O que a IA identificou no PDF, para você conferir. Não vai ao cliente: é
+          registrado nos andamentos do processo{" "}
+          {andamentoRegistrado
+            ? "(já registrado — alterações aqui atualizam o andamento)."
+            : "no primeiro envio, ou pelo botão abaixo."}
+        </p>
+        <div className="grid grid-cols-2 gap-4 mb-3">
+          <div>
+            <label className="block text-xs text-texto-secundario mb-1" htmlFor="tipoAndamento">
+              Tipo
+            </label>
+            <select
+              id="tipoAndamento"
+              name="tipoAndamento"
+              defaultValue={atualizacao.tipoAndamento}
+              className={classeInput}
+            >
+              {tiposAndamento.map((tipo) => (
+                <option key={tipo} value={tipo}>
+                  {LABEL_TIPO_ANDAMENTO[tipo] ?? tipo}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs text-texto-secundario mb-1" htmlFor="dataMovimentacao">
+              Data da movimentação
+            </label>
+            <input
+              id="dataMovimentacao"
+              name="dataMovimentacao"
+              type="date"
+              defaultValue={atualizacao.dataMovimentacao}
+              className={classeInput}
+            />
+          </div>
+        </div>
+        <label className="block text-xs text-texto-secundario mb-1" htmlFor="resumoInterno">
+          Resumo técnico
+        </label>
+        <textarea
+          id="resumoInterno"
+          name="resumoInterno"
+          rows={3}
+          defaultValue={atualizacao.resumoInterno}
+          className={classeInput}
+        />
+        {!andamentoRegistrado && (
+          <div className="mt-3">
+            <BotaoEnvio
+              name="acao"
+              value="andamento"
+              className={classeBotaoSecundario}
+              textoAguardando="Registrando…"
+            >
+              Registrar andamento sem enviar
+            </BotaoEnvio>
+            <span className="ml-2 text-xs text-texto-secundario">
+              Útil quando você envia pelo WhatsApp Web.
+            </span>
+          </div>
+        )}
+      </section>
 
       <section>
         <div className="flex items-baseline justify-between mb-1">

@@ -4,12 +4,12 @@ import { caminhoAbsolutoAnexo } from "@/lib/anexos";
 
 export async function GET(
   _request: Request,
-  { params }: { params: Promise<{ id: string; atualizacaoId: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id, atualizacaoId } = await params;
+  const { id } = await params;
 
-  const atualizacao = await prisma.atualizacaoCliente.findFirst({
-    where: { id: atualizacaoId, processoId: id },
+  const atualizacao = await prisma.atualizacaoCliente.findUnique({
+    where: { id },
     select: { arquivoCaminho: true, arquivoNome: true, arquivoTipo: true },
   });
 

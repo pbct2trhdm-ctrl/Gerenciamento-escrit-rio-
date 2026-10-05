@@ -14,6 +14,9 @@ export const TAMANHO_MAXIMO_PDF_BYTES = 22 * 1024 * 1024;
 
 export type MensagemGerada = {
   resumoInterno: string;
+  tipoAndamento: string;
+  /** Data da movimentação identificada, ou null se o PDF não permitir saber. */
+  dataMovimentacao: Date | null;
   mensagemWhatsapp: string;
   assuntoEmail: string;
   corpoEmail: string;
@@ -21,9 +24,10 @@ export type MensagemGerada = {
 
 export type DadosContexto = {
   nomeCliente: string;
-  numeroProcesso: string | null;
-  area: string;
-  tribunal: string | null;
+  /** Linhas descritivas do processo (número/protocolo, área ou órgão, tribunal etc.). */
+  linhasProcesso: string[];
+  /** Tipos de andamento que a IA pode sugerir (variam entre judicial e administrativo). */
+  tiposAndamento: readonly string[];
   dataUltimaAtualizacao: Date | null;
   orientacoes: string | null;
 };
@@ -44,7 +48,9 @@ Regras:
 - Se o documento não trouxer nenhuma novidade relevante, diga isso de forma tranquilizadora (o processo segue em andamento normal).
 
 Formato dos campos:
-- resumoInterno: 1 a 3 frases técnicas para a advogada conferir o que você identificou (qual peça, data e página aproximada). Não vai ao cliente.
+- resumoInterno: 1 a 3 frases técnicas para a advogada conferir o que você identificou (qual peça, data e página aproximada). Não vai ao cliente; será registrado como andamento do processo.
+- tipoAndamento: a categoria que melhor descreve a movimentação identificada, entre as opções permitidas (use OUTRO se nenhuma servir).
+- dataMovimentacao: a data da movimentação no formato AAAA-MM-DD, ou string vazia se o documento não permitir saber.
 - mensagemWhatsapp: mensagem curta (até cerca de 700 caracteres), em parágrafos curtos, sem markdown além de *negrito* do WhatsApp com moderação. Termine com "Pastana Mota Advocacia".
 - assuntoEmail: assunto curto e claro, com o número do processo quando houver.
 - corpoEmail: texto do e-mail em texto simples, um pouco mais completo que o WhatsApp, com saudação, explicação, próximo passo e despedida. Termine com a assinatura:
@@ -52,25 +58,39 @@ Atenciosamente,
 ${NOME_ESCRITORIO}
 ${CONTATO_ESCRITORIO}`;
 
-const ESQUEMA_RESPOSTA = {
-  type: "object",
-  properties: {
-    resumoInterno: { type: "string" },
-    mensagemWhatsapp: { type: "string" },
-    assuntoEmail: { type: "string" },
-    corpoEmail: { type: "string" },
-  },
-  required: ["resumoInterno", "mensagemWhatsapp", "assuntoEmail", "corpoEmail"],
-  additionalProperties: false,
-};
+function esquemaResposta(tiposAndamento: readonly string[]) {
+  return {
+    type: "object",
+    properties: {
+      resumoInterno: { type: "string" },
+      tipoAndamento: { type: "string", enum: [...tiposAndamento] },
+      dataMovimentacao: { type: "string" },
+      mensagemWhatsapp: { type: "string" },
+      assuntoEmail: { type: "string" },
+      corpoEmail: { type: "string" },
+    },
+    required: [
+      "resumoInterno",
+      "tipoAndamento",
+      "dataMovimentacao",
+      "mensagemWhatsapp",
+      "assuntoEmail",
+      "corpoEmail",
+    ],
+    additionalProperties: false,
+  };
+}
+
+/** Aceita só datas AAAA-MM-DD válidas; qualquer outra coisa vira null. */
+function parseDataMovimentacao(texto: string): Date | null {
+  const partes = /^(\d{4})-(\d{2})-(\d{2})$/.exec(texto.trim());
+  if (!partes) return null;
+  const data = new Date(Date.UTC(Number(partes[1]), Number(partes[2]) - 1, Number(partes[3])));
+  return Number.isNaN(data.getTime()) || data.getUTCDate() !== Number(partes[3]) ? null : data;
+}
 
 function montarContexto(dados: DadosContexto): string {
-  const linhas = [
-    `Cliente: ${dados.nomeCliente}`,
-    `Número do processo cadastrado: ${dados.numeroProcesso ?? "não informado"}`,
-    `Área: ${dados.area}`,
-  ];
-  if (dados.tribunal) linhas.push(`Tribunal/órgão: ${dados.tribunal}`);
+  const linhas = [`Cliente: ${dados.nomeCliente}`, ...dados.linhasProcesso];
   linhas.push(
     dados.dataUltimaAtualizacao
       ? `Última atualização enviada ao cliente: ${dados.dataUltimaAtualizacao.toLocaleDateString("pt-BR", { timeZone: "UTC" })}`
@@ -114,7 +134,7 @@ export async function gerarMensagemAtualizacao(
       fallbacks: "default",
       output_config: {
         effort: "high",
-        format: { type: "json_schema", schema: ESQUEMA_RESPOSTA },
+        format: { type: "json_schema", schema: esquemaResposta(dados.tiposAndamento) },
       },
       system: PROMPT_SISTEMA,
       messages: [
@@ -170,9 +190,11 @@ export async function gerarMensagemAtualizacao(
     .join("");
 
   try {
-    const json = JSON.parse(texto) as MensagemGerada;
+    const json = JSON.parse(texto) as Record<keyof MensagemGerada, string>;
     return {
       resumoInterno: json.resumoInterno.trim(),
+      tipoAndamento: dados.tiposAndamento.includes(json.tipoAndamento) ? json.tipoAndamento : "OUTRO",
+      dataMovimentacao: parseDataMovimentacao(json.dataMovimentacao),
       mensagemWhatsapp: json.mensagemWhatsapp.trim(),
       assuntoEmail: json.assuntoEmail.trim(),
       corpoEmail: json.corpoEmail.trim(),

@@ -5,14 +5,19 @@ import { BotaoEnvio } from "@/components/botao-envio";
 
 export function AtualizacaoUploadForm({
   processoId,
+  processoAdministrativoId,
   action,
 }: {
-  processoId: string;
+  processoId?: string;
+  processoAdministrativoId?: string;
   action: (formData: FormData) => void;
 }) {
   return (
     <form action={action} className="max-w-xl space-y-4">
-      <input type="hidden" name="processoId" value={processoId} />
+      {processoId && <input type="hidden" name="processoId" value={processoId} />}
+      {processoAdministrativoId && (
+        <input type="hidden" name="processoAdministrativoId" value={processoAdministrativoId} />
+      )}
 
       <div>
         <label className={classeLabel} htmlFor="arquivo">

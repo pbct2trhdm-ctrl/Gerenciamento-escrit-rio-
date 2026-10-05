@@ -128,6 +128,31 @@ export const TIPOS_ANDAMENTO_ADMINISTRATIVO = [
   "OUTRO",
 ] as const;
 
+/**
+ * Tipos que a IA pode sugerir ao registrar o andamento de uma atualização ao
+ * cliente — excluem os que exigem vínculo a recurso ou redesignação
+ * (remessa, julgamento de recurso, redesignação de audiência).
+ */
+export const TIPOS_ANDAMENTO_ATUALIZACAO_JUDICIAL = [
+  "DESPACHO",
+  "DECISAO",
+  "SENTENCA",
+  "AUDIENCIA_REALIZADA",
+  "PUBLICACAO",
+  "INTIMACAO",
+  "MANIFESTACAO_PROTOCOLADA",
+  "OUTRO",
+] as const;
+
+export const TIPOS_ANDAMENTO_ATUALIZACAO_ADMINISTRATIVO = [
+  "DESPACHO",
+  "DECISAO",
+  "PUBLICACAO",
+  "INTIMACAO",
+  "MANIFESTACAO_PROTOCOLADA",
+  "OUTRO",
+] as const;
+
 export const LABEL_TIPO_RECURSO: Record<string, string> = {
   APELACAO: "Apelação",
   AGRAVO_INSTRUMENTO: "Agravo de instrumento",
