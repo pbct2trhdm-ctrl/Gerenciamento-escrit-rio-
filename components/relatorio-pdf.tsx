@@ -1,4 +1,5 @@
-import { Document, Page, View, Text, StyleSheet } from "@react-pdf/renderer";
+import path from "node:path";
+import { Document, Page, View, Text, Image, StyleSheet } from "@react-pdf/renderer";
 import { formatarMoeda } from "@/lib/formatacao";
 import { NOME_ESCRITORIO, CNPJ_ESCRITORIO } from "@/lib/escritorio";
 import {
@@ -9,7 +10,9 @@ import {
   type LinhaRelatorio,
 } from "@/lib/relatorio";
 
-const CorTexto = "#0F172A";
+const CorTexto = "#13303F";
+
+const CaminhoLogo = path.join(process.cwd(), "public", "logo.png");
 const CorSecundaria = "#64748B";
 const CorBorda = "#E2E8F0";
 const CorTranquilo = "#166534";
@@ -28,6 +31,10 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: CorBorda,
     borderBottomStyle: "solid",
+  },
+  logo: {
+    width: 200,
+    marginBottom: 10,
   },
   nomeEscritorio: {
     fontSize: 16,
@@ -177,6 +184,8 @@ export function RelatorioPdfDocumento({
     <Document title={`Relatório financeiro — ${formatarPeriodo(relatorio.periodo)}`}>
       <Page size="A4" style={styles.page}>
         <View style={styles.cabecalho}>
+          {/* eslint-disable-next-line jsx-a11y/alt-text -- Image do react-pdf não aceita alt */}
+          <Image src={CaminhoLogo} style={styles.logo} />
           <Text style={styles.nomeEscritorio}>{NOME_ESCRITORIO}</Text>
           <Text style={styles.linhaCabecalho}>CNPJ {CNPJ_ESCRITORIO}</Text>
           <Text style={styles.linhaCabecalho}>

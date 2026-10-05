@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -33,14 +34,28 @@ export function Sidebar({ publicacoesNaoLidas = 0 }: { publicacoesNaoLidas?: num
 
   return (
     <nav className="w-60 shrink-0 border-r border-black/10 bg-base-escura min-h-screen flex flex-col">
-      <div className="px-5 py-6 border-b border-white/10">
-        <p className="font-display text-base font-semibold leading-tight text-white">
-          Pastana Mota
-        </p>
-        <p className="text-xs text-white/55 leading-tight mt-0.5">
-          Sociedade Individual de Advocacia
-        </p>
-      </div>
+      <Link
+        href="/"
+        className="flex flex-col items-center gap-3 px-5 py-6 border-b border-white/10 focus-visible:outline-white"
+        aria-label="Pastana Mota Advocacia — Dashboard"
+      >
+        <Image
+          src="/logo-pm-branca.png"
+          alt=""
+          width={600}
+          height={328}
+          priority
+          className="h-auto w-20"
+        />
+        <Image
+          src="/logo-texto-branca.png"
+          alt="Pastana Mota Advocacia"
+          width={800}
+          height={130}
+          priority
+          className="h-auto w-44"
+        />
+      </Link>
       <ul className="flex-1 py-4">
         {itens.map((item) => {
           const ativo =
@@ -51,16 +66,16 @@ export function Sidebar({ publicacoesNaoLidas = 0 }: { publicacoesNaoLidas?: num
             <li key={item.href}>
               <Link
                 href={item.href}
-                className={`flex items-center gap-3 mx-3 mb-1 rounded-md py-2 text-sm transition-colors ${
+                className={`flex items-center gap-3 mx-3 mb-1 rounded-md py-2 text-sm transition-colors focus-visible:outline-white ${
                   ativo
-                    ? "border-l-[3px] border-accent bg-accent/10 pl-[9px] pr-3 font-semibold text-accent"
-                    : "px-3 font-medium text-slate-400 hover:bg-white/5 hover:text-slate-100"
+                    ? "border-l-[3px] border-white bg-white/10 pl-[9px] pr-3 font-semibold text-white"
+                    : "px-3 font-medium text-white/60 hover:bg-white/5 hover:text-white"
                 }`}
               >
                 <item.Icone />
                 <span className="flex-1">{item.label}</span>
                 {item.href === "/publicacoes" && publicacoesNaoLidas > 0 && (
-                  <span className="inline-flex items-center justify-center rounded-full bg-accent px-1.5 py-0.5 text-xs font-semibold text-white min-w-[1.25rem] text-center">
+                  <span className="inline-flex items-center justify-center rounded-full bg-white px-1.5 py-0.5 text-xs font-semibold text-base-escura min-w-[1.25rem] text-center">
                     {publicacoesNaoLidas}
                   </span>
                 )}

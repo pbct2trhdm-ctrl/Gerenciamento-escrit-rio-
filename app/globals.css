@@ -2,17 +2,18 @@
 
 @theme inline {
   /* Cores base e superfícies */
-  --color-base-escura: #0f172a;
-  --color-fundo: #f8fafc;
+  /* Paleta da identidade visual Pastana Mota Advocacia (azul-marinho e grafite da logo) */
+  --color-base-escura: #13303f;
+  --color-fundo: #f6f8f9;
   --color-superficie: #ffffff;
 
-  /* Cor de destaque (dourado) */
-  --color-accent: #c59b27;
-  --color-accent-hover: #a37f1e;
+  /* Cor de destaque (azul-marinho da logo, em tom um pouco mais claro) */
+  --color-accent: #1f4b61;
+  --color-accent-hover: #13303f;
 
   /* Tipografia e texto */
-  --color-texto-principal: #0f172a;
-  --color-texto-secundario: #64748b;
+  --color-texto-principal: #13303f;
+  --color-texto-secundario: #5f6466;
   --color-borda-suave: #e2e8f0;
 
   /* Cores semânticas de urgência e status, com tom de fundo suave para cada uma */

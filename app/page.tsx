@@ -122,7 +122,7 @@ export default async function DashboardPage() {
                     </span>
                     <Link
                       href={`/processos/${prazo.processoId}`}
-                      className="inline-flex items-center rounded-md bg-base-escura px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-slate-800"
+                      className="inline-flex items-center rounded-md bg-base-escura px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-accent"
                     >
                       Ver processo →
                     </Link>
