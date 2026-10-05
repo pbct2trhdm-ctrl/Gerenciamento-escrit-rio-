@@ -1,7 +1,12 @@
 import path from "node:path";
 import { Document, Page, View, Text, Image, StyleSheet } from "@react-pdf/renderer";
 import { formatarMoeda } from "@/lib/formatacao";
-import { NOME_ESCRITORIO, CNPJ_ESCRITORIO } from "@/lib/escritorio";
+import {
+  NOME_ESCRITORIO,
+  CNPJ_ESCRITORIO,
+  ENDERECO_ESCRITORIO,
+  CONTATO_ESCRITORIO,
+} from "@/lib/escritorio";
 import {
   calcularVariacao,
   formatarPeriodo,
@@ -188,6 +193,8 @@ export function RelatorioPdfDocumento({
           <Image src={CaminhoLogo} style={styles.logo} />
           <Text style={styles.nomeEscritorio}>{NOME_ESCRITORIO}</Text>
           <Text style={styles.linhaCabecalho}>CNPJ {CNPJ_ESCRITORIO}</Text>
+          <Text style={styles.linhaCabecalho}>{ENDERECO_ESCRITORIO}</Text>
+          <Text style={styles.linhaCabecalho}>{CONTATO_ESCRITORIO}</Text>
           <Text style={styles.linhaCabecalho}>
             Período de referência: {formatarPeriodo(relatorio.periodo)}
             {comparar && relatorio.periodoAnterior
