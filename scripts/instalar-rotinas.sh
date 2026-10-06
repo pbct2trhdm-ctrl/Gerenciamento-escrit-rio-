@@ -163,7 +163,7 @@ echo "• Testando o backup agendado…"
 LOG_BACKUP="$LOGS/pastana-mota-backup.log"
 LINHAS_ANTES=$(wc -l 2>/dev/null < "$LOG_BACKUP" || echo 0)
 launchctl kickstart -k "gui/$UID_ATUAL/com.pastanamota.backup"
-sleep 8
+sleep 15
 NOVO_LOG="$(tail -n +"$((LINHAS_ANTES + 1))" "$LOG_BACKUP" 2>/dev/null || true)"
 echo "$NOVO_LOG"
 if echo "$NOVO_LOG" | grep -qiE "operation not permitted|EPERM|EACCES"; then
@@ -175,6 +175,24 @@ Libere assim:
   2. Clique em +, aperte Cmd+Shift+G, digite $NODE e clique em Abrir
   3. Deixe a chave ligada e rode este script de novo.
 AVISO
+  exit 1
+fi
+if echo "$NOVO_LOG" | grep -q "Falha ao copiar o backup para o OneDrive"; then
+  cat <<AVISO
+
+ATENÇÃO: o backup local foi criado, mas a cópia para o OneDrive falhou.
+  1. Confira se o app do OneDrive está aberto (ícone de nuvem na barra de menus)
+     e sincronizando.
+  2. Ajustes do Sistema → Privacidade e Segurança → Acesso Total ao Disco:
+     adicione $NODE (Cmd+Shift+G para digitar o caminho) e ligue a chave.
+  3. Rode este script de novo para testar.
+AVISO
+  exit 1
+fi
+if ! echo "$NOVO_LOG" | grep -q "Backup concluído"; then
+  echo
+  echo "ATENÇÃO: o teste do backup não terminou como esperado. Veja a mensagem acima"
+  echo "ou o log em $LOG_BACKUP e me envie o texto."
   exit 1
 fi
 

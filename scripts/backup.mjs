@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 import "dotenv/config";
-import { copyFileSync, createWriteStream, existsSync, mkdirSync, readdirSync, statSync, unlinkSync } from "node:fs";
+import { copyFileSync, createReadStream, createWriteStream, existsSync, mkdirSync, readdirSync, statSync, unlinkSync } from "node:fs";
 import { createRequire } from "node:module";
+import { pipeline } from "node:stream/promises";
+import { setTimeout as esperar } from "node:timers/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -50,6 +52,34 @@ function criarZip(destino) {
   });
 }
 
+/**
+ * Copia o backup para a pasta do OneDrive. A pasta ~/Library/CloudStorage é
+ * gerenciada pelo app do OneDrive (File Provider do macOS), que às vezes
+ * recusa a cópia nativa (copyfile) com "Unknown system error -11" (EAGAIN).
+ * Nesse caso copia como fluxo de bytes comum, tentando algumas vezes.
+ */
+async function copiarParaOneDrive(origem, destino) {
+  try {
+    copyFileSync(origem, destino);
+    return;
+  } catch (erro) {
+    console.warn(`Cópia rápida para o OneDrive recusada (${erro.code ?? erro.message}); tentando cópia comum...`);
+  }
+
+  let ultimoErro;
+  for (let tentativa = 1; tentativa <= 3; tentativa++) {
+    try {
+      await pipeline(createReadStream(origem), createWriteStream(destino));
+      return;
+    } catch (erro) {
+      ultimoErro = erro;
+      console.warn(`Tentativa ${tentativa} de copiar para o OneDrive falhou (${erro.code ?? erro.message}).`);
+      if (tentativa < 3) await esperar(5000);
+    }
+  }
+  throw ultimoErro;
+}
+
 /** Remove backups com mais de RETENCAO_DIAS dias, mantendo a pasta enxuta. */
 function removerBackupsAntigos(diretorio) {
   if (!existsSync(diretorio)) return;
@@ -73,12 +103,22 @@ async function main() {
   await criarZip(caminhoLocal);
   console.log(`Backup local criado em: ${caminhoLocal}`);
 
+  let falhaOneDrive = false;
   if (ONEDRIVE_DIR) {
-    mkdirSync(ONEDRIVE_DIR, { recursive: true });
     const caminhoOneDrive = path.join(ONEDRIVE_DIR, nomeArquivo);
-    copyFileSync(caminhoLocal, caminhoOneDrive);
-    console.log(`Backup copiado para a pasta sincronizada do OneDrive: ${caminhoOneDrive}`);
-    console.log("O aplicativo do OneDrive cuida do envio para a nuvem a partir daqui.");
+    try {
+      mkdirSync(ONEDRIVE_DIR, { recursive: true });
+      await copiarParaOneDrive(caminhoLocal, caminhoOneDrive);
+      console.log(`Backup copiado para a pasta sincronizada do OneDrive: ${caminhoOneDrive}`);
+      console.log("O aplicativo do OneDrive cuida do envio para a nuvem a partir daqui.");
+    } catch (erro) {
+      // O backup local já existe — a falha da cópia em nuvem não o invalida.
+      falhaOneDrive = true;
+      console.error(
+        `Falha ao copiar o backup para o OneDrive (${erro.code ?? erro.message}). ` +
+          "O backup local foi mantido. Confira se o app do OneDrive está aberto e sincronizando."
+      );
+    }
   } else {
     console.warn(
       "BACKUP_ONEDRIVE_DIR não configurado no .env — o backup ficou só local, sem cópia na nuvem. " +
@@ -87,8 +127,12 @@ async function main() {
   }
 
   removerBackupsAntigos(LOCAL_BACKUP_DIR);
-  if (ONEDRIVE_DIR) removerBackupsAntigos(ONEDRIVE_DIR);
+  if (ONEDRIVE_DIR && !falhaOneDrive) removerBackupsAntigos(ONEDRIVE_DIR);
 
+  if (falhaOneDrive) {
+    console.log("Backup concluído só localmente (sem cópia no OneDrive).");
+    process.exit(2);
+  }
   console.log("Backup concluído.");
 }
 
