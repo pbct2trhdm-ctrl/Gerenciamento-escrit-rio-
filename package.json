@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "postinstall": "prisma generate",
-    "backup": "node scripts/backup.mjs"
+    "backup": "node scripts/backup.mjs",
+    "rotinas": "bash scripts/instalar-rotinas.sh"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.131.0",

@@ -11,7 +11,8 @@
   ou `npm start`) na porta 3000. Se você não deixa o app rodando o tempo
   todo, as notificações não serão verificadas.
 
-  Como usar (veja o passo a passo completo na resposta do chat):
+  Como usar manual — prefira `npm run rotinas`, que gera e carrega
+  este arquivo automaticamente (scripts/instalar-rotinas.sh):
     1. Copie este arquivo para ~/Library/LaunchAgents/com.pastanamota.notificacoes.plist
     2. Nele, substitua SEU_TOKEN_AQUI pelo mesmo valor de
        NOTIFICACOES_CRON_SECRET definido no .env do projeto.

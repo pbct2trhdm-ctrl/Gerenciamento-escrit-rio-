@@ -60,6 +60,14 @@ Na tela do processo (judicial ou administrativo), **Atualizar cliente**: anexe o
 
 Configuração no `.env` (ver `.env.example`): `ANTHROPIC_API_KEY` para a IA; `GMAIL_USUARIO` e `GMAIL_SENHA_APP` (senha de app do Google) para o e-mail. O conteúdo do PDF é enviado à API da Anthropic para gerar a mensagem.
 
+## Rotinas automáticas (macOS)
+
+```bash
+npm run rotinas
+```
+
+Instala três agendamentos do macOS (launchd): backup diário às 20h (`npm run backup`, com cópia opcional no OneDrive), verificação de prazos para aviso por WhatsApp e busca de publicações no DJEN (a cada 15 min; cada rotina só age a partir do horário definido em Configurações e uma vez por dia). Gera os segredos `NOTIFICACOES_CRON_SECRET` e `PUBLICACOES_CRON_SECRET` no `.env` se faltarem. As rotinas de prazos e publicações dependem do sistema rodando em http://localhost:3000. Para remover: `bash scripts/instalar-rotinas.sh --remover`.
+
 ## Fora de escopo (v1)
 
 - Módulo de documentos/modelos de petições

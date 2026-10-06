@@ -10,7 +10,8 @@
   ou `npm start`) na porta 3000. Se você não deixa o app rodando o tempo
   todo, as publicações não serão buscadas automaticamente.
 
-  Como usar (veja o passo a passo completo na resposta do chat):
+  Como usar manual — prefira `npm run rotinas`, que gera e carrega
+  este arquivo automaticamente (scripts/instalar-rotinas.sh):
     1. Copie este arquivo para ~/Library/LaunchAgents/com.pastanamota.publicacoes.plist
     2. Nele, substitua SEU_TOKEN_AQUI pelo mesmo valor de
        PUBLICACOES_CRON_SECRET definido no .env do projeto.
