@@ -24,6 +24,7 @@ export async function salvarConfiguracaoNotificacoes(formData: FormData) {
   const urlBaseApi = textoOuNull(formData.get("urlBaseApi"));
   const instanciaId = textoOuNull(formData.get("instanciaId"));
   const credencialApi = textoOuNull(formData.get("credencialApi"));
+  const clientTokenApi = provedor === "Z_API" ? textoOuNull(formData.get("clientTokenApi")) : null;
 
   const dados = {
     numeroWhatsapp,
@@ -33,6 +34,7 @@ export async function salvarConfiguracaoNotificacoes(formData: FormData) {
     urlBaseApi,
     instanciaId,
     credencialApi,
+    clientTokenApi,
   };
 
   await prisma.configuracaoNotificacao.upsert({

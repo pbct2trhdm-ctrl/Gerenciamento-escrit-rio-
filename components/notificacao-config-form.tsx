@@ -124,6 +124,25 @@ export function NotificacaoConfigForm({
         />
       </div>
 
+      {provedor === "Z_API" && (
+        <div>
+          <label className={classeLabel} htmlFor="clientTokenApi">
+            Token de Segurança da conta (Client-Token)
+          </label>
+          <input
+            id="clientTokenApi"
+            name="clientTokenApi"
+            type="password"
+            defaultValue={configuracao?.clientTokenApi ?? ""}
+            className={classeInput}
+          />
+          <p className="mt-1 text-xs text-texto-secundario">
+            No painel da Z-API, em Segurança. Obrigatório se o token de segurança
+            estiver ativado na sua conta; caso contrário, deixe em branco.
+          </p>
+        </div>
+      )}
+
       <button type="submit" className={classeBotaoPrimario}>
         Salvar configurações
       </button>

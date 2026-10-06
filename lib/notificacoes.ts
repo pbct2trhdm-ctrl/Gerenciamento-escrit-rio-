@@ -105,6 +105,7 @@ export async function verificarEDispararNotificacoes(
         urlBaseApi: config.urlBaseApi,
         instanciaId: config.instanciaId,
         credencialApi: config.credencialApi,
+        clientTokenApi: config.clientTokenApi,
       },
       config.numeroWhatsapp,
       mensagem

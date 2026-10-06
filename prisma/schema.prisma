@@ -414,6 +414,8 @@ model ConfiguracaoNotificacao {
   instanciaId            String?
   /// apikey (Evolution API) ou token (Z-API).
   credencialApi          String?
+  /// Token de Segurança da conta Z-API (header Client-Token) — exigido quando ativado no painel da Z-API.
+  clientTokenApi         String?
   atualizadoEm           DateTime             @updatedAt
 }
 

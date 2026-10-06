@@ -15,6 +15,8 @@ export type ConfiguracaoEnvio = {
   urlBaseApi: string | null;
   instanciaId: string | null;
   credencialApi: string | null;
+  /** Token de Segurança da conta (Z-API), enviado no header Client-Token quando preenchido. */
+  clientTokenApi?: string | null;
 };
 
 export type ResultadoEnvio =
@@ -68,7 +70,10 @@ async function enviarViaZApi(
   const url = `https://api.z-api.io/instances/${config.instanciaId}/token/${config.credencialApi}/send-text`;
   const resposta = await fetch(url, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...(config.clientTokenApi ? { "Client-Token": config.clientTokenApi } : {}),
+    },
     body: JSON.stringify({ phone: numeroDestino, message: mensagem }),
   });
 

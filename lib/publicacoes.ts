@@ -184,6 +184,7 @@ export async function verificarEImportarPublicacoes(
           urlBaseApi: configNotificacao.urlBaseApi,
           instanciaId: configNotificacao.instanciaId,
           credencialApi: configNotificacao.credencialApi,
+          clientTokenApi: configNotificacao.clientTokenApi,
         },
         configNotificacao.numeroWhatsapp,
         mensagem

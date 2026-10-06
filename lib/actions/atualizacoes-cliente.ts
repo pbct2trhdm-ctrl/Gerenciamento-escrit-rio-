@@ -303,6 +303,7 @@ export async function salvarEEnviarAtualizacaoCliente(formData: FormData) {
           urlBaseApi: config.urlBaseApi,
           instanciaId: config.instanciaId,
           credencialApi: config.credencialApi,
+          clientTokenApi: config.clientTokenApi,
         },
         numero,
         atualizacao.mensagemWhatsapp
