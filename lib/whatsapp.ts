@@ -79,6 +79,14 @@ async function enviarViaZApi(
 
   if (!resposta.ok) {
     const corpo = await resposta.text().catch(() => "");
+    if (/client-token/i.test(corpo)) {
+      return {
+        sucesso: false,
+        erro:
+          "A Z-API exige o Token de Segurança da conta (Client-Token). Copie-o no painel da Z-API, " +
+          "em Segurança, e cole em Configurações → Token de Segurança da conta.",
+      };
+    }
     return {
       sucesso: false,
       erro: `Z-API retornou ${resposta.status}: ${corpo.slice(0, 300)}`,
