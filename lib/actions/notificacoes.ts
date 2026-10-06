@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { normalizarTelefoneWhatsapp } from "@/lib/whatsapp";
 
 const PROVEDORES = ["EVOLUTION_API", "Z_API"] as const;
 
@@ -12,7 +13,11 @@ function textoOuNull(valor: FormDataEntryValue | null): string | null {
 }
 
 export async function salvarConfiguracaoNotificacoes(formData: FormData) {
-  const numeroWhatsapp = textoOuNull(formData.get("numeroWhatsapp"));
+  // Guarda só dígitos com código do país (ex.: "+55 (91) 98100-9204" → "5591981009204").
+  const numeroTexto = textoOuNull(formData.get("numeroWhatsapp"));
+  const numeroWhatsapp = numeroTexto
+    ? (normalizarTelefoneWhatsapp(numeroTexto) ?? numeroTexto.replace(/\D/g, ""))
+    : null;
   const antecedenciaPadraoDias = Number(formData.get("antecedenciaPadraoDias") ?? 3);
   const horarioDisparo = (formData.get("horarioDisparo") ?? "08:00").toString();
 

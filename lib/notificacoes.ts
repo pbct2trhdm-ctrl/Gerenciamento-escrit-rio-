@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { diasRestantes } from "@/lib/prazos";
 import { LABEL_TIPO_PRAZO, formatarData } from "@/lib/formatacao";
-import { enviarWhatsapp, type ProvedorWhatsapp } from "@/lib/whatsapp";
+import { enviarWhatsapp, normalizarTelefoneWhatsapp, type ProvedorWhatsapp } from "@/lib/whatsapp";
 
 export type ResumoVerificacao = {
   executado: boolean;
@@ -107,7 +107,7 @@ export async function verificarEDispararNotificacoes(
         credencialApi: config.credencialApi,
         clientTokenApi: config.clientTokenApi,
       },
-      config.numeroWhatsapp,
+      normalizarTelefoneWhatsapp(config.numeroWhatsapp) ?? config.numeroWhatsapp,
       mensagem
     );
 

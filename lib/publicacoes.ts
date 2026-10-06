@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { buscarPublicacoesDjen, extrairNumeroProcesso } from "@/lib/djen";
-import { enviarWhatsapp, type ProvedorWhatsapp } from "@/lib/whatsapp";
+import { enviarWhatsapp, normalizarTelefoneWhatsapp, type ProvedorWhatsapp } from "@/lib/whatsapp";
 import { formatarData } from "@/lib/formatacao";
 
 export type ResumoVerificacaoPublicacoes = {
@@ -186,7 +186,7 @@ export async function verificarEImportarPublicacoes(
           credencialApi: configNotificacao.credencialApi,
           clientTokenApi: configNotificacao.clientTokenApi,
         },
-        configNotificacao.numeroWhatsapp,
+        normalizarTelefoneWhatsapp(configNotificacao.numeroWhatsapp) ?? configNotificacao.numeroWhatsapp,
         mensagem
       );
       whatsappEnviado = resultado.sucesso;
