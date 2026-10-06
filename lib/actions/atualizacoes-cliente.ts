@@ -142,7 +142,13 @@ async function gerarParaProcesso(
       erro instanceof ErroGeracaoMensagem
         ? erro.message
         : `Erro inesperado ao gerar a mensagem: ${erro instanceof Error ? erro.message : "desconhecido"}`;
-    console.error("Falha ao gerar atualização ao cliente:", erro);
+    // Falhas previstas (IA não configurada, PDF grande demais etc.) já aparecem
+    // na tela de revisão — no terminal basta uma linha, sem rastro de pilha.
+    if (erro instanceof ErroGeracaoMensagem) {
+      console.warn(`Atualização ao cliente sem IA: ${erro.message}`);
+    } else {
+      console.error("Falha ao gerar atualização ao cliente:", erro);
+    }
     return { erroGeracao: mensagemErro };
   }
 }
