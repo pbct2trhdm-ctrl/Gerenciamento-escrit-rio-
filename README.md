@@ -68,6 +68,24 @@ npm run rotinas
 
 Instala três agendamentos do macOS (launchd): backup diário às 20h (`npm run backup`, com cópia opcional no OneDrive), verificação de prazos para aviso por WhatsApp e busca de publicações no DJEN (a cada 15 min; cada rotina só age a partir do horário definido em Configurações e uma vez por dia). Gera os segredos `NOTIFICACOES_CRON_SECRET` e `PUBLICACOES_CRON_SECRET` no `.env` se faltarem. As rotinas de prazos e publicações dependem do sistema rodando em http://localhost:3000. Para remover: `bash scripts/instalar-rotinas.sh --remover`.
 
+## Ligar sozinho com o Mac (macOS)
+
+```bash
+npm run servico
+```
+
+Compila a versão de produção e instala o serviço `com.pastanamota.app` (launchd), que inicia o sistema em http://localhost:3000 ao fazer login no Mac e o religa se ele parar. Depois disso não use mais `npm run dev`. Log: `~/Library/Logs/pastana-mota-app.log`. Para remover: `bash scripts/instalar-servico.sh --remover`.
+
+## Atualizar
+
+Depois de puxar alterações do GitHub:
+
+```bash
+npm run atualizar
+```
+
+Instala dependências, aplica as migrações, regenera o Prisma Client e, se o serviço estiver instalado, recompila e o reinicia.
+
 ## Fora de escopo (v1)
 
 - Módulo de documentos/modelos de petições

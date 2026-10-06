@@ -10,7 +10,8 @@
     "postinstall": "prisma generate",
     "backup": "node scripts/backup.mjs",
     "rotinas": "bash scripts/instalar-rotinas.sh",
-    "atualizar": "npm install && prisma migrate deploy && prisma generate"
+    "atualizar": "bash scripts/atualizar.sh",
+    "servico": "bash scripts/instalar-servico.sh"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.131.0",
