@@ -7,7 +7,9 @@
  *
  * Uso:
  *   npm run diagnostico-djen
- *   npm run diagnostico-djen -- 12345 PA     (OAB e UF manualmente)
+ *   npm run diagnostico-djen -- 12345 PA          (OAB e UF manualmente)
+ *   npm run diagnostico-djen -- processo NUMERO   (todas as comunicações do
+ *                                                  processo, sem filtro de OAB)
  */
 import "dotenv/config";
 import { createRequire } from "node:module";
@@ -17,8 +19,14 @@ import { fileURLToPath } from "node:url";
 const require = createRequire(import.meta.url);
 const raiz = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
-let [oab, uf] = process.argv.slice(2);
-if (!oab || !uf) {
+const argumentos = process.argv.slice(2);
+const numeroProcesso = argumentos[0] === "processo" ? (argumentos[1] ?? "").replace(/\D/g, "") : null;
+if (argumentos[0] === "processo" && !numeroProcesso) {
+  console.log("Informe o número: npm run diagnostico-djen -- processo 0800000-00.2026.8.14.0301");
+  process.exit(1);
+}
+let [oab, uf] = numeroProcesso ? [] : argumentos;
+if (!numeroProcesso && (!oab || !uf)) {
   const Database = require("better-sqlite3");
   const db = new Database(path.join(raiz, "dev.db"), { readonly: true });
   const config = db
@@ -38,13 +46,15 @@ if (!oab || !uf) {
 }
 
 const fim = new Date();
-const inicio = new Date(fim);
-inicio.setDate(inicio.getDate() - 7);
+fim.setDate(fim.getDate() + 1); // margem: inclui o dia de amanhã, caso a API trate o fim como exclusivo
+const inicio = new Date();
+inicio.setDate(inicio.getDate() - (numeroProcesso ? 30 : 7));
 const iso = (d) => d.toISOString().slice(0, 10);
 
 const params = new URLSearchParams({
-  numeroOab: oab.replace(/[.\s]/g, ""),
-  ufOab: uf.toUpperCase(),
+  ...(numeroProcesso
+    ? { numeroProcesso }
+    : { numeroOab: oab.replace(/[.\s]/g, ""), ufOab: uf.toUpperCase() }),
   dataDisponibilizacaoInicio: iso(inicio),
   dataDisponibilizacaoFim: iso(fim),
   pagina: "1",
@@ -79,15 +89,25 @@ try {
 
   if (itens.length > 0) {
     console.log(`\nCampos de cada publicação: ${Object.keys(itens[0]).join(", ")}\n`);
-    for (const item of itens.slice(0, 15)) {
+    for (const item of itens.slice(0, 30)) {
       const data = item.data_disponibilizacao ?? item.dataDisponibilizacao ?? "?";
       const processo = item.numero_processo ?? item.numeroprocessocommascara ?? item.numeroProcesso ?? "?";
       const orgao = item.nomeOrgao ?? item.siglaTribunal ?? "?";
       const textoItem = String(item.texto ?? item.conteudo ?? "").replace(/\s+/g, " ").slice(0, 90);
-      console.log(`• ${data} | ${processo} | ${orgao}\n    ${textoItem}…`);
+      const advogados = Array.isArray(item.destinatarioadvogados)
+        ? item.destinatarioadvogados
+            .map((d) => {
+              const adv = d.advogado ?? d;
+              return `${adv.nome ?? "?"} (OAB ${adv.numero_oab ?? adv.numeroOab ?? "?"}/${adv.uf_oab ?? adv.ufOab ?? "?"})`;
+            })
+            .join("; ")
+        : "—";
+      console.log(`• ${data} | ${processo} | ${orgao} | ${item.tipoComunicacao ?? "?"} | meio ${item.meio ?? "?"}`);
+      console.log(`    Advogados: ${advogados}`);
+      console.log(`    ${textoItem}…`);
     }
   } else {
-    console.log("\nNenhuma publicação nos últimos 7 dias para essa OAB/UF. Início da resposta:");
+    console.log(`\nNenhuma publicação encontrada${numeroProcesso ? " para esse processo nos últimos 30 dias" : " nos últimos 7 dias para essa OAB/UF"}. Início da resposta:`);
     console.log(texto.slice(0, 800));
   }
 } catch (erro) {

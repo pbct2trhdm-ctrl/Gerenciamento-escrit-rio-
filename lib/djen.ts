@@ -95,7 +95,9 @@ export async function buscarPublicacoesDjen(
       numeroOab: oab,
       ufOab: seccionalOab.toUpperCase(),
       dataDisponibilizacaoInicio: paraDataISO(dataInicio),
-      dataDisponibilizacaoFim: paraDataISO(dataFim),
+      // +1 dia de margem: inclui o dia corrente mesmo se a API tratar o fim
+      // como exclusivo ou se o fuso deslocar a data (duplicatas são ignoradas).
+      dataDisponibilizacaoFim: paraDataISO(new Date(dataFim.getTime() + 24 * 60 * 60 * 1000)),
       pagina: String(pagina),
       itensPorPagina: String(itensPorPagina),
     });

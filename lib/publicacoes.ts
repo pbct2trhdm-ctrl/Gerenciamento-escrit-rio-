@@ -38,12 +38,16 @@ const DIAS_MAXIMOS_RETROATIVOS = 30;
  * dias. Na primeira busca, os últimos 7 dias. Publicações já importadas são
  * ignoradas pelo idExternoDjen, então a sobreposição não duplica nada.
  */
-function inicioDaJanelaDeBusca(ultimaExecucao: Date | null, agora: Date): Date {
+function inicioDaJanelaDeBusca(
+  ultimaExecucao: Date | null,
+  agora: Date,
+  diasSemHistorico: number = DIAS_PRIMEIRA_BUSCA
+): Date {
   const limite = new Date(agora);
   limite.setDate(limite.getDate() - DIAS_MAXIMOS_RETROATIVOS);
 
   const inicio = new Date(ultimaExecucao ?? agora);
-  inicio.setDate(inicio.getDate() - (ultimaExecucao ? 1 : DIAS_PRIMEIRA_BUSCA));
+  inicio.setDate(inicio.getDate() - (ultimaExecucao ? 1 : diasSemHistorico));
   return inicio < limite ? limite : inicio;
 }
 
@@ -156,7 +160,11 @@ export async function verificarEImportarPublicacoes(
     };
   }
 
-  const inicioBusca = inicioDaJanelaDeBusca(config.ultimaExecucao, agora);
+  // A busca manual ("Buscar agora") sempre revisa os últimos 30 dias, para
+  // recuperar qualquer publicação que a janela automática tenha deixado passar.
+  const inicioBusca = opcoes.forcar
+    ? inicioDaJanelaDeBusca(null, agora, DIAS_MAXIMOS_RETROATIVOS)
+    : inicioDaJanelaDeBusca(config.ultimaExecucao, agora);
 
   let itensDjen: Awaited<ReturnType<typeof buscarPublicacoesDjen>>;
   try {
