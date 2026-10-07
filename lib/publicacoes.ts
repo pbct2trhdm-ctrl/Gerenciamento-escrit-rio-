@@ -32,11 +32,19 @@ const INTERVALO_MINUTOS_ENTRE_BUSCAS = 60;
 const DIAS_MAXIMOS_RETROATIVOS = 30;
 
 /**
- * Início do período consultado no DJEN: desde a véspera da última busca
- * bem-sucedida (margem para publicações disponibilizadas tarde no dia), para
- * recuperar tudo o que saiu enquanto o Mac ficou desligado — limitado a 30
- * dias. Na primeira busca, os últimos 7 dias. Publicações já importadas são
- * ignoradas pelo idExternoDjen, então a sobreposição não duplica nada.
+ * Mínimo de dias revisados em toda busca automática. A API pública do DJEN
+ * pode levar dias para exibir uma comunicação que o site já mostra — com a
+ * data de disponibilização original. Revisar sempre a última semana captura
+ * essas publicações atrasadas; as já importadas são ignoradas.
+ */
+const DIAS_MINIMOS_REVISADOS = 7;
+
+/**
+ * Início do período consultado no DJEN: o mais antigo entre a véspera da
+ * última busca bem-sucedida (recupera o que saiu com o Mac desligado) e os
+ * últimos 7 dias (recupera o que a API publicou com atraso) — limitado a 30
+ * dias. Publicações já importadas são ignoradas pelo idExternoDjen, então a
+ * sobreposição não duplica nada.
  */
 function inicioDaJanelaDeBusca(
   ultimaExecucao: Date | null,
@@ -46,8 +54,15 @@ function inicioDaJanelaDeBusca(
   const limite = new Date(agora);
   limite.setDate(limite.getDate() - DIAS_MAXIMOS_RETROATIVOS);
 
-  const inicio = new Date(ultimaExecucao ?? agora);
-  inicio.setDate(inicio.getDate() - (ultimaExecucao ? 1 : diasSemHistorico));
+  const minimo = new Date(agora);
+  minimo.setDate(minimo.getDate() - Math.max(DIAS_MINIMOS_REVISADOS, ultimaExecucao ? 0 : diasSemHistorico));
+
+  let inicio = minimo;
+  if (ultimaExecucao) {
+    const vesperaUltima = new Date(ultimaExecucao);
+    vesperaUltima.setDate(vesperaUltima.getDate() - 1);
+    if (vesperaUltima < inicio) inicio = vesperaUltima;
+  }
   return inicio < limite ? limite : inicio;
 }
 
