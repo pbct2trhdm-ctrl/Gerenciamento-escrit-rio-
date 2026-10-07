@@ -51,17 +51,61 @@ const inicio = new Date();
 inicio.setDate(inicio.getDate() - (numeroProcesso ? 30 : 7));
 const iso = (d) => d.toISOString().slice(0, 10);
 
-const params = new URLSearchParams({
-  ...(numeroProcesso
-    ? { numeroProcesso }
-    : { numeroOab: oab.replace(/[.\s]/g, ""), ufOab: uf.toUpperCase() }),
-  dataDisponibilizacaoInicio: iso(inicio),
-  dataDisponibilizacaoFim: iso(fim),
-  pagina: "1",
-  itensPorPagina: "100",
-});
-const url = `https://comunicaapi.pje.jus.br/api/v1/comunicacao?${params}`;
-console.log(`\nConsultando: ${url}\n`);
+const BASE = "https://comunicaapi.pje.jus.br/api/v1/comunicacao";
+const CABECALHOS = {
+  Accept: "application/json",
+  "User-Agent":
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15",
+};
+const comMascara = (d) =>
+  d.length === 20
+    ? `${d.slice(0, 7)}-${d.slice(7, 9)}.${d.slice(9, 13)}.${d.slice(13, 14)}.${d.slice(14, 16)}.${d.slice(16)}`
+    : d;
+const hoje = iso(new Date());
+const periodo = { dataDisponibilizacaoInicio: iso(inicio), dataDisponibilizacaoFim: iso(fim) };
+const filtroOab = numeroProcesso ? null : { numeroOab: oab.replace(/[.\s]/g, ""), ufOab: uf.toUpperCase() };
+
+// Testa variações da consulta para descobrir qual a API aceita.
+const variantes = numeroProcesso
+  ? [
+      ["processo só dígitos + período", { numeroProcesso, ...periodo }],
+      ["processo com máscara + período", { numeroProcesso: comMascara(numeroProcesso), ...periodo }],
+      ["processo só dígitos, sem datas", { numeroProcesso }],
+      ["processo com máscara, sem datas", { numeroProcesso: comMascara(numeroProcesso) }],
+    ]
+  : [
+      ["OAB + últimos 7 dias", { ...filtroOab, ...periodo }],
+      ["OAB + só hoje", { ...filtroOab, dataDisponibilizacaoInicio: hoje, dataDisponibilizacaoFim: hoje }],
+      ["OAB + TRF1 + período", { ...filtroOab, siglaTribunal: "TRF1", ...periodo }],
+      ["OAB sem datas", { ...filtroOab }],
+    ];
+
+console.log("\nTestando variações da consulta:");
+let melhor = null;
+for (const [nome, filtros] of variantes) {
+  const qs = new URLSearchParams({ ...filtros, pagina: "1", itensPorPagina: "100" });
+  try {
+    const r = await fetch(`${BASE}?${qs}`, { headers: CABECALHOS });
+    const t = await r.text();
+    let qtd = "?";
+    try {
+      const j = JSON.parse(t);
+      qtd = Array.isArray(j.items) ? j.items.length : `campos: ${Object.keys(j).join(",")}`;
+      if (Array.isArray(j.items) && j.items.length > 0 && !melhor) melhor = qs;
+    } catch {
+      qtd = `não-JSON: ${t.slice(0, 80)}`;
+    }
+    console.log(`  ${nome.padEnd(36)} HTTP ${r.status} → ${qtd}`);
+  } catch (erro) {
+    console.log(`  ${nome.padEnd(36)} falha: ${erro.message}`);
+  }
+}
+
+const params =
+  melhor ??
+  new URLSearchParams({ ...(variantes[0][1]), pagina: "1", itensPorPagina: "100" });
+const url = `${BASE}?${params}`;
+console.log(`\nDetalhando: ${url}\n`);
 
 try {
   const resposta = await fetch(url, {
