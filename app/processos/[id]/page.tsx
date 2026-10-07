@@ -34,6 +34,7 @@ import {
   CLASSE_BADGE_AUDIENCIA,
 } from "@/lib/urgencia";
 import { SeloPrazo } from "@/components/selo-prazo";
+import { SeloAConferir } from "@/components/prazo-a-conferir";
 import { Badge } from "@/components/badge";
 import { EmptyState } from "@/components/empty-state";
 import { LinkVoltar } from "@/components/link-voltar";
@@ -197,6 +198,7 @@ export default async function ProcessoDetalhePage({
                             Audiência
                           </span>
                         )}
+                        {prazo.aConferir && <SeloAConferir />}
                         {prazo._count.redesignacoes > 0 && (
                           <span className={classeBadgeNeutro}>
                             Redesignada {prazo._count.redesignacoes}x

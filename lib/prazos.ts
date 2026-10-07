@@ -107,3 +107,16 @@ export function prazoProximoDoVencimento(dataFinal: Date, referencia: Date = new
   const restantes = diasRestantes(dataFinal, referencia);
   return restantes <= 7;
 }
+
+export function ehDiaUtil(data: Date): boolean {
+  return !ehFimDeSemana(data) && !ehFeriado(data, new Map());
+}
+
+/** Primeiro dia útil estritamente posterior à data (fins de semana e feriados nacionais). */
+export function proximoDiaUtil(data: Date): Date {
+  let atual = addDias(data, 1);
+  while (!ehDiaUtil(atual)) {
+    atual = addDias(atual, 1);
+  }
+  return atual;
+}

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SeloAConferir, BotaoConfirmarPrazo } from "@/components/prazo-a-conferir";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import {
@@ -53,8 +54,12 @@ export default async function PrazoDetalhePage({
     <div className="max-w-3xl">
       <LinkVoltar href="/prazos" label="Voltar para Prazos/Agenda" />
       <div className="flex items-center justify-between mb-1">
-        <h1 className={classeTituloPagina}>{LABEL_TIPO_PRAZO[prazo.tipo]}</h1>
+        <div className="flex items-center gap-2 flex-wrap">
+          <h1 className={classeTituloPagina}>{LABEL_TIPO_PRAZO[prazo.tipo]}</h1>
+          {prazo.aConferir && <SeloAConferir />}
+        </div>
         <div className="flex gap-2">
+          {prazo.aConferir && <BotaoConfirmarPrazo prazoId={prazo.id} />}
           <Link href={`/prazos/${prazo.id}/editar`} className={classeBotaoSecundario}>
             Editar
           </Link>

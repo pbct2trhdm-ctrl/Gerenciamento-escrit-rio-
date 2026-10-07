@@ -4,7 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { UFS_BRASIL } from "@/lib/formatacao";
-import { verificarEImportarPublicacoes } from "@/lib/publicacoes";
+import { verificarEImportarPublicacoes, vincularPublicacaoAoProcessoId } from "@/lib/publicacoes";
+import { calcularVencimentoPublicacao } from "@/lib/prazo-publicacao";
 
 function textoOuNull(valor: FormDataEntryValue | null): string | null {
   const texto = (valor ?? "").toString().trim();
@@ -35,25 +36,13 @@ export async function vincularPublicacaoManualmente(publicacaoId: string, formDa
     throw new Error("Processo é obrigatório");
   }
 
-  const publicacao = await prisma.publicacao.update({
-    where: { id: publicacaoId },
-    data: { processoId, statusVinculo: "VINCULADA" },
-  });
-
-  await prisma.andamento.create({
-    data: {
-      processoId,
-      data: publicacao.dataPublicacao,
-      tipo: "PUBLICACAO",
-      descricao: publicacao.textoPublicacao,
-    },
-  });
+  await vincularPublicacaoAoProcessoId(publicacaoId, processoId);
 
   revalidatePath("/publicacoes");
   revalidatePath(`/publicacoes/${publicacaoId}`);
   revalidatePath(`/processos/${processoId}`);
   revalidatePath("/");
-  redirect("/publicacoes");
+  redirect(`/publicacoes/${publicacaoId}`);
 }
 
 /**
@@ -76,4 +65,65 @@ export async function buscarPublicacoesAgora() {
   revalidatePath("/publicacoes");
   revalidatePath("/", "layout");
   redirect(destino);
+}
+
+const TIPOS_PRAZO_PUBLICACAO = ["PETICAO", "RECURSO", "MANIFESTACAO", "OUTRO"] as const;
+
+/**
+ * Publicação marcada "prazo a definir": a advogada informa os dias e o
+ * sistema calcula o vencimento a partir da data de publicação no DJEN.
+ * Como foi definido por ela, o prazo já nasce conferido.
+ */
+export async function definirPrazoDaPublicacao(publicacaoId: string, formData: FormData) {
+  const publicacao = await prisma.publicacao.findUniqueOrThrow({ where: { id: publicacaoId } });
+  if (!publicacao.processoId) throw new Error("Vincule a publicação a um processo antes");
+
+  const dias = Number(formData.get("dias"));
+  if (!Number.isInteger(dias) || dias < 1 || dias > 365) {
+    throw new Error("Informe o número de dias do prazo");
+  }
+  const contagem = formData.get("contagem") === "DIAS_CORRIDOS" ? "DIAS_CORRIDOS" : "DIAS_UTEIS";
+  const tipoTexto = (formData.get("tipo") ?? "").toString();
+  const tipo = (TIPOS_PRAZO_PUBLICACAO as readonly string[]).includes(tipoTexto)
+    ? (tipoTexto as (typeof TIPOS_PRAZO_PUBLICACAO)[number])
+    : "MANIFESTACAO";
+
+  const { dataBase, dataFinal } = calcularVencimentoPublicacao(
+    publicacao.dataPublicacao,
+    dias,
+    contagem
+  );
+
+  await prisma.prazo.create({
+    data: {
+      processoId: publicacao.processoId,
+      tipo,
+      dataBase,
+      dias,
+      contagem,
+      dataFinal,
+      origemPublicacaoId: publicacao.id,
+      observacoes: textoOuNull(formData.get("observacoes")),
+    },
+  });
+  await prisma.publicacao.update({
+    where: { id: publicacaoId },
+    data: { prazoADefinir: false },
+  });
+
+  revalidatePath("/");
+  revalidatePath("/prazos");
+  revalidatePath(`/processos/${publicacao.processoId}`);
+  revalidatePath(`/publicacoes/${publicacaoId}`);
+  redirect(`/publicacoes/${publicacaoId}`);
+}
+
+/** A advogada conferiu que a publicação não abre prazo: sai do destaque do Dashboard. */
+export async function marcarPublicacaoSemPrazo(publicacaoId: string) {
+  await prisma.publicacao.update({
+    where: { id: publicacaoId },
+    data: { prazoADefinir: false },
+  });
+  revalidatePath("/");
+  revalidatePath(`/publicacoes/${publicacaoId}`);
 }

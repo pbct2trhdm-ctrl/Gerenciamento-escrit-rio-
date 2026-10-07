@@ -9,11 +9,12 @@ import {
 } from "@/lib/formatacao";
 import { tierPorDiasRestantes, TIER_CLASSES, CLASSE_BADGE_AUDIENCIA } from "@/lib/urgencia";
 import { SeloPrazo } from "@/components/selo-prazo";
+import { SeloAConferir, BotaoConfirmarPrazo } from "@/components/prazo-a-conferir";
 import { EmptyState } from "@/components/empty-state";
 import { classeTituloPagina } from "@/lib/estilos";
 
 export default async function DashboardPage() {
-  const [prazos, publicacoesNaoLidas] = await Promise.all([
+  const [prazos, publicacoesNaoLidas, publicacoesPrazoADefinir] = await Promise.all([
     prisma.prazo.findMany({
       where: { status: "PENDENTE" },
       orderBy: { dataFinal: "asc" },
@@ -23,6 +24,11 @@ export default async function DashboardPage() {
       },
     }),
     prisma.publicacao.count({ where: { lida: false } }),
+    prisma.publicacao.findMany({
+      where: { prazoADefinir: true },
+      orderBy: { dataPublicacao: "asc" },
+      include: { processo: { include: { cliente: true } } },
+    }),
   ]);
 
   return (
@@ -46,6 +52,25 @@ export default async function DashboardPage() {
           </span>
           <span className="text-accent">Ver publicações →</span>
         </Link>
+      )}
+
+      {publicacoesPrazoADefinir.length > 0 && (
+        <div className="mb-6 rounded-lg border border-atencao/40 bg-atencao-fundo px-4 py-3 text-sm">
+          <p className="font-semibold text-atencao">
+            {publicacoesPrazoADefinir.length} publicaç
+            {publicacoesPrazoADefinir.length === 1 ? "ão" : "ões"} sem prazo identificado — defina o prazo
+          </p>
+          <ul className="mt-2 space-y-1">
+            {publicacoesPrazoADefinir.map((publicacao) => (
+              <li key={publicacao.id}>
+                <Link href={`/publicacoes/${publicacao.id}`} className="text-atencao underline">
+                  {formatarData(publicacao.dataPublicacao)} · {publicacao.processo?.cliente.nome ?? "—"} ·{" "}
+                  {publicacao.processo?.numeroProcesso ?? "sem número"}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
 
       {prazos.length === 0 ? (
@@ -88,6 +113,7 @@ export default async function DashboardPage() {
                           Audiência
                         </span>
                       )}
+                      {prazo.aConferir && <SeloAConferir />}
                     </div>
                     <p className="text-xs text-texto-secundario font-mono truncate mb-1">
                       Proc. nº {prazo.processo.numeroProcesso ?? "não informado"}
@@ -120,6 +146,7 @@ export default async function DashboardPage() {
                           ? "Vence hoje"
                           : `${restantes} dia(s) restante(s)`}
                     </span>
+                    {prazo.aConferir && <BotaoConfirmarPrazo prazoId={prazo.id} />}
                     <Link
                       href={`/processos/${prazo.processoId}`}
                       className="inline-flex items-center rounded-md bg-base-escura px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-accent"

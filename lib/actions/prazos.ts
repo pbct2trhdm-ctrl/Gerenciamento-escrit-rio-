@@ -156,6 +156,8 @@ export async function atualizarPrazo(id: string, formData: FormData) {
       ),
       status: validarStatus(formData.get("status")),
       observacoes: textoOuNull(formData.get("observacoes")),
+      // Editar um prazo gerado da publicação equivale a conferi-lo.
+      aConferir: false,
     },
   });
 
@@ -180,4 +182,17 @@ export async function marcarPrazoComoCumprido(id: string) {
   });
   revalidatePath("/prazos");
   revalidatePath("/");
+}
+
+/** Confirma um prazo gerado automaticamente da publicação (remove o "a conferir"). */
+export async function confirmarPrazo(id: string) {
+  const prazo = await prisma.prazo.update({
+    where: { id },
+    data: { aConferir: false },
+  });
+  revalidatePath("/prazos");
+  revalidatePath("/");
+  revalidatePath(`/prazos/${id}`);
+  revalidatePath(`/processos/${prazo.processoId}`);
+  if (prazo.origemPublicacaoId) revalidatePath(`/publicacoes/${prazo.origemPublicacaoId}`);
 }

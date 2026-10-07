@@ -12,6 +12,7 @@ import { marcarPrazoComoCumprido } from "@/lib/actions/prazos";
 import type { Prisma } from "@/app/generated/prisma/client";
 import { tierPrazo, CLASSE_BADGE_AUDIENCIA } from "@/lib/urgencia";
 import { SeloPrazo } from "@/components/selo-prazo";
+import { SeloAConferir } from "@/components/prazo-a-conferir";
 import { Badge } from "@/components/badge";
 import { EmptyState } from "@/components/empty-state";
 import {
@@ -128,6 +129,7 @@ export default async function PrazosPage({
                             Audiência
                           </span>
                         )}
+                        {prazo.aConferir && <SeloAConferir />}
                         {prazo._count.redesignacoes > 0 && (
                           <span className={`${classeBadgeNeutro} shrink-0`}>
                             Redesignada {prazo._count.redesignacoes}x

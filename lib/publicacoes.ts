@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { gerarPrazoDaPublicacao } from "@/lib/prazo-publicacao";
 import { buscarPublicacoesDjen, extrairNumeroProcesso } from "@/lib/djen";
 import { enviarWhatsapp, normalizarTelefoneWhatsapp, type ProvedorWhatsapp } from "@/lib/whatsapp";
 
@@ -8,6 +9,8 @@ export type ResumoVerificacaoPublicacoes = {
   novas: number;
   vinculadas: number;
   orfas: number;
+  prazosCriados?: number;
+  prazosADefinir?: number;
   whatsappEnviado: boolean;
 };
 
@@ -53,38 +56,56 @@ export async function marcarPublicacaoComoLida(id: string) {
   });
 }
 
+function somenteDigitos(texto: string): string {
+  return texto.replace(/\D/g, "");
+}
+
 /**
- * Vincula (ou não) uma publicação a um Processo cadastrado a partir do
- * número extraído do texto, e — quando encontra correspondência — cria
- * automaticamente o Andamento correspondente. Reaproveitada tanto pela
- * importação automática quanto pela vinculação manual (aba Órfãs).
+ * Vincula a publicação ao processo informado: registra o Andamento de
+ * publicação e, em seguida, cria o prazo "a conferir" (ou marca "prazo a
+ * definir") — ver lib/prazo-publicacao.ts. Usada pela importação automática
+ * e pela vinculação manual (aba Órfãs).
  */
-export async function vincularPublicacaoAoProcesso(
-  publicacaoId: string,
-  numeroProcesso: string
-) {
-  const processo = await prisma.processo.findFirst({
-    where: { numeroProcesso },
-    select: { id: true },
-  });
-
-  if (!processo) return null;
-
+export async function vincularPublicacaoAoProcessoId(publicacaoId: string, processoId: string) {
   const publicacao = await prisma.publicacao.update({
     where: { id: publicacaoId },
-    data: { processoId: processo.id, statusVinculo: "VINCULADA" },
+    data: { processoId, statusVinculo: "VINCULADA" },
   });
 
-  await prisma.andamento.create({
+  const andamento = await prisma.andamento.create({
     data: {
-      processoId: processo.id,
+      processoId,
       data: publicacao.dataPublicacao,
       tipo: "PUBLICACAO",
       descricao: publicacao.textoPublicacao,
     },
   });
 
-  return processo.id;
+  return gerarPrazoDaPublicacao(publicacaoId, andamento.id);
+}
+
+/**
+ * Procura o processo cadastrado com o número extraído do texto — comparando
+ * só os dígitos, para casar "0800123-45.2026.8.14.0301" com "08001234520268140301".
+ */
+export async function vincularPublicacaoAoProcesso(
+  publicacaoId: string,
+  numeroProcesso: string
+) {
+  const digitos = somenteDigitos(numeroProcesso);
+  if (!digitos) return null;
+
+  const processos = await prisma.processo.findMany({
+    where: { numeroProcesso: { not: null } },
+    select: { id: true, numeroProcesso: true },
+  });
+  const processo = processos.find(
+    (candidato) => somenteDigitos(candidato.numeroProcesso ?? "") === digitos
+  );
+  if (!processo) return null;
+
+  const resultadoPrazo = await vincularPublicacaoAoProcessoId(publicacaoId, processo.id);
+  return { processoId: processo.id, resultadoPrazo };
 }
 
 /**
@@ -145,6 +166,8 @@ export async function verificarEImportarPublicacoes(
   let novas = 0;
   let vinculadas = 0;
   let orfas = 0;
+  let prazosCriados = 0;
+  let prazosADefinir = 0;
 
   for (const item of itensDjen) {
     const jaExiste = await prisma.publicacao.findUnique({
@@ -169,12 +192,14 @@ export async function verificarEImportarPublicacoes(
 
     novas += 1;
 
-    const processoIdVinculado = numeroProcessoIdentificado
+    const vinculo = numeroProcessoIdentificado
       ? await vincularPublicacaoAoProcesso(publicacao.id, numeroProcessoIdentificado)
       : null;
 
-    if (processoIdVinculado) {
+    if (vinculo) {
       vinculadas += 1;
+      if (vinculo.resultadoPrazo === "criado") prazosCriados += 1;
+      if (vinculo.resultadoPrazo === "a_definir") prazosADefinir += 1;
     } else {
       orfas += 1;
     }
@@ -194,6 +219,12 @@ export async function verificarEImportarPublicacoes(
         "📰 Publicações no DJEN",
         `${novas} nova(s) publicação(ões) encontrada(s) entre ${inicioBusca.toLocaleDateString("pt-BR")} e ${agora.toLocaleDateString("pt-BR")}.`,
         `${vinculadas} vinculada(s) a processo(s) cadastrado(s), ${orfas} sem correspondência.`,
+        ...(prazosCriados > 0
+          ? [`⏰ ${prazosCriados} prazo(s) cadastrado(s) automaticamente — confira no sistema.`]
+          : []),
+        ...(prazosADefinir > 0
+          ? [`⚠️ ${prazosADefinir} publicação(ões) sem prazo identificado — defina no sistema.`]
+          : []),
       ].join("\n");
 
       const resultado = await enviarWhatsapp(
@@ -219,5 +250,13 @@ export async function verificarEImportarPublicacoes(
     data: { ultimaExecucao: agora },
   });
 
-  return { executado: true, novas, vinculadas, orfas, whatsappEnviado };
+  return {
+    executado: true,
+    novas,
+    vinculadas,
+    orfas,
+    prazosCriados,
+    prazosADefinir,
+    whatsappEnviado,
+  };
 }

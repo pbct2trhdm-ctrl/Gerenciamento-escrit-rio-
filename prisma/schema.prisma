@@ -374,6 +374,11 @@ model Prazo {
   /// Quando nulo, usa ConfiguracaoNotificacao.antecedenciaPadraoDias.
   diasAntecedenciaNotificacao Int?
   observacoes  String?
+  /// Prazo criado automaticamente a partir de uma publicação do DJEN, ainda
+  /// não conferido pela advogada (confirmar ou editar remove a marcação).
+  aConferir          Boolean      @default(false)
+  origemPublicacaoId String?
+  origemPublicacao   Publicacao?  @relation(fields: [origemPublicacaoId], references: [id], onDelete: SetNull)
   criadoEm     DateTime     @default(now())
   notificacoes Notificacao[]
   redesignacoes Redesignacao[]
@@ -441,6 +446,10 @@ model Publicacao {
   /// id retornado pela API do DJEN para esta comunicação — evita reimportar a
   /// mesma publicação em execuções repetidas da rotina diária.
   idExternoDjen                 String                  @unique
+  /// Vinculada a um processo, mas o texto não diz o número de dias do prazo:
+  /// fica em destaque no Dashboard até a advogada definir o prazo ou marcar "sem prazo".
+  prazoADefinir                 Boolean                 @default(false)
+  prazos                        Prazo[]
   criadoEm                     DateTime                @default(now())
 }
 
