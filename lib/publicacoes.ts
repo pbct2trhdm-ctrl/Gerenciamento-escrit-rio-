@@ -1,7 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { buscarPublicacoesDjen, extrairNumeroProcesso } from "@/lib/djen";
 import { enviarWhatsapp, normalizarTelefoneWhatsapp, type ProvedorWhatsapp } from "@/lib/whatsapp";
-import { formatarData } from "@/lib/formatacao";
 
 export type ResumoVerificacaoPublicacoes = {
   executado: boolean;
@@ -25,6 +24,25 @@ function mesmoDia(a: Date, b: Date): boolean {
     a.getMonth() === b.getMonth() &&
     a.getDate() === b.getDate()
   );
+}
+
+const DIAS_PRIMEIRA_BUSCA = 7;
+const DIAS_MAXIMOS_RETROATIVOS = 30;
+
+/**
+ * Início do período consultado no DJEN: desde a véspera da última busca
+ * bem-sucedida (margem para publicações disponibilizadas tarde no dia), para
+ * recuperar tudo o que saiu enquanto o Mac ficou desligado — limitado a 30
+ * dias. Na primeira busca, os últimos 7 dias. Publicações já importadas são
+ * ignoradas pelo idExternoDjen, então a sobreposição não duplica nada.
+ */
+function inicioDaJanelaDeBusca(ultimaExecucao: Date | null, agora: Date): Date {
+  const limite = new Date(agora);
+  limite.setDate(limite.getDate() - DIAS_MAXIMOS_RETROATIVOS);
+
+  const inicio = new Date(ultimaExecucao ?? agora);
+  inicio.setDate(inicio.getDate() - (ultimaExecucao ? 1 : DIAS_PRIMEIRA_BUSCA));
+  return inicio < limite ? limite : inicio;
 }
 
 /** Marca a publicação como lida — chamada diretamente ao renderizar a tela de detalhe. */
@@ -77,7 +95,8 @@ export async function vincularPublicacaoAoProcesso(
  * configuração do módulo de Notificações de prazo.
  */
 export async function verificarEImportarPublicacoes(
-  agora: Date = new Date()
+  agora: Date = new Date(),
+  opcoes: { forcar?: boolean } = {}
 ): Promise<ResumoVerificacaoPublicacoes> {
   const config = await prisma.configuracaoPublicacoes.findUnique({ where: { id: 1 } });
 
@@ -92,7 +111,7 @@ export async function verificarEImportarPublicacoes(
     };
   }
 
-  if (!horarioJaChegou(config.horarioConsulta, agora)) {
+  if (!opcoes.forcar && !horarioJaChegou(config.horarioConsulta, agora)) {
     return {
       executado: false,
       motivo: `Ainda não chegou o horário configurado (${config.horarioConsulta}).`,
@@ -103,7 +122,7 @@ export async function verificarEImportarPublicacoes(
     };
   }
 
-  if (config.ultimaExecucao && mesmoDia(config.ultimaExecucao, agora)) {
+  if (!opcoes.forcar && config.ultimaExecucao && mesmoDia(config.ultimaExecucao, agora)) {
     return {
       executado: false,
       motivo: "Rotina já executada hoje.",
@@ -114,13 +133,12 @@ export async function verificarEImportarPublicacoes(
     };
   }
 
-  const doisDiasAtras = new Date(agora);
-  doisDiasAtras.setDate(doisDiasAtras.getDate() - 2);
+  const inicioBusca = inicioDaJanelaDeBusca(config.ultimaExecucao, agora);
 
   const itensDjen = await buscarPublicacoesDjen(
     config.numeroOab,
     config.seccionalOab,
-    doisDiasAtras,
+    inicioBusca,
     agora
   );
 
@@ -174,7 +192,7 @@ export async function verificarEImportarPublicacoes(
     ) {
       const mensagem = [
         "📰 Publicações no DJEN",
-        `${novas} nova(s) publicação(ões) encontrada(s) hoje (${formatarData(agora)}).`,
+        `${novas} nova(s) publicação(ões) encontrada(s) entre ${inicioBusca.toLocaleDateString("pt-BR")} e ${agora.toLocaleDateString("pt-BR")}.`,
         `${vinculadas} vinculada(s) a processo(s) cadastrado(s), ${orfas} sem correspondência.`,
       ].join("\n");
 

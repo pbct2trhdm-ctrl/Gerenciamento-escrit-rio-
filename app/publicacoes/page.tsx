@@ -5,8 +5,14 @@ import { tierStatus } from "@/lib/urgencia";
 import { Badge } from "@/components/badge";
 import { EmptyState } from "@/components/empty-state";
 import { VincularPublicacaoForm } from "@/components/vincular-publicacao-form";
-import { vincularPublicacaoManualmente } from "@/lib/actions/publicacoes";
-import { classeCard, classeBadgeNeutro, classeTituloPagina } from "@/lib/estilos";
+import { vincularPublicacaoManualmente, buscarPublicacoesAgora } from "@/lib/actions/publicacoes";
+import { BotaoEnvio } from "@/components/botao-envio";
+import {
+  classeCard,
+  classeBadgeNeutro,
+  classeTituloPagina,
+  classeBotaoSecundario,
+} from "@/lib/estilos";
 import type { Prisma } from "@/app/generated/prisma/client";
 
 function trechoTexto(texto: string, tamanho = 220): string {
@@ -16,9 +22,9 @@ function trechoTexto(texto: string, tamanho = 220): string {
 export default async function PublicacoesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ aba?: string }>;
+  searchParams: Promise<{ aba?: string; busca?: string; novas?: string; motivo?: string }>;
 }) {
-  const { aba } = await searchParams;
+  const { aba, busca, novas, motivo } = await searchParams;
   const abaAtiva = aba === "vinculadas" || aba === "orfas" ? aba : "";
 
   const where: Prisma.PublicacaoWhereInput =
@@ -28,7 +34,7 @@ export default async function PublicacoesPage({
         ? { statusVinculo: "ORFA" }
         : {};
 
-  const [publicacoes, totalTodas, totalVinculadas, totalOrfas, processos] = await Promise.all([
+  const [publicacoes, totalTodas, totalVinculadas, totalOrfas, processos, configuracao] = await Promise.all([
     prisma.publicacao.findMany({
       where,
       orderBy: { dataPublicacao: "desc" },
@@ -41,6 +47,10 @@ export default async function PublicacoesPage({
       orderBy: { criadoEm: "desc" },
       select: { id: true, numeroProcesso: true, cliente: { select: { nome: true } } },
     }),
+    prisma.configuracaoPublicacoes.findUnique({
+      where: { id: 1 },
+      select: { ultimaExecucao: true },
+    }),
   ]);
 
   const segmentos = [
@@ -51,7 +61,37 @@ export default async function PublicacoesPage({
 
   return (
     <div className="max-w-4xl">
-      <h1 className={`${classeTituloPagina} mb-6`}>Publicações</h1>
+      <div className="flex items-start justify-between gap-4 mb-6 flex-wrap">
+        <div>
+          <h1 className={classeTituloPagina}>Publicações</h1>
+          <p className="text-sm text-texto-secundario mt-1">
+            {configuracao?.ultimaExecucao
+              ? `Última busca no DJEN: ${configuracao.ultimaExecucao.toLocaleString("pt-BR", {
+                  dateStyle: "short",
+                  timeStyle: "short",
+                })}`
+              : "Nenhuma busca no DJEN feita ainda."}
+          </p>
+        </div>
+        <form action={buscarPublicacoesAgora}>
+          <BotaoEnvio className={classeBotaoSecundario} textoAguardando="Buscando no DJEN…">
+            Buscar agora
+          </BotaoEnvio>
+        </form>
+      </div>
+
+      {busca === "ok" && (
+        <div className="mb-6 rounded-lg border border-tranquilo/30 bg-tranquilo-fundo px-4 py-3 text-sm text-tranquilo">
+          Busca concluída: {Number(novas ?? 0) === 0
+            ? "nenhuma publicação nova."
+            : `${novas} publicação(ões) nova(s) importada(s).`}
+        </div>
+      )}
+      {busca === "erro" && (
+        <div className="mb-6 rounded-lg border border-critico/30 bg-critico-fundo px-4 py-3 text-sm text-critico">
+          A busca não foi feita: {motivo}
+        </div>
+      )}
 
       <div className="inline-flex items-center gap-1 rounded-md border border-slate-300 bg-superficie p-1 mb-6">
         {segmentos.map((segmento) => {

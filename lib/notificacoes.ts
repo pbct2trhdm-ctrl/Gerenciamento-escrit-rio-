@@ -45,9 +45,10 @@ function montarMensagem(prazo: {
 }
 
 /**
- * Verifica os prazos pendentes e dispara os alertas de WhatsApp cujo número de
- * dias restantes bate com a antecedência configurada (do prazo, ou o padrão
- * geral). Idempotente por (prazo, dia): pode ser chamada quantas vezes forem
+ * Verifica os prazos pendentes e dispara um alerta de WhatsApp por prazo quando
+ * ele entra na janela de antecedência configurada (do prazo, ou o padrão
+ * geral) — no dia exato ou, se o sistema não rodou nesse dia, no primeiro dia
+ * seguinte em que rodar, até o vencimento. Idempotente por (prazo, dia): pode ser chamada quantas vezes forem
  * necessárias no mesmo dia sem duplicar envios, já registrados em Notificacao.
  */
 export async function verificarEDispararNotificacoes(
@@ -89,12 +90,22 @@ export async function verificarEDispararNotificacoes(
   for (const prazo of prazosPendentes) {
     const restantes = diasRestantes(prazo.dataFinal, agora);
     const antecedencia = prazo.diasAntecedenciaNotificacao ?? config.antecedenciaPadraoDias;
-    if (restantes !== antecedencia) continue;
+    // Dentro da janela de aviso (da antecedência até o vencimento). Se o Mac
+    // estava desligado no dia exato da antecedência, o aviso sai no primeiro
+    // dia em que o sistema rodar — uma única vez por janela.
+    if (restantes < 0 || restantes > antecedencia) continue;
 
     const jaEnviadaHoje = await prisma.notificacao.findFirst({
       where: { prazoId: prazo.id, dataEnvio: { gte: hoje } },
     });
     if (jaEnviadaHoje) continue;
+
+    const inicioJanela = new Date(hoje);
+    inicioJanela.setDate(inicioJanela.getDate() - (antecedencia - restantes));
+    const jaAvisadoNaJanela = await prisma.notificacao.findFirst({
+      where: { prazoId: prazo.id, status: "ENVIADO", dataEnvio: { gte: inicioJanela } },
+    });
+    if (jaAvisadoNaJanela) continue;
 
     processados += 1;
     const mensagem = montarMensagem(prazo, restantes);
