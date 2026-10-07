@@ -21,7 +21,7 @@ if [[ "$(uname)" == "Darwin" && -f "$PLIST" ]]; then
   npm run build
   launchctl bootstrap "gui/$(id -u)" "$PLIST"
   for _ in $(seq 1 30); do
-    if curl -fsS -o /dev/null http://localhost:3000; then
+    if curl -fsS -o /dev/null http://localhost:3000 2>/dev/null; then
       echo "Atualização aplicada. O sistema está no ar em http://localhost:3000"
       exit 0
     fi
