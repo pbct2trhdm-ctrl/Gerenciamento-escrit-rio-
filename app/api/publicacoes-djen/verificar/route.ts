@@ -3,9 +3,9 @@ import { verificarEImportarPublicacoes } from "@/lib/publicacoes";
 /**
  * Endpoint interno chamado periodicamente por um agendador do sistema
  * (launchd/cron — veja scripts/com.pastanamota.publicacoes.plist.example)
- * enquanto o app estiver rodando. A busca em si só age de fato quando o
- * horário configurado já chegou e a rotina ainda não rodou hoje; chamadas
- * antes disso ou repetidas no mesmo dia são no-ops seguros.
+ * enquanto o app estiver rodando. A busca em si só age de fato depois do
+ * horário configurado e no máximo uma vez por hora; chamadas fora disso são
+ * no-ops seguros.
  */
 export async function GET(request: Request) {
   const segredo = process.env.PUBLICACOES_CRON_SECRET;

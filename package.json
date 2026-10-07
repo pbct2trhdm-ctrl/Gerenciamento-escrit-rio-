@@ -11,7 +11,8 @@
     "backup": "node scripts/backup.mjs",
     "rotinas": "bash scripts/instalar-rotinas.sh",
     "atualizar": "bash scripts/atualizar.sh",
-    "servico": "bash scripts/instalar-servico.sh"
+    "servico": "bash scripts/instalar-servico.sh",
+    "diagnostico-djen": "node scripts/diagnostico-djen.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.131.0",

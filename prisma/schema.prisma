@@ -460,8 +460,12 @@ model ConfiguracaoPublicacoes {
   seccionalOab    String?
   /// Horário de disparo da rotina diária, formato "HH:MM" (hora local do computador que roda o app).
   horarioConsulta String    @default("07:00")
-  /// Data (dia) da última execução bem-sucedida — evita rodar a rotina mais de uma vez no mesmo dia.
+  /// Momento da última busca bem-sucedida — define o início da próxima janela
+  /// de busca e o intervalo mínimo entre buscas automáticas.
   ultimaExecucao  DateTime?
+  /// Erro da última tentativa que falhou (mostrado na tela de Publicações).
+  ultimoErro      String?
+  ultimoErroEm    DateTime?
   atualizadoEm    DateTime  @updatedAt
 }
 

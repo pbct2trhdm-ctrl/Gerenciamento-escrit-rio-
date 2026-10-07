@@ -21,15 +21,14 @@ function horarioJaChegou(horarioConsulta: string, agora: Date): boolean {
   return minutosAgora >= minutosConfigurados;
 }
 
-function mesmoDia(a: Date, b: Date): boolean {
-  return (
-    a.getFullYear() === b.getFullYear() &&
-    a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate()
-  );
-}
-
 const DIAS_PRIMEIRA_BUSCA = 7;
+/**
+ * A partir do horário configurado, a busca automática se repete de hora em
+ * hora: o DJEN disponibiliza publicações ao longo do dia, e uma busca única
+ * de manhã deixaria as da tarde para o dia seguinte. Publicações já
+ * importadas são ignoradas, e o WhatsApp só avisa quando há novas.
+ */
+const INTERVALO_MINUTOS_ENTRE_BUSCAS = 60;
 const DIAS_MAXIMOS_RETROATIVOS = 30;
 
 /**
@@ -143,10 +142,13 @@ export async function verificarEImportarPublicacoes(
     };
   }
 
-  if (!opcoes.forcar && config.ultimaExecucao && mesmoDia(config.ultimaExecucao, agora)) {
+  const minutosDesdeUltima = config.ultimaExecucao
+    ? (agora.getTime() - config.ultimaExecucao.getTime()) / 60000
+    : Infinity;
+  if (!opcoes.forcar && minutosDesdeUltima < INTERVALO_MINUTOS_ENTRE_BUSCAS) {
     return {
       executado: false,
-      motivo: "Rotina já executada hoje.",
+      motivo: `Última busca há menos de ${INTERVALO_MINUTOS_ENTRE_BUSCAS} minutos.`,
       novas: 0,
       vinculadas: 0,
       orfas: 0,
@@ -156,12 +158,30 @@ export async function verificarEImportarPublicacoes(
 
   const inicioBusca = inicioDaJanelaDeBusca(config.ultimaExecucao, agora);
 
-  const itensDjen = await buscarPublicacoesDjen(
-    config.numeroOab,
-    config.seccionalOab,
-    inicioBusca,
-    agora
-  );
+  let itensDjen: Awaited<ReturnType<typeof buscarPublicacoesDjen>>;
+  try {
+    itensDjen = await buscarPublicacoesDjen(
+      config.numeroOab,
+      config.seccionalOab,
+      inicioBusca,
+      agora
+    );
+  } catch (erro) {
+    const mensagem = erro instanceof Error ? erro.message : "Erro desconhecido ao consultar o DJEN.";
+    console.error("Falha na busca de publicações no DJEN:", mensagem);
+    await prisma.configuracaoPublicacoes.update({
+      where: { id: 1 },
+      data: { ultimoErro: mensagem, ultimoErroEm: agora },
+    });
+    return {
+      executado: false,
+      motivo: mensagem,
+      novas: 0,
+      vinculadas: 0,
+      orfas: 0,
+      whatsappEnviado: false,
+    };
+  }
 
   let novas = 0;
   let vinculadas = 0;
@@ -247,7 +267,7 @@ export async function verificarEImportarPublicacoes(
 
   await prisma.configuracaoPublicacoes.update({
     where: { id: 1 },
-    data: { ultimaExecucao: agora },
+    data: { ultimaExecucao: agora, ultimoErro: null, ultimoErroEm: null },
   });
 
   return {

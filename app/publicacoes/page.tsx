@@ -49,7 +49,7 @@ export default async function PublicacoesPage({
     }),
     prisma.configuracaoPublicacoes.findUnique({
       where: { id: 1 },
-      select: { ultimaExecucao: true },
+      select: { ultimaExecucao: true, ultimoErro: true, ultimoErroEm: true },
     }),
   ]);
 
@@ -80,6 +80,15 @@ export default async function PublicacoesPage({
         </form>
       </div>
 
+      {configuracao?.ultimoErro && configuracao.ultimoErroEm && busca !== "ok" && (
+        <div className="mb-6 rounded-lg border border-critico/30 bg-critico-fundo px-4 py-3 text-sm text-critico">
+          <p className="font-semibold">
+            A última busca automática falhou (
+            {configuracao.ultimoErroEm.toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}).
+          </p>
+          <p className="mt-1">{configuracao.ultimoErro}</p>
+        </div>
+      )}
       {busca === "ok" && (
         <div className="mb-6 rounded-lg border border-tranquilo/30 bg-tranquilo-fundo px-4 py-3 text-sm text-tranquilo">
           Busca concluída: {Number(novas ?? 0) === 0

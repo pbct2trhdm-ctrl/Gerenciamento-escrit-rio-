@@ -87,11 +87,13 @@ export async function buscarPublicacoesDjen(
   const itensPorPagina = 100;
   const resultado: PublicacaoDjenNormalizada[] = [];
   let pagina = 1;
+  // "12.345" ou "12 345" → "12345" (a API compara o número da OAB sem pontuação).
+  const oab = numeroOab.replace(/[.\s]/g, "");
 
   while (true) {
     const params = new URLSearchParams({
-      numeroOab,
-      ufOab: seccionalOab,
+      numeroOab: oab,
+      ufOab: seccionalOab.toUpperCase(),
       dataDisponibilizacaoInicio: paraDataISO(dataInicio),
       dataDisponibilizacaoFim: paraDataISO(dataFim),
       pagina: String(pagina),
@@ -99,7 +101,12 @@ export async function buscarPublicacoesDjen(
     });
 
     const resposta = await fetch(`${BASE_URL}?${params.toString()}`, {
-      headers: { Accept: "application/json" },
+      headers: {
+        Accept: "application/json",
+        // Alguns firewalls de órgãos públicos recusam clientes sem User-Agent de navegador.
+        "User-Agent":
+          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15",
+      },
     });
 
     if (!resposta.ok) {
@@ -107,8 +114,21 @@ export async function buscarPublicacoesDjen(
       throw new Error(`API do DJEN retornou ${resposta.status}: ${corpo.slice(0, 300)}`);
     }
 
-    const corpo = (await resposta.json()) as { items?: unknown; count?: unknown };
-    const itens = Array.isArray(corpo.items) ? corpo.items : [];
+    const textoResposta = await resposta.text();
+    let corpo: Record<string, unknown>;
+    try {
+      corpo = JSON.parse(textoResposta) as Record<string, unknown>;
+    } catch {
+      throw new Error(`O DJEN respondeu em formato inesperado (não é JSON): ${textoResposta.slice(0, 200)}`);
+    }
+    // Leitura defensiva do contêiner da lista: "items" é o documentado.
+    const lista = [corpo.items, corpo.data, corpo.content, corpo.comunicacoes].find(Array.isArray);
+    if (!lista) {
+      throw new Error(
+        `O DJEN respondeu sem lista de publicações (campos recebidos: ${Object.keys(corpo).join(", ") || "nenhum"}).`
+      );
+    }
+    const itens = lista as unknown[];
 
     for (const item of itens) {
       if (item && typeof item === "object") {
