@@ -4,7 +4,11 @@ import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { UFS_BRASIL } from "@/lib/formatacao";
-import { verificarEImportarPublicacoes, vincularPublicacaoAoProcessoId } from "@/lib/publicacoes";
+import {
+  verificarEImportarPublicacoes,
+  vincularPublicacaoAoProcessoId,
+  importarHistoricoPublicacoes,
+} from "@/lib/publicacoes";
 import { calcularVencimentoPublicacao } from "@/lib/prazo-publicacao";
 
 function textoOuNull(valor: FormDataEntryValue | null): string | null {
@@ -126,4 +130,35 @@ export async function marcarPublicacaoSemPrazo(publicacaoId: string) {
   });
   revalidatePath("/");
   revalidatePath(`/publicacoes/${publicacaoId}`);
+}
+
+const PERIODOS_HISTORICO = [3, 6, 12, 24];
+
+/** Botão "Importar histórico": publicações da OAB dos últimos N meses. */
+export async function importarHistorico(formData: FormData) {
+  const mesesInformado = Number(formData.get("meses"));
+  const meses = PERIODOS_HISTORICO.includes(mesesInformado) ? mesesInformado : 12;
+
+  let destino: string;
+  try {
+    const r = await importarHistoricoPublicacoes(meses);
+    const qs = new URLSearchParams({
+      historico: "ok",
+      novas: String(r.novas),
+      vinculadas: String(r.vinculadas),
+      orfas: String(r.orfas),
+      prazos: String(r.prazosCriados + r.prazosADefinir),
+      periodo: r.periodo,
+    });
+    destino = `/publicacoes?${qs}`;
+  } catch (erro) {
+    const motivo = erro instanceof Error ? erro.message : "Erro desconhecido ao importar o histórico.";
+    console.error("Falha ao importar histórico de publicações:", erro);
+    destino = `/publicacoes?historico=erro&motivo=${encodeURIComponent(motivo)}`;
+  }
+
+  revalidatePath("/publicacoes");
+  revalidatePath("/processos");
+  revalidatePath("/", "layout");
+  redirect(destino);
 }

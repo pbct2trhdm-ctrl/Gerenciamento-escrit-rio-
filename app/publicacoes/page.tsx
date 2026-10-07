@@ -5,13 +5,18 @@ import { tierStatus } from "@/lib/urgencia";
 import { Badge } from "@/components/badge";
 import { EmptyState } from "@/components/empty-state";
 import { VincularPublicacaoForm } from "@/components/vincular-publicacao-form";
-import { vincularPublicacaoManualmente, buscarPublicacoesAgora } from "@/lib/actions/publicacoes";
+import {
+  vincularPublicacaoManualmente,
+  buscarPublicacoesAgora,
+  importarHistorico,
+} from "@/lib/actions/publicacoes";
 import { BotaoEnvio } from "@/components/botao-envio";
 import {
   classeCard,
   classeBadgeNeutro,
   classeTituloPagina,
   classeBotaoSecundario,
+  classeInputAuto,
 } from "@/lib/estilos";
 import type { Prisma } from "@/app/generated/prisma/client";
 
@@ -22,9 +27,20 @@ function trechoTexto(texto: string, tamanho = 220): string {
 export default async function PublicacoesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ aba?: string; busca?: string; novas?: string; motivo?: string }>;
+  searchParams: Promise<{
+    aba?: string;
+    busca?: string;
+    novas?: string;
+    motivo?: string;
+    historico?: string;
+    vinculadas?: string;
+    orfas?: string;
+    prazos?: string;
+    periodo?: string;
+  }>;
 }) {
-  const { aba, busca, novas, motivo } = await searchParams;
+  const { aba, busca, novas, motivo, historico, vinculadas, orfas, prazos, periodo } =
+    await searchParams;
   const abaAtiva = aba === "vinculadas" || aba === "orfas" ? aba : "";
 
   const where: Prisma.PublicacaoWhereInput =
@@ -73,12 +89,44 @@ export default async function PublicacoesPage({
               : "Nenhuma busca no DJEN feita ainda."}
           </p>
         </div>
-        <form action={buscarPublicacoesAgora}>
-          <BotaoEnvio className={classeBotaoSecundario} textoAguardando="Buscando no DJEN…">
-            Buscar agora
-          </BotaoEnvio>
-        </form>
+        <div className="flex flex-col items-end gap-2">
+          <form action={buscarPublicacoesAgora}>
+            <BotaoEnvio className={classeBotaoSecundario} textoAguardando="Buscando no DJEN…">
+              Buscar agora
+            </BotaoEnvio>
+          </form>
+          <details className="text-sm">
+            <summary className="cursor-pointer text-texto-secundario hover:text-accent text-right">
+              Importar histórico
+            </summary>
+            <form action={importarHistorico} className="mt-2 flex items-center gap-2">
+              <select name="meses" defaultValue="12" className={classeInputAuto} aria-label="Período">
+                <option value="3">Últimos 3 meses</option>
+                <option value="6">Últimos 6 meses</option>
+                <option value="12">Últimos 12 meses</option>
+                <option value="24">Últimos 24 meses</option>
+              </select>
+              <BotaoEnvio className={classeBotaoSecundario} textoAguardando="Importando… (pode levar alguns minutos)">
+                Importar
+              </BotaoEnvio>
+            </form>
+          </details>
+        </div>
       </div>
+
+      {historico === "ok" && (
+        <div className="mb-6 rounded-lg border border-tranquilo/30 bg-tranquilo-fundo px-4 py-3 text-sm text-tranquilo">
+          Histórico importado ({periodo}): {novas} publicação(ões) nova(s) — {vinculadas} vinculada(s)
+          a processos cadastrados, {orfas} sem processo correspondente (aba Órfãs).
+          {Number(prazos ?? 0) > 0 && ` ${prazos} publicação(ões) recente(s) com prazo cadastrado ou a definir.`}{" "}
+          Publicações com mais de 7 dias entram como lidas e sem prazo.
+        </div>
+      )}
+      {historico === "erro" && (
+        <div className="mb-6 rounded-lg border border-critico/30 bg-critico-fundo px-4 py-3 text-sm text-critico">
+          A importação do histórico falhou: {motivo}
+        </div>
+      )}
 
       {configuracao?.ultimoErro && configuracao.ultimoErroEm && busca !== "ok" && (
         <div className="mb-6 rounded-lg border border-critico/30 bg-critico-fundo px-4 py-3 text-sm text-critico">

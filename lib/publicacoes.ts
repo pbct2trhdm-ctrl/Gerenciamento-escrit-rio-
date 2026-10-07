@@ -1,6 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import { gerarPrazoDaPublicacao } from "@/lib/prazo-publicacao";
-import { buscarPublicacoesDjen, extrairNumeroProcesso } from "@/lib/djen";
+import {
+  buscarPublicacoesDjen,
+  extrairNumeroProcesso,
+  type PublicacaoDjenNormalizada,
+} from "@/lib/djen";
 import { enviarWhatsapp, normalizarTelefoneWhatsapp, type ProvedorWhatsapp } from "@/lib/whatsapp";
 
 export type ResumoVerificacaoPublicacoes = {
@@ -84,7 +88,11 @@ function somenteDigitos(texto: string): string {
  * definir") — ver lib/prazo-publicacao.ts. Usada pela importação automática
  * e pela vinculação manual (aba Órfãs).
  */
-export async function vincularPublicacaoAoProcessoId(publicacaoId: string, processoId: string) {
+export async function vincularPublicacaoAoProcessoId(
+  publicacaoId: string,
+  processoId: string,
+  opcoes: { gerarPrazo?: boolean } = {}
+) {
   const publicacao = await prisma.publicacao.update({
     where: { id: publicacaoId },
     data: { processoId, statusVinculo: "VINCULADA" },
@@ -99,6 +107,8 @@ export async function vincularPublicacaoAoProcessoId(publicacaoId: string, proce
     },
   });
 
+  // Na importação de histórico, publicações antigas não geram prazo (já passou).
+  if (opcoes.gerarPrazo === false) return "ignorado" as const;
   return gerarPrazoDaPublicacao(publicacaoId, andamento.id);
 }
 
@@ -108,7 +118,8 @@ export async function vincularPublicacaoAoProcessoId(publicacaoId: string, proce
  */
 export async function vincularPublicacaoAoProcesso(
   publicacaoId: string,
-  numeroProcesso: string
+  numeroProcesso: string,
+  opcoes: { gerarPrazo?: boolean } = {}
 ) {
   const digitos = somenteDigitos(numeroProcesso);
   if (!digitos) return null;
@@ -122,8 +133,121 @@ export async function vincularPublicacaoAoProcesso(
   );
   if (!processo) return null;
 
-  const resultadoPrazo = await vincularPublicacaoAoProcessoId(publicacaoId, processo.id);
+  const resultadoPrazo = await vincularPublicacaoAoProcessoId(publicacaoId, processo.id, opcoes);
   return { processoId: processo.id, resultadoPrazo };
+}
+
+type ContagemImportacao = {
+  novas: number;
+  vinculadas: number;
+  orfas: number;
+  prazosCriados: number;
+  prazosADefinir: number;
+};
+
+const DIAS_PUBLICACAO_RECENTE = 7;
+
+/**
+ * Grava as publicações ainda não importadas, vinculando-as aos processos
+ * cadastrados. No modo histórico, as com mais de 7 dias entram como lidas e
+ * sem gerar prazo (já passou); as recentes seguem a regra normal.
+ */
+async function importarItens(
+  itens: PublicacaoDjenNormalizada[],
+  agora: Date,
+  opcoes: { historico: boolean }
+): Promise<ContagemImportacao> {
+  const limiteRecente = new Date(agora);
+  limiteRecente.setDate(limiteRecente.getDate() - DIAS_PUBLICACAO_RECENTE);
+
+  let novas = 0;
+  let vinculadas = 0;
+  let orfas = 0;
+  let prazosCriados = 0;
+  let prazosADefinir = 0;
+
+  for (const item of itens) {
+    const jaExiste = await prisma.publicacao.findUnique({
+      where: { idExternoDjen: item.idExterno },
+      select: { id: true },
+    });
+    if (jaExiste) continue;
+
+    const antiga = opcoes.historico && item.dataPublicacao < limiteRecente;
+    const numeroProcessoIdentificado =
+      item.numeroProcesso ?? extrairNumeroProcesso(item.texto);
+
+    const publicacao = await prisma.publicacao.create({
+      data: {
+        idExternoDjen: item.idExterno,
+        numeroProcessoIdentificado,
+        dataPublicacao: item.dataPublicacao,
+        tribunalOrgao: item.tribunalOrgao,
+        textoPublicacao: item.texto,
+        statusVinculo: "ORFA",
+        lida: antiga,
+      },
+    });
+
+    novas += 1;
+
+    const vinculo = numeroProcessoIdentificado
+      ? await vincularPublicacaoAoProcesso(publicacao.id, numeroProcessoIdentificado, {
+          gerarPrazo: !antiga,
+        })
+      : null;
+
+    if (vinculo) {
+      vinculadas += 1;
+      if (vinculo.resultadoPrazo === "criado") prazosCriados += 1;
+      if (vinculo.resultadoPrazo === "a_definir") prazosADefinir += 1;
+    } else {
+      orfas += 1;
+    }
+  }
+
+  return { novas, vinculadas, orfas, prazosCriados, prazosADefinir };
+}
+
+/**
+ * Botão "Importar histórico": traz as publicações da OAB dos últimos N meses,
+ * consultando o DJEN mês a mês. Não envia WhatsApp nem atualiza a data da
+ * última busca automática.
+ */
+export async function importarHistoricoPublicacoes(
+  meses: number,
+  agora: Date = new Date()
+): Promise<ContagemImportacao & { periodo: string }> {
+  const config = await prisma.configuracaoPublicacoes.findUnique({ where: { id: 1 } });
+  if (!config?.numeroOab || !config.seccionalOab) {
+    throw new Error("Configure o número da OAB e a seccional em Configurações antes de importar.");
+  }
+
+  const inicioTotal = new Date(agora);
+  inicioTotal.setMonth(inicioTotal.getMonth() - meses);
+
+  const total: ContagemImportacao = { novas: 0, vinculadas: 0, orfas: 0, prazosCriados: 0, prazosADefinir: 0 };
+  let inicioTrecho = new Date(inicioTotal);
+  while (inicioTrecho <= agora) {
+    const fimTrecho = new Date(inicioTrecho);
+    fimTrecho.setMonth(fimTrecho.getMonth() + 1);
+    fimTrecho.setDate(fimTrecho.getDate() - 1);
+    const fim = fimTrecho > agora ? agora : fimTrecho;
+
+    const itens = await buscarPublicacoesDjen(config.numeroOab, config.seccionalOab, inicioTrecho, fim);
+    const parcial = await importarItens(itens, agora, { historico: true });
+    for (const chave of Object.keys(total) as (keyof ContagemImportacao)[]) {
+      total[chave] += parcial[chave];
+    }
+
+    inicioTrecho = new Date(fimTrecho);
+    inicioTrecho.setDate(inicioTrecho.getDate() + 1);
+  }
+
+  return {
+    ...total,
+    periodo: `${inicioTotal.toLocaleDateString("pt-BR")} a ${agora.toLocaleDateString("pt-BR")}`,
+  };
 }
 
 /**
@@ -206,47 +330,11 @@ export async function verificarEImportarPublicacoes(
     };
   }
 
-  let novas = 0;
-  let vinculadas = 0;
-  let orfas = 0;
-  let prazosCriados = 0;
-  let prazosADefinir = 0;
-
-  for (const item of itensDjen) {
-    const jaExiste = await prisma.publicacao.findUnique({
-      where: { idExternoDjen: item.idExterno },
-      select: { id: true },
-    });
-    if (jaExiste) continue;
-
-    const numeroProcessoIdentificado =
-      item.numeroProcesso ?? extrairNumeroProcesso(item.texto);
-
-    const publicacao = await prisma.publicacao.create({
-      data: {
-        idExternoDjen: item.idExterno,
-        numeroProcessoIdentificado,
-        dataPublicacao: item.dataPublicacao,
-        tribunalOrgao: item.tribunalOrgao,
-        textoPublicacao: item.texto,
-        statusVinculo: "ORFA",
-      },
-    });
-
-    novas += 1;
-
-    const vinculo = numeroProcessoIdentificado
-      ? await vincularPublicacaoAoProcesso(publicacao.id, numeroProcessoIdentificado)
-      : null;
-
-    if (vinculo) {
-      vinculadas += 1;
-      if (vinculo.resultadoPrazo === "criado") prazosCriados += 1;
-      if (vinculo.resultadoPrazo === "a_definir") prazosADefinir += 1;
-    } else {
-      orfas += 1;
-    }
-  }
+  const { novas, vinculadas, orfas, prazosCriados, prazosADefinir } = await importarItens(
+    itensDjen,
+    agora,
+    { historico: false }
+  );
 
   let whatsappEnviado = false;
   if (novas > 0) {
