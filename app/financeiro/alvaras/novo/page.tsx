@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { AlvaraForm } from "@/components/alvara-form";
 import { criarAlvara } from "@/lib/actions/alvaras";
+import { carregarOpcoesAlvara } from "@/lib/alvara-opcoes";
 import { classeTituloSecao } from "@/lib/estilos";
 import { LinkVoltar } from "@/components/link-voltar";
 
@@ -10,14 +11,12 @@ export default async function NovoAlvaraPage({
   searchParams: Promise<{ processoId?: string }>;
 }) {
   const { processoId } = await searchParams;
-  const [processos, sucumbencias] = await Promise.all([
+  const [processos, opcoes] = await Promise.all([
     prisma.processo.findMany({
       orderBy: { criadoEm: "desc" },
       include: { cliente: { select: { nome: true } } },
     }),
-    prisma.honorarioSucumbencial.findMany({
-      select: { id: true, processoId: true },
-    }),
+    carregarOpcoesAlvara(),
   ]);
 
   return (
@@ -29,7 +28,8 @@ export default async function NovoAlvaraPage({
       <h2 className={`${classeTituloSecao} mb-6`}>Novo alvará</h2>
       <AlvaraForm
         processos={processos}
-        sucumbencias={sucumbencias}
+        sucumbencias={opcoes.sucumbencias}
+        parcelas={opcoes.parcelas}
         processoIdPadrao={processoId}
         action={criarAlvara}
       />

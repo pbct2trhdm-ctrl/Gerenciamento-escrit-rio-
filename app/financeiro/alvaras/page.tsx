@@ -68,6 +68,18 @@ export default async function AlvarasPage() {
                   </div>
                   <div className="flex items-center gap-2 mt-3">
                     <Link
+                      href={`/financeiro/alvaras/${alvara.id}`}
+                      className={`${classeBotaoSecundario} !px-3 !py-1 text-xs`}
+                    >
+                      Ver demonstrativo
+                    </Link>
+                    <a
+                      href={`/financeiro/alvaras/${alvara.id}/prestacao-contas`}
+                      className={`${classeBotaoSecundario} !px-3 !py-1 text-xs`}
+                    >
+                      Prestação de contas (PDF)
+                    </a>
+                    <Link
                       href={`/financeiro/alvaras/${alvara.id}/editar`}
                       className={`${classeBotaoSecundario} !px-3 !py-1 text-xs`}
                     >

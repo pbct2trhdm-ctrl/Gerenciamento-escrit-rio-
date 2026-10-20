@@ -121,10 +121,16 @@ async function calcularTotais(periodo: Periodo): Promise<TotaisBrutos> {
   const [parcelasPagas, sucumbenciasRecebidas, alvaras, despesas, obrigacoesPagas, retiradas] =
     await Promise.all([
       prisma.parcela.findMany({
-        where: { status: "PAGO", dataPagamento: { gte: inicio, lte: fim } },
+        // Parcelas quitadas por alvará entram no caixa pelo alvará (valor retido).
+        where: { status: "PAGO", dataPagamento: { gte: inicio, lte: fim }, quitadaPorAlvaraId: null },
       }),
       prisma.honorarioSucumbencial.findMany({
-        where: { status: "RECEBIDO", dataRecebimento: { gte: inicio, lte: fim } },
+        // Idem para a sucumbência recebida por meio de alvará.
+        where: {
+          status: "RECEBIDO",
+          dataRecebimento: { gte: inicio, lte: fim },
+          alvaras: { none: { honorariosSucumbencia: { gt: 0 } } },
+        },
       }),
       prisma.alvara.findMany({
         where: { dataRecebimento: { gte: inicio, lte: fim } },

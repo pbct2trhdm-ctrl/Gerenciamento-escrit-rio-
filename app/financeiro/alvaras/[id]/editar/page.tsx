@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { AlvaraForm } from "@/components/alvara-form";
 import { atualizarAlvara, excluirAlvara } from "@/lib/actions/alvaras";
+import { carregarOpcoesAlvara } from "@/lib/alvara-opcoes";
 import { classeBotaoPerigo, classeTituloSecao } from "@/lib/estilos";
 import { LinkVoltar } from "@/components/link-voltar";
 
@@ -11,14 +12,12 @@ export default async function EditarAlvaraPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [alvara, sucumbencias] = await Promise.all([
+  const [alvara, opcoes] = await Promise.all([
     prisma.alvara.findUnique({
       where: { id },
       include: { processo: { include: { cliente: true } } },
     }),
-    prisma.honorarioSucumbencial.findMany({
-      select: { id: true, processoId: true },
-    }),
+    carregarOpcoesAlvara(id),
   ]);
 
   if (!alvara) {
@@ -27,7 +26,7 @@ export default async function EditarAlvaraPage({
 
   return (
     <div>
-      <LinkVoltar href="/financeiro/alvaras" label="Voltar para Alvarás" />
+      <LinkVoltar href={`/financeiro/alvaras/${alvara.id}`} label="Voltar para o alvará" />
       <div className="flex items-center justify-between mb-1">
         <h2 className={classeTituloSecao}>{alvara.processo.cliente.nome}</h2>
         <form action={excluirAlvara.bind(null, alvara.id)}>
@@ -41,7 +40,9 @@ export default async function EditarAlvaraPage({
       </p>
       <AlvaraForm
         alvara={alvara}
-        sucumbencias={sucumbencias.filter((s) => s.processoId === alvara.processoId)}
+        sucumbencias={opcoes.sucumbencias}
+        parcelas={opcoes.parcelas}
+        parcelaQuitadaIdAtual={opcoes.parcelaQuitadaIdAtual}
         action={atualizarAlvara.bind(null, id)}
       />
     </div>

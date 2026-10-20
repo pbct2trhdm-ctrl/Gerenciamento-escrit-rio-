@@ -29,7 +29,10 @@ export default async function FinanceiroVisaoGeralPage() {
       }),
       prisma.honorarioSucumbencial.findMany({
         where: { status: "RECEBIDO" },
-        include: { processo: { include: { cliente: true } } },
+        include: {
+          processo: { include: { cliente: true } },
+          alvaras: { select: { honorariosSucumbencia: true } },
+        },
       }),
       prisma.alvara.findMany({
         include: { processo: { include: { cliente: true } } },
@@ -45,10 +48,14 @@ export default async function FinanceiroVisaoGeralPage() {
     0
   );
 
+  // Parcelas e sucumbências recebidas por meio de alvará entram no caixa
+  // pelo valor retido do alvará — aqui ficam de fora para não contar duas vezes.
   const recebidoParcelasMes = parcelasPagas
+    .filter((p) => !p.quitadaPorAlvaraId)
     .filter((p) => p.dataPagamento && dentroDoMes(p.dataPagamento, inicioMes))
     .reduce((soma, p) => soma + p.valor, 0);
   const recebidoSucumbenciaMes = sucumbenciasRecebidas
+    .filter((s) => !s.alvaras.some((a) => a.honorariosSucumbencia > 0))
     .filter((s) => s.dataRecebimento && dentroDoMes(s.dataRecebimento, inicioMes))
     .reduce((soma, s) => soma + (s.valorDefinido ?? s.valorEstimado ?? 0), 0);
   const recebidoAlvarasMes = alvaras
@@ -101,8 +108,31 @@ export default async function FinanceiroVisaoGeralPage() {
     },
   ];
 
+  // Dinheiro de clientes já recebido em alvarás e ainda não repassado —
+  // está na conta do escritório, mas não é do escritório.
+  const alvarasPendentesRepasse = alvaras.filter(
+    (a) => a.status === "AGUARDANDO_REPASSE" && a.dataRecebimento
+  );
+  const valoresDeClientes = alvarasPendentesRepasse.reduce((soma, a) => soma + a.valorRepassado, 0);
+
   return (
     <div>
+      {valoresDeClientes > 0 && (
+        <Link
+          href="/financeiro/alvaras"
+          className="mb-6 flex items-center justify-between gap-4 rounded-lg border border-accent/30 bg-accent/10 px-4 py-3 text-sm hover:bg-accent/15 transition-colors"
+        >
+          <span>
+            <span className="font-semibold text-accent">
+              {formatarMoeda(valoresDeClientes)} de clientes
+            </span>{" "}
+            recebidos em {alvarasPendentesRepasse.length} alvará(s) e ainda não repassados — não
+            é dinheiro do escritório.
+          </span>
+          <span className="text-accent shrink-0">Ver alvarás →</span>
+        </Link>
+      )}
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {cards.map((card) => (
           <div key={card.label} className={classeCard}>

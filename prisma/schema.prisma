@@ -592,6 +592,8 @@ model Parcela {
   dataPagamento       DateTime?
   notaFiscalEmitida   Boolean       @default(false)
   dataEmissaoNf       DateTime?
+  quitadaPorAlvaraId  String?
+  quitadaPorAlvara    Alvara?       @relation(fields: [quitadaPorAlvaraId], references: [id], onDelete: SetNull)
   criadoEm            DateTime      @default(now())
 }
 
@@ -619,8 +621,19 @@ model Alvara {
   processo                 Processo               @relation(fields: [processoId], references: [id], onDelete: Cascade)
   honorarioSucumbencialId  String?
   honorarioSucumbencial    HonorarioSucumbencial? @relation(fields: [honorarioSucumbencialId], references: [id], onDelete: SetNull)
+  /// Valor bruto do alvará.
   valorTotal               Float
+  /// Descontos na fonte (reduzem o valor efetivamente recebido).
+  impostoRetido            Float                  @default(0)
+  tarifas                  Float                  @default(0)
+  /// Composição do que fica com o escritório — valorRetido é a soma destes três.
+  honorariosContratuais    Float                  @default(0)
+  honorariosSucumbencia    Float                  @default(0)
+  reembolsoDespesas        Float                  @default(0)
+  /// % aplicado sobre a base de cálculo dos honorários contratuais (informativo, para a prestação de contas).
+  percentualContratual     Float?
   valorRetido              Float
+  /// valorTotal − impostoRetido − tarifas − valorRetido.
   valorRepassado           Float
   dataRecebimento          DateTime?
   dataRepasse              DateTime?
@@ -630,6 +643,9 @@ model Alvara {
   contaDestino             String?
   chavePixDestino          String?
   observacoes              String?
+  /// Parcelas de honorários quitadas por este alvará — o valor entra no caixa
+  /// pelo alvará (honorariosContratuais), não pela parcela, para não contar duas vezes.
+  parcelasQuitadas         Parcela[]
   criadoEm                 DateTime               @default(now())
 }
 

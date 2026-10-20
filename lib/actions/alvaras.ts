@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { calcularAlvara } from "@/lib/alvara";
 
 const STATUS = ["AGUARDANDO_REPASSE", "REPASSADO"] as const;
 
@@ -25,20 +26,32 @@ function validarStatus(valor: FormDataEntryValue | null) {
     : "AGUARDANDO_REPASSE";
 }
 
+function numero(formData: FormData, campo: string): number {
+  const valor = Number((formData.get(campo) ?? "").toString().replace(",", "."));
+  return Number.isFinite(valor) && valor > 0 ? valor : 0;
+}
+
 function dadosComuns(formData: FormData) {
-  const valorTotal = Number(formData.get("valorTotal") ?? 0);
-  const valorRetido = Number(formData.get("valorRetido") ?? 0);
-  const valorRepassadoTexto = (formData.get("valorRepassado") ?? "").toString().trim();
-  const valorRepassado =
-    valorRepassadoTexto === ""
-      ? valorTotal - valorRetido
-      : Number(valorRepassadoTexto);
+  const composicao = {
+    valorTotal: numero(formData, "valorTotal"),
+    impostoRetido: numero(formData, "impostoRetido"),
+    tarifas: numero(formData, "tarifas"),
+    honorariosContratuais: numero(formData, "honorariosContratuais"),
+    honorariosSucumbencia: numero(formData, "honorariosSucumbencia"),
+    reembolsoDespesas: numero(formData, "reembolsoDespesas"),
+  };
+  const { valorRetido, valorRepassado } = calcularAlvara(composicao);
+  if (valorRepassado < 0) {
+    throw new Error("Os descontos e valores retidos ultrapassam o valor do alvará.");
+  }
+  const percentualTexto = (formData.get("percentualContratual") ?? "").toString().trim();
 
   const honorarioSucumbencialId = (formData.get("honorarioSucumbencialId") ?? "").toString();
 
   return {
     honorarioSucumbencialId: honorarioSucumbencialId || null,
-    valorTotal,
+    ...composicao,
+    percentualContratual: percentualTexto ? Number(percentualTexto.replace(",", ".")) : null,
     valorRetido,
     valorRepassado,
     dataRecebimento: parseData(formData.get("dataRecebimento")),
@@ -52,20 +65,59 @@ function dadosComuns(formData: FormData) {
   };
 }
 
+/**
+ * Evita contar o mesmo dinheiro duas vezes no caixa: a parcela de honorários
+ * escolhida passa a "paga por este alvará" (o valor entra pelo alvará), e a
+ * sucumbência vinculada é marcada como recebida quando o alvará traz a parte
+ * de sucumbência e já foi recebido.
+ */
+async function sincronizarVinculos(alvaraId: string, parcelaQuitadaId: string | null) {
+  const alvara = await prisma.alvara.findUniqueOrThrow({ where: { id: alvaraId } });
+  const hoje = new Date();
+  const dataPagamento = alvara.dataRecebimento ?? new Date(Date.UTC(hoje.getFullYear(), hoje.getMonth(), hoje.getDate()));
+
+  // Parcela que deixou de ser quitada por este alvará volta a pendente.
+  await prisma.parcela.updateMany({
+    where: { quitadaPorAlvaraId: alvaraId, id: parcelaQuitadaId ? { not: parcelaQuitadaId } : undefined },
+    data: { quitadaPorAlvaraId: null, status: "PENDENTE", dataPagamento: null },
+  });
+  if (parcelaQuitadaId) {
+    await prisma.parcela.update({
+      where: { id: parcelaQuitadaId },
+      data: { quitadaPorAlvaraId: alvaraId, status: "PAGO", dataPagamento },
+    });
+  }
+
+  if (alvara.honorarioSucumbencialId && alvara.honorariosSucumbencia > 0 && alvara.dataRecebimento) {
+    const sucumbencia = await prisma.honorarioSucumbencial.findUniqueOrThrow({
+      where: { id: alvara.honorarioSucumbencialId },
+    });
+    await prisma.honorarioSucumbencial.update({
+      where: { id: sucumbencia.id },
+      data: {
+        status: "RECEBIDO",
+        dataRecebimento: alvara.dataRecebimento,
+        valorDefinido: sucumbencia.valorDefinido ?? alvara.honorariosSucumbencia,
+      },
+    });
+  }
+}
+
 export async function criarAlvara(formData: FormData) {
   const processoId = (formData.get("processoId") ?? "").toString();
   if (!processoId) {
     throw new Error("Processo é obrigatório");
   }
 
-  await prisma.alvara.create({
+  const alvara = await prisma.alvara.create({
     data: { processoId, ...dadosComuns(formData) },
   });
+  await sincronizarVinculos(alvara.id, textoOuNull(formData.get("parcelaQuitadaId")));
 
   revalidatePath("/financeiro/alvaras");
   revalidatePath("/financeiro");
   revalidatePath(`/processos/${processoId}`);
-  redirect("/financeiro/alvaras");
+  redirect(`/financeiro/alvaras/${alvara.id}`);
 }
 
 export async function atualizarAlvara(id: string, formData: FormData) {
@@ -73,14 +125,20 @@ export async function atualizarAlvara(id: string, formData: FormData) {
     where: { id },
     data: dadosComuns(formData),
   });
+  await sincronizarVinculos(alvara.id, textoOuNull(formData.get("parcelaQuitadaId")));
 
   revalidatePath("/financeiro/alvaras");
   revalidatePath("/financeiro");
   revalidatePath(`/processos/${alvara.processoId}`);
-  redirect("/financeiro/alvaras");
+  redirect(`/financeiro/alvaras/${alvara.id}`);
 }
 
 export async function excluirAlvara(id: string) {
+  // Parcela que constava como paga por este alvará volta a pendente.
+  await prisma.parcela.updateMany({
+    where: { quitadaPorAlvaraId: id },
+    data: { quitadaPorAlvaraId: null, status: "PENDENTE", dataPagamento: null },
+  });
   const alvara = await prisma.alvara.delete({ where: { id } });
   revalidatePath("/financeiro/alvaras");
   revalidatePath("/financeiro");
@@ -98,5 +156,6 @@ export async function marcarAlvaraRepassado(id: string) {
     },
   });
   revalidatePath("/financeiro/alvaras");
+  revalidatePath(`/financeiro/alvaras/${id}`);
   revalidatePath("/financeiro");
 }
