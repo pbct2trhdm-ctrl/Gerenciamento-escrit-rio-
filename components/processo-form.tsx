@@ -8,6 +8,8 @@ import {
   LABEL_JURISDICAO,
   LABEL_RITO,
   RITOS_POR_JURISDICAO,
+  GRAUS_PROCESSO,
+  LABEL_GRAU_PROCESSO,
 } from "@/lib/formatacao";
 import { classeInput, classeLabel, classeBotaoPrimario } from "@/lib/estilos";
 import { LABEL_TRIBUNAL, GRUPOS_TRIBUNAL } from "@/lib/tribunais";
@@ -156,6 +158,28 @@ export function ProcessoForm({
             </optgroup>
           ))}
         </select>
+      </div>
+
+      <div>
+        <label className={classeLabel} htmlFor="grau">
+          Grau em que o processo está
+        </label>
+        <select
+          id="grau"
+          name="grau"
+          defaultValue={processo?.grau ?? "PRIMEIRO_GRAU"}
+          className={classeInput}
+        >
+          {GRAUS_PROCESSO.map((codigo) => (
+            <option key={codigo} value={codigo}>
+              {LABEL_GRAU_PROCESSO[codigo]}
+            </option>
+          ))}
+        </select>
+        <p className="mt-1 text-xs text-texto-secundario">
+          Muda sozinho ao registrar a remessa de um recurso. Quando os autos voltarem ao 1º grau,
+          altere aqui.
+        </p>
       </div>
 
       <div className="grid grid-cols-2 gap-4">

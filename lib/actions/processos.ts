@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { TODOS_TRIBUNAIS } from "@/lib/tribunais";
-import { RITOS_POR_JURISDICAO } from "@/lib/formatacao";
+import { RITOS_POR_JURISDICAO, GRAUS_PROCESSO } from "@/lib/formatacao";
 import type { Tribunal, Jurisdicao, Rito } from "@/app/generated/prisma/client";
 
 const AREAS = [
@@ -77,6 +77,13 @@ function dadosJurisdicaoRito(formData: FormData) {
   return { jurisdicao, rito };
 }
 
+function validarGrau(valor: FormDataEntryValue | null) {
+  const texto = (valor ?? "").toString();
+  return (GRAUS_PROCESSO as readonly string[]).includes(texto)
+    ? (texto as (typeof GRAUS_PROCESSO)[number])
+    : "PRIMEIRO_GRAU";
+}
+
 export async function criarProcesso(formData: FormData) {
   const clienteId = (formData.get("clienteId") ?? "").toString();
   if (!clienteId) {
@@ -93,6 +100,7 @@ export async function criarProcesso(formData: FormData) {
       vara: textoOuNull(formData.get("vara")),
       comarca: textoOuNull(formData.get("comarca")),
       status: validarStatus(formData.get("status")),
+      grau: validarGrau(formData.get("grau")),
       resumo: textoOuNull(formData.get("resumo")),
     },
   });
@@ -119,6 +127,7 @@ export async function atualizarProcesso(id: string, formData: FormData) {
       vara: textoOuNull(formData.get("vara")),
       comarca: textoOuNull(formData.get("comarca")),
       status: validarStatus(formData.get("status")),
+      grau: validarGrau(formData.get("grau")),
       resumo: textoOuNull(formData.get("resumo")),
     },
   });

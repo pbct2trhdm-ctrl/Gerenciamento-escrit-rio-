@@ -148,6 +148,15 @@ enum Tribunal {
   OUTRO
 }
 
+/// Instância em que o processo tramita no momento. Muda sozinho para
+/// SEGUNDO_GRAU/TRIBUNAL_SUPERIOR ao registrar a remessa de um recurso
+/// (lib/actions/andamentos.ts); a volta ao 1º grau é manual.
+enum GrauProcesso {
+  PRIMEIRO_GRAU
+  SEGUNDO_GRAU
+  TRIBUNAL_SUPERIOR
+}
+
 enum StatusProcesso {
   ATIVO
   SUSPENSO
@@ -341,6 +350,7 @@ model Processo {
   vara            String?
   comarca         String?
   status          StatusProcesso @default(ATIVO)
+  grau            GrauProcesso   @default(PRIMEIRO_GRAU)
   resumo          String?
   criadoEm        DateTime       @default(now())
   prazos          Prazo[]

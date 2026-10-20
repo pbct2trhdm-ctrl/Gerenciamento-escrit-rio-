@@ -25,7 +25,7 @@ Acesse http://localhost:3000.
 ## Modelo de dados
 
 - **Cliente**: nome/razão social, tipo (PF/PJ), CPF/CNPJ, telefone, email, observações.
-- **Processo**: vinculado a um cliente, número (opcional), área, vara/tribunal, status, resumo.
+- **Processo**: vinculado a um cliente, número (opcional), área, vara/tribunal, status, grau (1º grau, 2º grau/Turma Recursal ou tribunal superior — muda sozinho ao registrar a remessa de um recurso; a volta ao 1º grau é manual), resumo.
 - **Prazo**: vinculado a um processo, tipo, data base, dias, tipo de contagem (dias úteis/corridos), data final (calculada automaticamente), status.
 
 O cálculo de dias úteis considera fins de semana e feriados nacionais brasileiros (fixos e móveis: Carnaval, Sexta-feira Santa, Corpus Christi) — ver `lib/prazos.ts`.
@@ -34,7 +34,7 @@ O cálculo de dias úteis considera fins de semana e feriados nacionais brasilei
 
 - **Dashboard**: prazos pendentes mais próximos de vencer, com destaque para os que vencem em até 7 dias.
 - **Clientes**: listagem com busca/filtro, cadastro/edição, processos vinculados.
-- **Processos**: listagem com busca/filtro, cadastro/edição, prazos vinculados.
+- **Processos**: listagem com busca/filtros (status, grau, área, tribunal, comarca/vara), cadastro/edição, prazos vinculados.
 - **Prazos/Agenda**: listagem geral com filtros, cadastro/edição com cálculo automático da data final, ação rápida "marcar como cumprido".
 - **Financeiro**: honorários contratuais e parcelas, honorários de sucumbência, alvarás/repasses, despesas e obrigações societárias (pró-labore, DAS, INSS, CPP, retiradas de lucro). Ver detalhes abaixo.
 

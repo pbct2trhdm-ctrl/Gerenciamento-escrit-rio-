@@ -13,6 +13,8 @@ import {
 } from "@/lib/formatacao";
 import type { TipoAndamento } from "@/app/generated/prisma/client";
 
+const TRIBUNAIS_SUPERIORES: readonly string[] = ["STF", "STJ", "TST", "TSE", "STM"];
+
 const TIPOS_PRAZO_RAPIDO = ["PETICAO", "RECURSO", "MANIFESTACAO", "OUTRO"] as const;
 
 /** União dos tipos válidos nos dois contextos (judicial e administrativo) — a UI já restringe as opções mostradas, aqui só validamos o valor recebido. */
@@ -95,6 +97,20 @@ export async function criarAndamento(formData: FormData) {
     await prisma.recurso.update({
       where: { id: recursoId },
       data: { status: "EM_TRAMITACAO_2_GRAU" },
+    });
+  }
+
+  // Remessa ao 2º grau: o processo passa a constar no grau de destino — tribunal
+  // superior quando o recurso aponta para STF/STJ/TST/TSE/STM, senão 2º grau.
+  if (processoId && tipo === "REMESSA_2_GRAU") {
+    const recurso = recursoId
+      ? await prisma.recurso.findUnique({ where: { id: recursoId }, select: { tribunal2Grau: true } })
+      : null;
+    const superior =
+      recurso?.tribunal2Grau && TRIBUNAIS_SUPERIORES.includes(recurso.tribunal2Grau);
+    await prisma.processo.update({
+      where: { id: processoId },
+      data: { grau: superior ? "TRIBUNAL_SUPERIOR" : "SEGUNDO_GRAU" },
     });
   }
 

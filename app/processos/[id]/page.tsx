@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import {
   LABEL_STATUS_PROCESSO,
+  LABEL_GRAU_PROCESSO,
   LABEL_TIPO_PRAZO,
   LABEL_CONTAGEM,
   LABEL_STATUS_PRAZO,
@@ -126,6 +127,7 @@ export default async function ProcessoDetalhePage({
           <span>· {LABEL_TRIBUNAL[processo.tribunal]}</span>
         )}
         <Badge tier={tierStatus(processo.status)}>{LABEL_STATUS_PROCESSO[processo.status]}</Badge>
+        <span className={classeBadgeNeutro}>{LABEL_GRAU_PROCESSO[processo.grau]}</span>
       </p>
 
       <div className={`grid grid-cols-3 gap-4 mb-8 text-sm ${classeCard}`}>
@@ -148,6 +150,10 @@ export default async function ProcessoDetalhePage({
         <div>
           <p className="text-texto-secundario">Comarca</p>
           <p>{processo.comarca || "—"}</p>
+        </div>
+        <div>
+          <p className="text-texto-secundario">Grau</p>
+          <p>{LABEL_GRAU_PROCESSO[processo.grau]}</p>
         </div>
         <div>
           <p className="text-texto-secundario">Criado em</p>

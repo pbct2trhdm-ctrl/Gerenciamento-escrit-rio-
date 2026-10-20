@@ -1,6 +1,14 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { LABEL_AREA, AREAS_PROCESSO, LABEL_STATUS_PROCESSO, formatarArea } from "@/lib/formatacao";
+import {
+  LABEL_AREA,
+  AREAS_PROCESSO,
+  LABEL_STATUS_PROCESSO,
+  GRAUS_PROCESSO,
+  LABEL_GRAU_PROCESSO,
+  LABEL_GRAU_CURTO,
+  formatarArea,
+} from "@/lib/formatacao";
 import { LABEL_TRIBUNAL, TODOS_TRIBUNAIS } from "@/lib/tribunais";
 import type { Prisma } from "@/app/generated/prisma/client";
 import { tierStatus } from "@/lib/urgencia";
@@ -12,6 +20,7 @@ import {
   classeBotaoPrimario,
   classeBotaoSecundario,
   classeTituloPagina,
+  classeBadgeNeutro,
 } from "@/lib/estilos";
 
 export default async function ProcessosPage({
@@ -24,9 +33,10 @@ export default async function ProcessosPage({
     tribunal?: string;
     comarca?: string;
     vara?: string;
+    grau?: string;
   }>;
 }) {
-  const { q, status, area, tribunal, comarca, vara } = await searchParams;
+  const { q, status, area, tribunal, comarca, vara, grau } = await searchParams;
 
   const where: Prisma.ProcessoWhereInput = {};
   if (q) {
@@ -45,6 +55,9 @@ export default async function ProcessosPage({
   }
   if (TODOS_TRIBUNAIS.includes(tribunal ?? "")) {
     where.tribunal = tribunal as Prisma.ProcessoWhereInput["tribunal"];
+  }
+  if ((GRAUS_PROCESSO as readonly string[]).includes(grau ?? "")) {
+    where.grau = grau as Prisma.ProcessoWhereInput["grau"];
   }
   if (comarca) {
     where.comarca = comarca;
@@ -100,6 +113,14 @@ export default async function ProcessosPage({
           <option value="ARQUIVADO">Arquivado</option>
           <option value="ENCERRADO">Encerrado</option>
         </select>
+        <select name="grau" defaultValue={grau ?? ""} className={classeInputAuto}>
+          <option value="">Todos os graus</option>
+          {GRAUS_PROCESSO.map((codigo) => (
+            <option key={codigo} value={codigo}>
+              {LABEL_GRAU_PROCESSO[codigo]}
+            </option>
+          ))}
+        </select>
         <select name="area" defaultValue={area ?? ""} className={classeInputAuto}>
           <option value="">Todas as áreas</option>
           {AREAS_PROCESSO.map((codigo) => (
@@ -145,6 +166,7 @@ export default async function ProcessosPage({
                 <th className="px-4 py-3 font-medium">Cliente</th>
                 <th className="px-4 py-3 font-medium">Área</th>
                 <th className="px-4 py-3 font-medium">Tribunal</th>
+                <th className="px-4 py-3 font-medium">Grau</th>
                 <th className="px-4 py-3 font-medium">Status</th>
               </tr>
             </thead>
@@ -165,6 +187,15 @@ export default async function ProcessosPage({
                   </td>
                   <td className="px-4 py-3 text-texto-secundario">
                     {processo.tribunal ? LABEL_TRIBUNAL[processo.tribunal] : "—"}
+                  </td>
+                  <td className="px-4 py-3">
+                    <span
+                      className={`${classeBadgeNeutro} ${
+                        processo.grau === "PRIMEIRO_GRAU" ? "" : "!border-accent/40 !bg-accent/10 !text-accent"
+                      }`}
+                    >
+                      {LABEL_GRAU_CURTO[processo.grau]}
+                    </span>
                   </td>
                   <td className="px-4 py-3">
                     <Badge tier={tierStatus(processo.status)}>

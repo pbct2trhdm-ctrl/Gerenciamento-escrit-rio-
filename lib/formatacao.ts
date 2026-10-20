@@ -67,6 +67,21 @@ export const LABEL_MODALIDADE_AUDIENCIA: Record<string, string> = {
   PRESENCIAL: "Presencial",
 };
 
+export const GRAUS_PROCESSO = ["PRIMEIRO_GRAU", "SEGUNDO_GRAU", "TRIBUNAL_SUPERIOR"] as const;
+
+export const LABEL_GRAU_PROCESSO: Record<string, string> = {
+  PRIMEIRO_GRAU: "1º grau",
+  SEGUNDO_GRAU: "2º grau / Turma Recursal",
+  TRIBUNAL_SUPERIOR: "Tribunal superior",
+};
+
+/** Rótulo curto para listas e selos. */
+export const LABEL_GRAU_CURTO: Record<string, string> = {
+  PRIMEIRO_GRAU: "1º grau",
+  SEGUNDO_GRAU: "2º grau",
+  TRIBUNAL_SUPERIOR: "Superior",
+};
+
 export const LABEL_STATUS_PROCESSO: Record<string, string> = {
   ATIVO: "Ativo",
   SUSPENSO: "Suspenso",
