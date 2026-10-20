@@ -114,6 +114,14 @@ export async function criarAndamento(formData: FormData) {
     });
   }
 
+  // Baixa dos autos: o processo volta ao 1º grau.
+  if (processoId && tipo === "BAIXA_AUTOS_1_GRAU") {
+    await prisma.processo.update({
+      where: { id: processoId },
+      data: { grau: "PRIMEIRO_GRAU" },
+    });
+  }
+
   if (recursoId && tipo === "JULGAMENTO_RECURSO") {
     const resultado = validarResultadoRecurso(formData.get("resultado"));
     if (!resultado) {
@@ -174,9 +182,33 @@ export async function criarAndamento(formData: FormData) {
     : `/processos-administrativos/${processoAdministrativoId}`;
 
   revalidatePath(caminhoDetalhe);
+  revalidatePath("/processos");
   revalidatePath("/prazos");
   revalidatePath("/");
   redirect(caminhoDetalhe);
+}
+
+/**
+ * Atalho da tela do processo: registra hoje o andamento "Baixa dos autos ao
+ * 1º grau" e devolve o processo ao 1º grau.
+ */
+export async function registrarBaixaAutos(processoId: string) {
+  const agora = new Date();
+  await prisma.andamento.create({
+    data: {
+      processoId,
+      data: new Date(Date.UTC(agora.getFullYear(), agora.getMonth(), agora.getDate())),
+      tipo: "BAIXA_AUTOS_1_GRAU",
+      descricao: "Autos baixados ao 1º grau.",
+    },
+  });
+  await prisma.processo.update({
+    where: { id: processoId },
+    data: { grau: "PRIMEIRO_GRAU" },
+  });
+
+  revalidatePath(`/processos/${processoId}`);
+  revalidatePath("/processos");
 }
 
 export async function excluirAndamento(id: string) {

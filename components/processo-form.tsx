@@ -177,8 +177,7 @@ export function ProcessoForm({
           ))}
         </select>
         <p className="mt-1 text-xs text-texto-secundario">
-          Muda sozinho ao registrar a remessa de um recurso. Quando os autos voltarem ao 1º grau,
-          altere aqui.
+          Muda sozinho ao registrar a remessa de um recurso ou a baixa dos autos ao 1º grau.
         </p>
       </div>
 

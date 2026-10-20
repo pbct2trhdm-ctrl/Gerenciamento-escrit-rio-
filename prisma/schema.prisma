@@ -149,8 +149,8 @@ enum Tribunal {
 }
 
 /// Instância em que o processo tramita no momento. Muda sozinho para
-/// SEGUNDO_GRAU/TRIBUNAL_SUPERIOR ao registrar a remessa de um recurso
-/// (lib/actions/andamentos.ts); a volta ao 1º grau é manual.
+/// SEGUNDO_GRAU/TRIBUNAL_SUPERIOR ao registrar a remessa de um recurso e volta
+/// a PRIMEIRO_GRAU ao registrar a baixa dos autos (lib/actions/andamentos.ts).
 enum GrauProcesso {
   PRIMEIRO_GRAU
   SEGUNDO_GRAU
@@ -181,6 +181,7 @@ enum TipoAndamento {
   INTIMACAO
   MANIFESTACAO_PROTOCOLADA
   REMESSA_2_GRAU
+  BAIXA_AUTOS_1_GRAU
   JULGAMENTO_RECURSO
   REMESSA_RECURSO_ADMINISTRATIVO
   REDESIGNACAO_AUDIENCIA

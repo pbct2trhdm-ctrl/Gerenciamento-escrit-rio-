@@ -25,7 +25,7 @@ Acesse http://localhost:3000.
 ## Modelo de dados
 
 - **Cliente**: nome/razão social, tipo (PF/PJ), CPF/CNPJ, telefone, email, observações.
-- **Processo**: vinculado a um cliente, número (opcional), área, vara/tribunal, status, grau (1º grau, 2º grau/Turma Recursal ou tribunal superior — muda sozinho ao registrar a remessa de um recurso; a volta ao 1º grau é manual), resumo.
+- **Processo**: vinculado a um cliente, número (opcional), área, vara/tribunal, status, grau (1º grau, 2º grau/Turma Recursal ou tribunal superior — muda sozinho ao registrar a remessa de um recurso e volta ao 1º grau com o andamento "Baixa dos autos ao 1º grau" ou o botão de atalho na tela do processo), resumo.
 - **Prazo**: vinculado a um processo, tipo, data base, dias, tipo de contagem (dias úteis/corridos), data final (calculada automaticamente), status.
 
 O cálculo de dias úteis considera fins de semana e feriados nacionais brasileiros (fixos e móveis: Carnaval, Sexta-feira Santa, Corpus Christi) — ver `lib/prazos.ts`.

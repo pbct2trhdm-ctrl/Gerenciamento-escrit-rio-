@@ -26,7 +26,8 @@ import { LABEL_TRIBUNAL } from "@/lib/tribunais";
 import { diasRestantes } from "@/lib/prazos";
 import { excluirProcesso } from "@/lib/actions/processos";
 import { marcarPrazoComoCumprido } from "@/lib/actions/prazos";
-import { excluirAndamento } from "@/lib/actions/andamentos";
+import { excluirAndamento, registrarBaixaAutos } from "@/lib/actions/andamentos";
+import { BotaoEnvio } from "@/components/botao-envio";
 import { excluirRecurso } from "@/lib/actions/recursos";
 import {
   tierPrazo,
@@ -129,6 +130,20 @@ export default async function ProcessoDetalhePage({
         <Badge tier={tierStatus(processo.status)}>{LABEL_STATUS_PROCESSO[processo.status]}</Badge>
         <span className={classeBadgeNeutro}>{LABEL_GRAU_PROCESSO[processo.grau]}</span>
       </p>
+
+      {processo.grau !== "PRIMEIRO_GRAU" && (
+        <div className="mb-6 flex items-center justify-between gap-3 flex-wrap rounded-lg border border-accent/30 bg-accent/10 px-4 py-3 text-sm">
+          <span>
+            Processo em <strong>{LABEL_GRAU_PROCESSO[processo.grau]}</strong>. Quando os autos
+            voltarem, registre a baixa.
+          </span>
+          <form action={registrarBaixaAutos.bind(null, processo.id)}>
+            <BotaoEnvio className={classeBotaoSecundario} textoAguardando="Registrando…">
+              Registrar baixa ao 1º grau
+            </BotaoEnvio>
+          </form>
+        </div>
+      )}
 
       <div className={`grid grid-cols-3 gap-4 mb-8 text-sm ${classeCard}`}>
         <div>
