@@ -381,6 +381,34 @@ export function AlvaraForm({
         </div>
       </fieldset>
 
+      <fieldset className="rounded-md border border-slate-200 p-3 space-y-3">
+        <legend className="font-display text-sm font-medium px-1 text-texto-principal">
+          Documentos (anexados ao final da prestação de contas)
+        </legend>
+        {(
+          [
+            ["arquivoAlvara", "PDF do alvará judicial", alvara?.arquivoAlvaraNome],
+            ["comprovanteRepasse", "Comprovante do repasse ao cliente", alvara?.comprovanteRepasseNome],
+          ] as const
+        ).map(([campo, rotulo, atual]) => (
+          <div key={campo}>
+            <label className={classeLabel} htmlFor={campo}>
+              {rotulo}
+            </label>
+            <input
+              id={campo}
+              name={campo}
+              type="file"
+              accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+              className={`${classeInput} file:mr-3 file:rounded-md file:border-0 file:bg-fundo file:px-3 file:py-1.5 file:text-sm file:font-medium`}
+            />
+            <p className="mt-1 text-xs text-texto-secundario">
+              {atual ? `Atual: ${atual} — envie outro para substituir.` : "PDF, JPG ou PNG."}
+            </p>
+          </div>
+        ))}
+      </fieldset>
+
       <div>
         <label className={classeLabel} htmlFor="observacoes">
           Observações

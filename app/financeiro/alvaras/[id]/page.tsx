@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { calcularAlvara } from "@/lib/alvara";
 import { formatarData, formatarMoeda, LABEL_STATUS_ALVARA } from "@/lib/formatacao";
-import { marcarAlvaraRepassado } from "@/lib/actions/alvaras";
+import { marcarAlvaraRepassado, removerAnexoAlvara } from "@/lib/actions/alvaras";
 import { LinkVoltar } from "@/components/link-voltar";
 import { Badge } from "@/components/badge";
 import {
@@ -106,6 +106,48 @@ export default async function AlvaraDetalhePage({
         <Linha rotulo="Honorários de sucumbência" valor={alvara.honorariosSucumbencia} sinal="-" />
         <Linha rotulo="Reembolso de despesas adiantadas" valor={alvara.reembolsoDespesas} sinal="-" />
         <Linha rotulo="Valor a repassar ao cliente" valor={calculo.valorRepassado} sinal="=" destaque />
+      </div>
+
+      <div className={`${classeCard} mt-6 text-sm`}>
+        <p className="font-medium mb-2">Documentos</p>
+        <ul className="space-y-2">
+          {(
+            [
+              ["alvara", "PDF do alvará judicial", alvara.arquivoAlvaraNome],
+              ["comprovante", "Comprovante do repasse", alvara.comprovanteRepasseNome],
+            ] as const
+          ).map(([tipo, rotulo, nome]) => (
+            <li key={tipo} className="flex items-center justify-between gap-3 flex-wrap">
+              <span>
+                <span className="text-texto-secundario">{rotulo}: </span>
+                {nome ? (
+                  <a
+                    href={`/financeiro/alvaras/${alvara.id}/anexo/${tipo}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-accent underline break-all"
+                  >
+                    {nome}
+                  </a>
+                ) : (
+                  <Link href={`/financeiro/alvaras/${alvara.id}/editar`} className="text-texto-secundario underline">
+                    anexar
+                  </Link>
+                )}
+              </span>
+              {nome && (
+                <form action={removerAnexoAlvara.bind(null, alvara.id, tipo)}>
+                  <button type="submit" className="text-xs text-critico underline">
+                    Remover
+                  </button>
+                </form>
+              )}
+            </li>
+          ))}
+        </ul>
+        <p className="mt-2 text-xs text-texto-secundario">
+          Os documentos anexados vão juntos, ao final do PDF da prestação de contas.
+        </p>
       </div>
 
       <div className="mt-6 grid grid-cols-2 gap-4 text-sm">

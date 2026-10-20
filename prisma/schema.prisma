@@ -643,6 +643,14 @@ model Alvara {
   contaDestino             String?
   chavePixDestino          String?
   observacoes              String?
+  /// PDF do alvará judicial e comprovante do repasse ao cliente (anexados ao
+  /// final da prestação de contas). Caminhos relativos em storage/anexos.
+  arquivoAlvaraNome        String?
+  arquivoAlvaraCaminho     String?
+  arquivoAlvaraTipo        String?
+  comprovanteRepasseNome    String?
+  comprovanteRepasseCaminho String?
+  comprovanteRepasseTipo    String?
   /// Parcelas de honorários quitadas por este alvará — o valor entra no caixa
   /// pelo alvará (honorariosContratuais), não pela parcela, para não contar duas vezes.
   parcelasQuitadas         Parcela[]

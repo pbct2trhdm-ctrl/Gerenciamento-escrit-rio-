@@ -4,6 +4,29 @@ import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { calcularAlvara } from "@/lib/alvara";
+import { salvarAnexo, removerAnexo } from "@/lib/anexos";
+
+const TIPOS_ANEXO_ACEITOS = ["application/pdf", "image/jpeg", "image/png"];
+
+/** Anexos enviados no formulário (PDF do alvará e comprovante do repasse). */
+async function salvarAnexosEnviados(formData: FormData) {
+  const dados: Record<string, string | null> = {};
+  for (const [campo, prefixo] of [
+    ["arquivoAlvara", "arquivoAlvara"],
+    ["comprovanteRepasse", "comprovanteRepasse"],
+  ] as const) {
+    const arquivo = formData.get(campo);
+    if (!(arquivo instanceof File) || arquivo.size === 0) continue;
+    const ehAceito =
+      TIPOS_ANEXO_ACEITOS.includes(arquivo.type) || /\.(pdf|jpe?g|png)$/i.test(arquivo.name);
+    if (!ehAceito) throw new Error("Anexe arquivos em PDF, JPG ou PNG.");
+    const salvo = await salvarAnexo(arquivo);
+    dados[`${prefixo}Nome`] = salvo.nome;
+    dados[`${prefixo}Caminho`] = salvo.caminho;
+    dados[`${prefixo}Tipo`] = salvo.tipo;
+  }
+  return dados;
+}
 
 const STATUS = ["AGUARDANDO_REPASSE", "REPASSADO"] as const;
 
@@ -110,7 +133,7 @@ export async function criarAlvara(formData: FormData) {
   }
 
   const alvara = await prisma.alvara.create({
-    data: { processoId, ...dadosComuns(formData) },
+    data: { processoId, ...dadosComuns(formData), ...(await salvarAnexosEnviados(formData)) },
   });
   await sincronizarVinculos(alvara.id, textoOuNull(formData.get("parcelaQuitadaId")));
 
@@ -121,10 +144,19 @@ export async function criarAlvara(formData: FormData) {
 }
 
 export async function atualizarAlvara(id: string, formData: FormData) {
+  const anterior = await prisma.alvara.findUniqueOrThrow({ where: { id } });
+  const anexosNovos = await salvarAnexosEnviados(formData);
   const alvara = await prisma.alvara.update({
     where: { id },
-    data: dadosComuns(formData),
+    data: { ...dadosComuns(formData), ...anexosNovos },
   });
+  // Arquivo substituído: apaga o anterior do disco.
+  if (anexosNovos.arquivoAlvaraCaminho && anterior.arquivoAlvaraCaminho) {
+    await removerAnexo(anterior.arquivoAlvaraCaminho);
+  }
+  if (anexosNovos.comprovanteRepasseCaminho && anterior.comprovanteRepasseCaminho) {
+    await removerAnexo(anterior.comprovanteRepasseCaminho);
+  }
   await sincronizarVinculos(alvara.id, textoOuNull(formData.get("parcelaQuitadaId")));
 
   revalidatePath("/financeiro/alvaras");
@@ -140,6 +172,9 @@ export async function excluirAlvara(id: string) {
     data: { quitadaPorAlvaraId: null, status: "PENDENTE", dataPagamento: null },
   });
   const alvara = await prisma.alvara.delete({ where: { id } });
+  for (const caminho of [alvara.arquivoAlvaraCaminho, alvara.comprovanteRepasseCaminho]) {
+    if (caminho) await removerAnexo(caminho);
+  }
   revalidatePath("/financeiro/alvaras");
   revalidatePath("/financeiro");
   revalidatePath(`/processos/${alvara.processoId}`);
@@ -158,4 +193,24 @@ export async function marcarAlvaraRepassado(id: string) {
   revalidatePath("/financeiro/alvaras");
   revalidatePath(`/financeiro/alvaras/${id}`);
   revalidatePath("/financeiro");
+}
+
+/** Remove um dos anexos do alvará ("alvara" ou "comprovante"). */
+export async function removerAnexoAlvara(id: string, tipo: "alvara" | "comprovante") {
+  const alvara = await prisma.alvara.findUniqueOrThrow({ where: { id } });
+  if (tipo === "alvara" && alvara.arquivoAlvaraCaminho) {
+    await removerAnexo(alvara.arquivoAlvaraCaminho);
+    await prisma.alvara.update({
+      where: { id },
+      data: { arquivoAlvaraNome: null, arquivoAlvaraCaminho: null, arquivoAlvaraTipo: null },
+    });
+  }
+  if (tipo === "comprovante" && alvara.comprovanteRepasseCaminho) {
+    await removerAnexo(alvara.comprovanteRepasseCaminho);
+    await prisma.alvara.update({
+      where: { id },
+      data: { comprovanteRepasseNome: null, comprovanteRepasseCaminho: null, comprovanteRepasseTipo: null },
+    });
+  }
+  revalidatePath(`/financeiro/alvaras/${id}`);
 }
