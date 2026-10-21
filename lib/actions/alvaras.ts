@@ -111,9 +111,24 @@ async function sincronizarVinculos(alvaraId: string, parcelaQuitadaId: string | 
     });
   }
 
-  if (alvara.honorarioSucumbencialId && alvara.honorariosSucumbencia > 0 && alvara.dataRecebimento) {
+  // Alvará com sucumbência sem vínculo escolhido: se o processo tem uma
+  // única sucumbência em aberto, vincula sozinho (evita contá-la de novo
+  // quando ela for marcada como recebida).
+  let honorarioSucumbencialId = alvara.honorarioSucumbencialId;
+  if (!honorarioSucumbencialId && alvara.honorariosSucumbencia > 0) {
+    const abertas = await prisma.honorarioSucumbencial.findMany({
+      where: { processoId: alvara.processoId, status: { not: "RECEBIDO" } },
+      select: { id: true },
+    });
+    if (abertas.length === 1) {
+      honorarioSucumbencialId = abertas[0].id;
+      await prisma.alvara.update({ where: { id: alvaraId }, data: { honorarioSucumbencialId } });
+    }
+  }
+
+  if (honorarioSucumbencialId && alvara.honorariosSucumbencia > 0 && alvara.dataRecebimento) {
     const sucumbencia = await prisma.honorarioSucumbencial.findUniqueOrThrow({
-      where: { id: alvara.honorarioSucumbencialId },
+      where: { id: honorarioSucumbencialId },
     });
     await prisma.honorarioSucumbencial.update({
       where: { id: sucumbencia.id },

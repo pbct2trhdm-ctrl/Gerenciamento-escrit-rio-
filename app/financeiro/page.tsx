@@ -88,6 +88,16 @@ export default async function FinanceiroVisaoGeralPage() {
   const alvarasSemParteCliente = alvaras.filter(
     (a) => a.valorTotal > 0 && a.valorRepassado <= 0
   );
+  // Sucumbência marcada como recebida fora do alvará, num processo que já tem
+  // alvará com parte de sucumbência: o mesmo dinheiro pode estar contado duas vezes.
+  const processosComSucumbenciaEmAlvara = new Set(
+    alvaras.filter((a) => a.honorariosSucumbencia > 0).map((a) => a.processoId)
+  );
+  const sucumbenciasPossivelDuplicidade = sucumbenciasRecebidas.filter(
+    (s) =>
+      !s.alvaras.some((a) => a.honorariosSucumbencia > 0) &&
+      processosComSucumbenciaEmAlvara.has(s.processoId)
+  );
   const duplicados = idsAlvarasDuplicados(alvaras);
   const alvarasDuplicados = alvaras.filter((a) => duplicados.has(a.id));
   const alvarasAguardando = alvaras.filter(
@@ -203,7 +213,8 @@ export default async function FinanceiroVisaoGeralPage() {
         sucumbenciasSemNf.length === 0 &&
         alvarasAguardando.length === 0 &&
         alvarasSemParteCliente.length === 0 &&
-        alvarasDuplicados.length === 0 ? (
+        alvarasDuplicados.length === 0 &&
+        sucumbenciasPossivelDuplicidade.length === 0 ? (
           <p className="text-texto-secundario text-sm">Nenhum alerta no momento.</p>
         ) : (
           <div className="space-y-3">
@@ -237,6 +248,31 @@ export default async function FinanceiroVisaoGeralPage() {
                   {sucumbenciasSemNf.map((s) => (
                     <li key={s.id}>
                       <Link href={`/financeiro/sucumbencia/${s.id}/editar`} className="underline">
+                        {s.processo.cliente.nome} ·{" "}
+                        <span className="tabular-nums">
+                          {formatarMoeda(s.valorDefinido ?? s.valorEstimado ?? 0)}
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {sucumbenciasPossivelDuplicidade.length > 0 && (
+              <div className="rounded-lg border border-critico/40 bg-critico/10 p-4">
+                <p className="font-medium text-critico text-sm mb-1">
+                  Sucumbência possivelmente contada duas vezes ({sucumbenciasPossivelDuplicidade.length})
+                </p>
+                <p className="text-sm text-critico mb-2">
+                  Marcada como recebida fora do alvará, mas o processo tem alvará com parte de
+                  sucumbência. Se foi recebida por esse alvará, edite o alvará e escolha a
+                  sucumbência em &quot;Sucumbência vinculada&quot;.
+                </p>
+                <ul className="text-sm space-y-1">
+                  {sucumbenciasPossivelDuplicidade.map((s) => (
+                    <li key={s.id}>
+                      <Link href={`/processos/${s.processoId}`} className="underline">
                         {s.processo.cliente.nome} ·{" "}
                         <span className="tabular-nums">
                           {formatarMoeda(s.valorDefinido ?? s.valorEstimado ?? 0)}
