@@ -116,7 +116,13 @@ export default async function FinanceiroVisaoGeralPage() {
     {
       label: "Receita do escritório no mês",
       valor: totalRecebidoMes,
-      detalhe: `Honorários: ${formatarMoeda(recebidoParcelasMes)} · Sucumbência: ${formatarMoeda(recebidoSucumbenciaMes)} · Alvarás (parte do escritório): ${formatarMoeda(recebidoAlvarasMes)}`,
+      // Por natureza: a parte do escritório nos alvarás é distribuída entre
+      // contratuais, sucumbência e reembolsos.
+      detalhe: `Honorários contratuais: ${formatarMoeda(
+        recebidoParcelasMes + alvarasDoMes.reduce((soma, a) => soma + a.honorariosContratuais, 0)
+      )} · Sucumbência: ${formatarMoeda(
+        recebidoSucumbenciaMes + alvarasDoMes.reduce((soma, a) => soma + a.honorariosSucumbencia, 0)
+      )} · Reembolsos: ${formatarMoeda(alvarasDoMes.reduce((soma, a) => soma + a.reembolsoDespesas, 0))}`,
     },
     {
       label: "Despesas no mês",

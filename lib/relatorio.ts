@@ -106,10 +106,15 @@ export function calcularVariacao(
   return { absoluta, percentual };
 }
 
+/**
+ * Receitas agrupadas pela natureza do valor, não pela forma de recebimento:
+ * a parte do escritório nos alvarás é distribuída entre honorários
+ * contratuais, sucumbência e reembolso de despesas.
+ */
 type TotaisBrutos = {
   honorarios: number;
   sucumbencia: number;
-  alvaras: number;
+  reembolsos: number;
   despesasPorCategoria: Record<string, number>;
   obrigacoesPorTipo: Record<string, number>;
   retiradas: number;
@@ -155,12 +160,13 @@ async function calcularTotais(periodo: Periodo): Promise<TotaisBrutos> {
   }
 
   return {
-    honorarios: parcelasPagas.reduce((soma, p) => soma + p.valor, 0),
-    sucumbencia: sucumbenciasRecebidas.reduce(
-      (soma, s) => soma + (s.valorDefinido ?? s.valorEstimado ?? 0),
-      0
-    ),
-    alvaras: alvaras.reduce((soma, a) => soma + a.valorRetido, 0),
+    honorarios:
+      parcelasPagas.reduce((soma, p) => soma + p.valor, 0) +
+      alvaras.reduce((soma, a) => soma + a.honorariosContratuais, 0),
+    sucumbencia:
+      sucumbenciasRecebidas.reduce((soma, s) => soma + (s.valorDefinido ?? s.valorEstimado ?? 0), 0) +
+      alvaras.reduce((soma, a) => soma + a.honorariosSucumbencia, 0),
+    reembolsos: alvaras.reduce((soma, a) => soma + a.reembolsoDespesas, 0),
     despesasPorCategoria,
     obrigacoesPorTipo,
     retiradas: retiradas.reduce((soma, r) => soma + r.valor, 0),
@@ -202,9 +208,9 @@ export async function gerarRelatorioFinanceiro(
   ]);
 
   const receitasLinhas: LinhaRelatorio[] = [
-    linha("Honorários recebidos", atual.honorarios, brutoAnterior?.honorarios ?? null),
-    linha("Sucumbência recebida", atual.sucumbencia, brutoAnterior?.sucumbencia ?? null),
-    linha("Alvarás (parte do escritório)", atual.alvaras, brutoAnterior?.alvaras ?? null),
+    linha("Honorários contratuais", atual.honorarios, brutoAnterior?.honorarios ?? null),
+    linha("Honorários de sucumbência", atual.sucumbencia, brutoAnterior?.sucumbencia ?? null),
+    linha("Reembolso de despesas adiantadas", atual.reembolsos, brutoAnterior?.reembolsos ?? null),
   ];
 
   const despesasLinhas: LinhaRelatorio[] = CATEGORIAS_DESPESA.map((categoria) =>
