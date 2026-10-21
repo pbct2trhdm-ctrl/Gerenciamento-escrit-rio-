@@ -12,6 +12,7 @@ import { Badge } from "@/components/badge";
 import { iaConfigurada } from "@/lib/ia-atualizacao";
 import { emailConfigurado } from "@/lib/email";
 import { EmptyState } from "@/components/empty-state";
+import { versaoEmUso } from "@/lib/versao";
 import { classeCard, classeTituloPagina, classeTituloSecao } from "@/lib/estilos";
 
 export default async function ConfiguracoesPage() {
@@ -27,7 +28,8 @@ export default async function ConfiguracoesPage() {
 
   return (
     <div className="max-w-3xl">
-      <h1 className={`${classeTituloPagina} mb-6`}>Configurações</h1>
+      <h1 className={`${classeTituloPagina} mb-2`}>Configurações</h1>
+      <VersaoSistema />
 
       <h2 className={`${classeTituloSecao} mb-3`}>Notificações de prazo por WhatsApp</h2>
       <p className="text-sm text-texto-secundario mb-4">
@@ -113,5 +115,16 @@ export default async function ConfiguracoesPage() {
         </ul>
       )}
     </div>
+  );
+}
+
+function VersaoSistema() {
+  const versao = versaoEmUso();
+  return (
+    <p className="mb-6 text-xs text-texto-secundario">
+      {versao
+        ? `Versão em uso: ${versao.data} · ${versao.descricao} (${versao.codigo})`
+        : "Versão em uso: não identificada."}
+    </p>
   );
 }

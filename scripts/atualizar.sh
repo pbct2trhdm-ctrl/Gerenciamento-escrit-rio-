@@ -23,6 +23,7 @@ if [[ "$(uname)" == "Darwin" && -f "$PLIST" ]]; then
   for _ in $(seq 1 30); do
     if curl -fsS -o /dev/null http://localhost:3000 2>/dev/null; then
       echo "Atualização aplicada. O sistema está no ar em http://localhost:3000"
+      echo "Versão: $(git log -1 --format='%cd · %s' --date=format:'%d/%m/%Y %H:%M')"
       exit 0
     fi
     sleep 2
@@ -31,4 +32,5 @@ if [[ "$(uname)" == "Darwin" && -f "$PLIST" ]]; then
   exit 1
 fi
 
-echo "Atualização aplicada. Ligue o sistema com: npm run dev"
+echo "Atualização aplicada. Versão: $(git log -1 --format='%cd · %s' --date=format:'%d/%m/%Y %H:%M')"
+echo "Ligue o sistema com: npm run dev"
