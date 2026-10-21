@@ -13,12 +13,14 @@ export function BotaoEnvio({
   className,
   name,
   value,
+  desabilitado = false,
 }: {
   children: React.ReactNode;
   textoAguardando: string;
   className: string;
   name?: string;
   value?: string;
+  desabilitado?: boolean;
 }) {
   const { pending, data } = useFormStatus();
   const esteBotao = pending && (!name || data?.get(name) === value);
@@ -28,7 +30,7 @@ export function BotaoEnvio({
       type="submit"
       name={name}
       value={value}
-      disabled={pending}
+      disabled={pending || desabilitado}
       className={`${className} disabled:opacity-60 disabled:cursor-wait`}
     >
       {esteBotao ? textoAguardando : children}

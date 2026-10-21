@@ -132,8 +132,22 @@ export async function criarAlvara(formData: FormData) {
     throw new Error("Processo é obrigatório");
   }
 
+  // Proteção contra envio duplicado (duplo clique em Salvar): um alvará igual
+  // (mesmo processo e valor) criado há menos de 2 minutos é reaproveitado.
+  const dados = dadosComuns(formData);
+  const recente = await prisma.alvara.findFirst({
+    where: {
+      processoId,
+      valorTotal: dados.valorTotal,
+      criadoEm: { gte: new Date(Date.now() - 2 * 60 * 1000) },
+    },
+  });
+  if (recente) {
+    redirect(`/financeiro/alvaras/${recente.id}`);
+  }
+
   const alvara = await prisma.alvara.create({
-    data: { processoId, ...dadosComuns(formData), ...(await salvarAnexosEnviados(formData)) },
+    data: { processoId, ...dados, ...(await salvarAnexosEnviados(formData)) },
   });
   await sincronizarVinculos(alvara.id, textoOuNull(formData.get("parcelaQuitadaId")));
 

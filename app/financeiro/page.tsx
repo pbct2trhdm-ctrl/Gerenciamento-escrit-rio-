@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { idsAlvarasDuplicados } from "@/lib/alvara-duplicados";
 import { prisma } from "@/lib/prisma";
 import { formatarMoeda, formatarData } from "@/lib/formatacao";
 import {
@@ -58,9 +59,13 @@ export default async function FinanceiroVisaoGeralPage() {
     .filter((s) => !s.alvaras.some((a) => a.honorariosSucumbencia > 0))
     .filter((s) => s.dataRecebimento && dentroDoMes(s.dataRecebimento, inicioMes))
     .reduce((soma, s) => soma + (s.valorDefinido ?? s.valorEstimado ?? 0), 0);
-  const recebidoAlvarasMes = alvaras
-    .filter((a) => a.dataRecebimento && dentroDoMes(a.dataRecebimento, inicioMes))
-    .reduce((soma, a) => soma + a.valorRetido, 0);
+  const alvarasDoMes = alvaras.filter(
+    (a) => a.dataRecebimento && dentroDoMes(a.dataRecebimento, inicioMes)
+  );
+  const recebidoAlvarasMes = alvarasDoMes.reduce((soma, a) => soma + a.valorRetido, 0);
+  const alvarasMesBruto = alvarasDoMes.reduce((soma, a) => soma + a.valorTotal, 0);
+  const alvarasMesClientes = alvarasDoMes.reduce((soma, a) => soma + a.valorRepassado, 0);
+  const alvarasMesDescontos = alvarasDoMes.reduce((soma, a) => soma + a.impostoRetido + a.tarifas, 0);
   const totalRecebidoMes = recebidoParcelasMes + recebidoSucumbenciaMes + recebidoAlvarasMes;
 
   const totalDespesasMes = despesas
@@ -78,6 +83,13 @@ export default async function FinanceiroVisaoGeralPage() {
 
   const parcelasSemNf = parcelasPagas.filter((p) => !p.notaFiscalEmitida);
   const sucumbenciasSemNf = sucumbenciasRecebidas.filter((s) => !s.notaFiscalEmitida);
+  // Alvará em que nada ficou para o cliente: quase sempre detalhamento errado
+  // (ex.: valor retido igual ao total, herdado do cadastro antigo).
+  const alvarasSemParteCliente = alvaras.filter(
+    (a) => a.valorTotal > 0 && a.valorRepassado <= 0
+  );
+  const duplicados = idsAlvarasDuplicados(alvaras);
+  const alvarasDuplicados = alvaras.filter((a) => duplicados.has(a.id));
   const alvarasAguardando = alvaras.filter(
     (a) =>
       a.status === "AGUARDANDO_REPASSE" &&
@@ -92,9 +104,9 @@ export default async function FinanceiroVisaoGeralPage() {
       detalhe: `Honorários: ${formatarMoeda(totalAReceberHonorarios)} · Sucumbência: ${formatarMoeda(totalSucumbenciaAReceber)}`,
     },
     {
-      label: "Recebido no mês",
+      label: "Receita do escritório no mês",
       valor: totalRecebidoMes,
-      detalhe: null,
+      detalhe: `Honorários: ${formatarMoeda(recebidoParcelasMes)} · Sucumbência: ${formatarMoeda(recebidoSucumbenciaMes)} · Alvarás (parte do escritório): ${formatarMoeda(recebidoAlvarasMes)}`,
     },
     {
       label: "Despesas no mês",
@@ -104,7 +116,7 @@ export default async function FinanceiroVisaoGeralPage() {
     {
       label: "Saldo do mês",
       valor: saldoMes,
-      detalhe: "Recebido − despesas − obrigações pagas − retiradas",
+      detalhe: "Receita do escritório − despesas − obrigações pagas − retiradas",
     },
   ];
 
@@ -151,12 +163,47 @@ export default async function FinanceiroVisaoGeralPage() {
         ))}
       </div>
 
+      {alvarasDoMes.length > 0 && (
+        <div className={`${classeCard} mb-8`}>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className={classeTituloSecao}>Alvarás recebidos no mês</h2>
+            <Link href="/financeiro/alvaras" className="text-sm text-accent underline">
+              Ver alvarás
+            </Link>
+          </div>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+            <div>
+              <p className="text-texto-secundario">Valor bruto recebido</p>
+              <p className="text-lg font-semibold tabular-nums">{formatarMoeda(alvarasMesBruto)}</p>
+            </div>
+            <div>
+              <p className="text-texto-secundario">IR e tarifas</p>
+              <p className="text-lg font-semibold tabular-nums">{formatarMoeda(alvarasMesDescontos)}</p>
+            </div>
+            <div>
+              <p className="text-texto-secundario">Parte do escritório</p>
+              <p className="text-lg font-semibold tabular-nums text-tranquilo">
+                {formatarMoeda(recebidoAlvarasMes)}
+              </p>
+              <p className="text-xs text-texto-secundario">entra na receita</p>
+            </div>
+            <div>
+              <p className="text-texto-secundario">Parte dos clientes</p>
+              <p className="text-lg font-semibold tabular-nums">{formatarMoeda(alvarasMesClientes)}</p>
+              <p className="text-xs text-texto-secundario">não é receita — repassar</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="space-y-4">
         <h2 className={classeTituloSecao}>Alertas</h2>
 
         {parcelasSemNf.length === 0 &&
         sucumbenciasSemNf.length === 0 &&
-        alvarasAguardando.length === 0 ? (
+        alvarasAguardando.length === 0 &&
+        alvarasSemParteCliente.length === 0 &&
+        alvarasDuplicados.length === 0 ? (
           <p className="text-texto-secundario text-sm">Nenhum alerta no momento.</p>
         ) : (
           <div className="space-y-3">
@@ -194,6 +241,52 @@ export default async function FinanceiroVisaoGeralPage() {
                         <span className="tabular-nums">
                           {formatarMoeda(s.valorDefinido ?? s.valorEstimado ?? 0)}
                         </span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {alvarasDuplicados.length > 0 && (
+              <div className="rounded-lg border border-critico/40 bg-critico/10 p-4">
+                <p className="font-medium text-critico text-sm mb-1">
+                  Possíveis alvarás duplicados ({alvarasDuplicados.length})
+                </p>
+                <p className="text-sm text-critico mb-2">
+                  Mesmo processo, valor e data de recebimento — a receita está sendo contada mais de
+                  uma vez. Abra um deles, confira e exclua o repetido.
+                </p>
+                <ul className="text-sm space-y-1">
+                  {alvarasDuplicados.map((a) => (
+                    <li key={a.id}>
+                      <Link href={`/financeiro/alvaras/${a.id}`} className="underline">
+                        {a.processo.cliente.nome} ·{" "}
+                        <span className="tabular-nums">{formatarMoeda(a.valorTotal)}</span> ·
+                        cadastrado em {a.criadoEm.toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {alvarasSemParteCliente.length > 0 && (
+              <div className="rounded-lg border border-critico/40 bg-critico/10 p-4">
+                <p className="font-medium text-critico text-sm mb-1">
+                  Alvarás sem nenhum valor para o cliente ({alvarasSemParteCliente.length})
+                </p>
+                <p className="text-sm text-critico mb-2">
+                  Todo o valor está contando como receita do escritório. Confira o detalhamento
+                  (honorários contratuais, sucumbência e reembolso).
+                </p>
+                <ul className="text-sm space-y-1">
+                  {alvarasSemParteCliente.map((a) => (
+                    <li key={a.id}>
+                      <Link href={`/financeiro/alvaras/${a.id}/editar`} className="underline">
+                        {a.processo.cliente.nome} ·{" "}
+                        <span className="tabular-nums">{formatarMoeda(a.valorTotal)}</span> · retido{" "}
+                        <span className="tabular-nums">{formatarMoeda(a.valorRetido)}</span>
                       </Link>
                     </li>
                   ))}

@@ -204,7 +204,7 @@ export async function gerarRelatorioFinanceiro(
   const receitasLinhas: LinhaRelatorio[] = [
     linha("Honorários recebidos", atual.honorarios, brutoAnterior?.honorarios ?? null),
     linha("Sucumbência recebida", atual.sucumbencia, brutoAnterior?.sucumbencia ?? null),
-    linha("Valor retido de alvarás", atual.alvaras, brutoAnterior?.alvaras ?? null),
+    linha("Alvarás (parte do escritório)", atual.alvaras, brutoAnterior?.alvaras ?? null),
   ];
 
   const despesasLinhas: LinhaRelatorio[] = CATEGORIAS_DESPESA.map((categoria) =>

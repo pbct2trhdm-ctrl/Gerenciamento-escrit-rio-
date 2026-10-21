@@ -10,6 +10,7 @@ import {
 } from "@/lib/estilos";
 import { calcularAlvara, calcularHonorariosContratuais } from "@/lib/alvara";
 import { formatarMoeda } from "@/lib/formatacao";
+import { BotaoEnvio } from "@/components/botao-envio";
 
 type ProcessoComCliente = Pick<Processo, "id" | "numeroProcesso"> & {
   cliente: Pick<Cliente, "nome">;
@@ -422,13 +423,13 @@ export function AlvaraForm({
         />
       </div>
 
-      <button
-        type="submit"
-        disabled={calculo.valorRepassado < 0}
-        className={`${classeBotaoPrimario} disabled:opacity-50`}
+      <BotaoEnvio
+        className={classeBotaoPrimario}
+        textoAguardando="Salvando…"
+        desabilitado={calculo.valorRepassado < 0}
       >
         Salvar
-      </button>
+      </BotaoEnvio>
     </form>
   );
 }

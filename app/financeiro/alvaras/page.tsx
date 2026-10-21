@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { idsAlvarasDuplicados } from "@/lib/alvara-duplicados";
 import { prisma } from "@/lib/prisma";
 import { LABEL_STATUS_ALVARA, formatarMoeda, formatarData } from "@/lib/formatacao";
 import { DIAS_ALERTA_ALVARA } from "@/lib/financeiro";
@@ -18,6 +19,7 @@ export default async function AlvarasPage() {
     orderBy: { criadoEm: "desc" },
     include: { processo: { include: { cliente: true } } },
   });
+  const duplicados = idsAlvarasDuplicados(alvaras);
 
   return (
     <div>
@@ -61,7 +63,8 @@ export default async function AlvarasPage() {
                       <p className="text-sm text-texto-secundario tabular-nums">
                         Repassar: {formatarMoeda(alvara.valorRepassado)}
                       </p>
-                      <div className="mt-1">
+                      <div className="mt-1 flex justify-end gap-1">
+                        {duplicados.has(alvara.id) && <Badge tier="critico">Possível duplicado</Badge>}
                         <Badge tier={tier}>{LABEL_STATUS_ALVARA[alvara.status]}</Badge>
                       </div>
                     </div>

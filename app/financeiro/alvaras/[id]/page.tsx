@@ -3,11 +3,12 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { calcularAlvara } from "@/lib/alvara";
 import { formatarData, formatarMoeda, LABEL_STATUS_ALVARA } from "@/lib/formatacao";
-import { marcarAlvaraRepassado, removerAnexoAlvara } from "@/lib/actions/alvaras";
+import { marcarAlvaraRepassado, removerAnexoAlvara, excluirAlvara } from "@/lib/actions/alvaras";
 import { LinkVoltar } from "@/components/link-voltar";
 import { Badge } from "@/components/badge";
 import {
   classeBotaoConfirma,
+  classeBotaoPerigo,
   classeBotaoPrimario,
   classeBotaoSecundario,
   classeCard,
@@ -82,6 +83,11 @@ export default async function AlvaraDetalhePage({
         <Link href={`/financeiro/alvaras/${alvara.id}/editar`} className={classeBotaoSecundario}>
           Editar
         </Link>
+        <form action={excluirAlvara.bind(null, alvara.id)}>
+          <button type="submit" className={classeBotaoPerigo}>
+            Excluir
+          </button>
+        </form>
         {alvara.status !== "REPASSADO" && (
           <form action={marcarAlvaraRepassado.bind(null, alvara.id)}>
             <button type="submit" className={classeBotaoConfirma}>
