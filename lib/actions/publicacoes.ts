@@ -113,7 +113,7 @@ export async function definirPrazoDaPublicacao(publicacaoId: string, formData: F
   });
   await prisma.publicacao.update({
     where: { id: publicacaoId },
-    data: { prazoADefinir: false },
+    data: { prazoADefinir: false, observacaoPrazo: null },
   });
 
   revalidatePath("/");
@@ -127,7 +127,7 @@ export async function definirPrazoDaPublicacao(publicacaoId: string, formData: F
 export async function marcarPublicacaoSemPrazo(publicacaoId: string) {
   await prisma.publicacao.update({
     where: { id: publicacaoId },
-    data: { prazoADefinir: false },
+    data: { prazoADefinir: false, observacaoPrazo: null },
   });
   revalidatePath("/");
   revalidatePath(`/publicacoes/${publicacaoId}`);

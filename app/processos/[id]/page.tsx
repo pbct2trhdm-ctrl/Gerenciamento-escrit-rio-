@@ -171,6 +171,16 @@ export default async function ProcessoDetalhePage({
           <p>{LABEL_GRAU_PROCESSO[processo.grau]}</p>
         </div>
         <div>
+          <p className="text-texto-secundario">Cliente no</p>
+          <p>
+            {processo.poloCliente === "ATIVO"
+              ? "Polo ativo"
+              : processo.poloCliente === "PASSIVO"
+                ? "Polo passivo"
+                : "Não informado"}
+          </p>
+        </div>
+        <div>
           <p className="text-texto-secundario">Criado em</p>
           <p className="tabular-nums">{formatarData(processo.criadoEm)}</p>
         </div>

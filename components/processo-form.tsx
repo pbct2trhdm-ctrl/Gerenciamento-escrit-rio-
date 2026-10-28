@@ -10,6 +10,7 @@ import {
   RITOS_POR_JURISDICAO,
   GRAUS_PROCESSO,
   LABEL_GRAU_PROCESSO,
+  LABEL_POLO_CLIENTE,
 } from "@/lib/formatacao";
 import { classeInput, classeLabel, classeBotaoPrimario } from "@/lib/estilos";
 import { LABEL_TRIBUNAL, GRUPOS_TRIBUNAL } from "@/lib/tribunais";
@@ -158,6 +159,26 @@ export function ProcessoForm({
             </optgroup>
           ))}
         </select>
+      </div>
+
+      <div>
+        <label className={classeLabel} htmlFor="poloCliente">
+          Seu cliente é
+        </label>
+        <select
+          id="poloCliente"
+          name="poloCliente"
+          defaultValue={processo?.poloCliente ?? ""}
+          className={classeInput}
+        >
+          <option value="">Não informado</option>
+          <option value="ATIVO">{LABEL_POLO_CLIENTE.ATIVO}</option>
+          <option value="PASSIVO">{LABEL_POLO_CLIENTE.PASSIVO}</option>
+        </select>
+        <p className="mt-1 text-xs text-texto-secundario">
+          Evita cadastrar como seu o prazo dirigido à parte contrária nas publicações. Se ficar em
+          branco, o sistema tenta descobrir pelo texto das publicações.
+        </p>
       </div>
 
       <div>

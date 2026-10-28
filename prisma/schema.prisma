@@ -157,6 +157,13 @@ enum GrauProcesso {
   TRIBUNAL_SUPERIOR
 }
 
+/// Lado do cliente no processo — usado para não cadastrar como prazo do
+/// escritório a ordem dirigida à parte contrária (lib/polo.ts).
+enum PoloProcessual {
+  ATIVO
+  PASSIVO
+}
+
 enum StatusProcesso {
   ATIVO
   SUSPENSO
@@ -352,6 +359,7 @@ model Processo {
   comarca         String?
   status          StatusProcesso @default(ATIVO)
   grau            GrauProcesso   @default(PRIMEIRO_GRAU)
+  poloCliente     PoloProcessual?
   resumo          String?
   criadoEm        DateTime       @default(now())
   prazos          Prazo[]
@@ -460,6 +468,8 @@ model Publicacao {
   /// Vinculada a um processo, mas o texto não diz o número de dias do prazo:
   /// fica em destaque no Dashboard até a advogada definir o prazo ou marcar "sem prazo".
   prazoADefinir                 Boolean                 @default(false)
+  /// Motivo de não ter gerado prazo (ex.: prazo dirigido à parte contrária).
+  observacaoPrazo               String?
   prazos                        Prazo[]
   criadoEm                     DateTime                @default(now())
 }

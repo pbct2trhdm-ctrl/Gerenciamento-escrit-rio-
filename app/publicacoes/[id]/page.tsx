@@ -110,11 +110,15 @@ export default async function PublicacaoDetalhePage({
                 </li>
               ))}
             </ul>
-          ) : publicacao.prazoADefinir ? (
+          ) : publicacao.prazoADefinir || publicacao.observacaoPrazo ? (
             <div className="rounded-lg border border-atencao/40 bg-atencao-fundo p-4 text-sm">
-              <p className="font-semibold text-atencao">Prazo não identificado no texto.</p>
+              <p className="font-semibold text-atencao">
+                {publicacao.observacaoPrazo ?? "Prazo não identificado no texto."}
+              </p>
               <p className="mt-1 text-atencao">
-                Informe o prazo para cadastrá-lo, ou marque que esta publicação não abre prazo.
+                {publicacao.observacaoPrazo
+                  ? "Se o prazo também for do seu cliente, cadastre-o abaixo."
+                  : "Informe o prazo para cadastrá-lo, ou marque que esta publicação não abre prazo."}
                 Publicação considerada feita em{" "}
                 {formatarData(dataPublicacaoEfetiva(publicacao.dataPublicacao))} (1º dia útil
                 após a disponibilização); a contagem começa no dia útil seguinte.

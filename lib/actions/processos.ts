@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { TODOS_TRIBUNAIS } from "@/lib/tribunais";
 import { RITOS_POR_JURISDICAO, GRAUS_PROCESSO } from "@/lib/formatacao";
+import { revisarPrazosGeradosDoProcesso } from "@/lib/prazo-publicacao";
 import type { Tribunal, Jurisdicao, Rito } from "@/app/generated/prisma/client";
 
 const AREAS = [
@@ -77,6 +78,11 @@ function dadosJurisdicaoRito(formData: FormData) {
   return { jurisdicao, rito };
 }
 
+function validarPolo(valor: FormDataEntryValue | null) {
+  const texto = (valor ?? "").toString();
+  return texto === "ATIVO" || texto === "PASSIVO" ? texto : null;
+}
+
 function validarGrau(valor: FormDataEntryValue | null) {
   const texto = (valor ?? "").toString();
   return (GRAUS_PROCESSO as readonly string[]).includes(texto)
@@ -101,6 +107,7 @@ export async function criarProcesso(formData: FormData) {
       comarca: textoOuNull(formData.get("comarca")),
       status: validarStatus(formData.get("status")),
       grau: validarGrau(formData.get("grau")),
+      poloCliente: validarPolo(formData.get("poloCliente")),
       resumo: textoOuNull(formData.get("resumo")),
     },
   });
@@ -128,13 +135,20 @@ export async function atualizarProcesso(id: string, formData: FormData) {
       comarca: textoOuNull(formData.get("comarca")),
       status: validarStatus(formData.get("status")),
       grau: validarGrau(formData.get("grau")),
+      poloCliente: validarPolo(formData.get("poloCliente")),
       resumo: textoOuNull(formData.get("resumo")),
     },
   });
 
+  // Polo do cliente informado: remove prazos "a conferir" gerados de
+  // publicações que eram da parte contrária.
+  await revisarPrazosGeradosDoProcesso(id);
+
   revalidatePath("/processos");
   revalidatePath(`/processos/${id}`);
   revalidatePath(`/clientes/${clienteId}`);
+  revalidatePath("/prazos");
+  revalidatePath("/");
   redirect(`/processos/${id}`);
 }
 

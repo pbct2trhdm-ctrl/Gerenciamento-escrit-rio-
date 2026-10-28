@@ -82,6 +82,11 @@ export const LABEL_GRAU_CURTO: Record<string, string> = {
   TRIBUNAL_SUPERIOR: "Superior",
 };
 
+export const LABEL_POLO_CLIENTE: Record<string, string> = {
+  ATIVO: "Polo ativo (autor, requerente, exequente…)",
+  PASSIVO: "Polo passivo (réu, requerido, executado…)",
+};
+
 export const LABEL_STATUS_PROCESSO: Record<string, string> = {
   ATIVO: "Ativo",
   SUSPENSO: "Suspenso",
