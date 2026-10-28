@@ -60,9 +60,14 @@ export default async function PrazosPage({
     <div className="max-w-4xl">
       <div className="flex items-center justify-between mb-6">
         <h1 className={classeTituloPagina}>Prazos/Agenda</h1>
-        <Link href="/prazos/novo" className={classeBotaoPrimario}>
-          Novo prazo
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link href="/prazos/revisar" className={classeBotaoSecundario}>
+            Revisar prazos das publicações
+          </Link>
+          <Link href="/prazos/novo" className={classeBotaoPrimario}>
+            Novo prazo
+          </Link>
+        </div>
       </div>
 
       <form className="flex flex-wrap gap-3 mb-6" method="get">

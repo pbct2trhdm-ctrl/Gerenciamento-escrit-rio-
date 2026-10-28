@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { calcularDataFinal, type TipoContagem } from "@/lib/prazos";
+import { removerPrazosDaParteContraria } from "@/lib/revisao-prazos";
 import type { Prisma } from "@/app/generated/prisma/client";
 
 const TIPOS = ["PETICAO", "RECURSO", "AUDIENCIA", "MANIFESTACAO", "OUTRO"] as const;
@@ -195,4 +196,22 @@ export async function confirmarPrazo(id: string) {
   revalidatePath(`/prazos/${id}`);
   revalidatePath(`/processos/${prazo.processoId}`);
   if (prazo.origemPublicacaoId) revalidatePath(`/publicacoes/${prazo.origemPublicacaoId}`);
+}
+
+/** Revisão: remove os prazos marcados que eram da parte contrária. */
+export async function aplicarRevisaoPrazos(formData: FormData) {
+  const ids = formData.getAll("prazoId").map((v) => v.toString());
+  const removidos = ids.length > 0 ? await removerPrazosDaParteContraria(ids) : 0;
+  revalidatePath("/prazos");
+  revalidatePath("/");
+  redirect(`/prazos/revisar?removidos=${removidos}`);
+}
+
+/** Revisão: define o polo do cliente de um processo e volta para a análise. */
+export async function definirPoloNaRevisao(processoId: string, formData: FormData) {
+  const polo = formData.get("poloCliente");
+  if (polo !== "ATIVO" && polo !== "PASSIVO") return;
+  await prisma.processo.update({ where: { id: processoId }, data: { poloCliente: polo } });
+  revalidatePath("/prazos/revisar");
+  redirect("/prazos/revisar");
 }
