@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { ordenarProcessosPorCliente } from "@/lib/ordenacao";
 import { PrazoForm } from "@/components/prazo-form";
 import { criarPrazo } from "@/lib/actions/prazos";
 import { classeTituloPagina } from "@/lib/estilos";
@@ -12,8 +13,8 @@ export default async function NovoPrazoPage({
   const { processoId } = await searchParams;
   const processos = await prisma.processo.findMany({
     orderBy: { criadoEm: "desc" },
-    select: { id: true, numeroProcesso: true },
-  });
+    select: { id: true, numeroProcesso: true, cliente: { select: { nome: true } } },
+  }).then(ordenarProcessosPorCliente);
 
   return (
     <div>

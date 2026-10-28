@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { ordenarProcessosPorCliente } from "@/lib/ordenacao";
 import { LABEL_CATEGORIA_DESPESA, formatarMoeda, formatarData } from "@/lib/formatacao";
 import type { Prisma } from "@/app/generated/prisma/client";
 import { EmptyState } from "@/components/empty-state";
@@ -33,8 +34,8 @@ export default async function DespesasPage({
     }),
     prisma.processo.findMany({
       orderBy: { criadoEm: "desc" },
-      select: { id: true, numeroProcesso: true },
-    }),
+      select: { id: true, numeroProcesso: true, cliente: { select: { nome: true } } },
+    }).then(ordenarProcessosPorCliente),
   ]);
 
   const total = despesas.reduce((soma, d) => soma + d.valor, 0);
@@ -68,7 +69,7 @@ export default async function DespesasPage({
           <option value="">Todos os processos</option>
           {processos.map((processo) => (
             <option key={processo.id} value={processo.id}>
-              {processo.numeroProcesso ?? `Processo ${processo.id.slice(0, 8)}`}
+              {processo.cliente.nome} · {processo.numeroProcesso ?? `Processo ${processo.id.slice(0, 8)}`}
             </option>
           ))}
         </select>

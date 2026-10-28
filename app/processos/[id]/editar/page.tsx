@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { ordenarPorNome } from "@/lib/ordenacao";
 import { ProcessoForm } from "@/components/processo-form";
 import { atualizarProcesso } from "@/lib/actions/processos";
 import { classeTituloPagina } from "@/lib/estilos";
@@ -16,7 +17,7 @@ export default async function EditarProcessoPage({
     prisma.cliente.findMany({
       orderBy: { nome: "asc" },
       select: { id: true, nome: true, cpfCnpj: true },
-    }),
+    }).then(ordenarPorNome),
   ]);
 
   if (!processo) {

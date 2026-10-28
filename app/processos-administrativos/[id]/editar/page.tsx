@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { ordenarPorNome, ordenarProcessosPorCliente } from "@/lib/ordenacao";
 import { ProcessoAdministrativoForm } from "@/components/processo-administrativo-form";
 import { atualizarProcessoAdministrativo } from "@/lib/actions/processos-administrativos";
 import { classeTituloPagina } from "@/lib/estilos";
@@ -16,7 +17,7 @@ export default async function EditarProcessoAdministrativoPage({
     prisma.cliente.findMany({
       orderBy: { nome: "asc" },
       select: { id: true, nome: true, cpfCnpj: true },
-    }),
+    }).then(ordenarPorNome),
     prisma.processo.findMany({
       orderBy: { criadoEm: "desc" },
       select: {
@@ -24,7 +25,7 @@ export default async function EditarProcessoAdministrativoPage({
         numeroProcesso: true,
         cliente: { select: { nome: true } },
       },
-    }),
+    }).then(ordenarProcessosPorCliente),
   ]);
 
   if (!processoAdministrativo) {

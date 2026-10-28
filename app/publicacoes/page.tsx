@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { ordenarProcessosPorCliente } from "@/lib/ordenacao";
 import { LABEL_STATUS_VINCULO_PUBLICACAO, formatarData } from "@/lib/formatacao";
 import { tierStatus } from "@/lib/urgencia";
 import { Badge } from "@/components/badge";
@@ -79,7 +80,7 @@ export default async function PublicacoesPage({
     prisma.processo.findMany({
       orderBy: { criadoEm: "desc" },
       select: { id: true, numeroProcesso: true, cliente: { select: { nome: true } } },
-    }),
+    }).then(ordenarProcessosPorCliente),
     prisma.configuracaoPublicacoes.findUnique({
       where: { id: 1 },
       select: { ultimaExecucao: true, ultimoErro: true, ultimoErroEm: true },

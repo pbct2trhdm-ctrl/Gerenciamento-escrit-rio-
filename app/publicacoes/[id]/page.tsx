@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { ordenarProcessosPorCliente } from "@/lib/ordenacao";
 import {
   LABEL_STATUS_VINCULO_PUBLICACAO,
   LABEL_TIPO_PRAZO,
@@ -58,7 +59,7 @@ export default async function PublicacaoDetalhePage({
     : await prisma.processo.findMany({
         orderBy: { criadoEm: "desc" },
         select: { id: true, numeroProcesso: true, cliente: { select: { nome: true } } },
-      });
+      }).then(ordenarProcessosPorCliente);
 
   return (
     <div className="max-w-3xl">

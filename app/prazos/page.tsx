@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { ordenarProcessosPorCliente } from "@/lib/ordenacao";
 import {
   LABEL_TIPO_PRAZO,
   LABEL_STATUS_PRAZO,
@@ -51,8 +52,8 @@ export default async function PrazosPage({
     }),
     prisma.processo.findMany({
       orderBy: { criadoEm: "desc" },
-      select: { id: true, numeroProcesso: true },
-    }),
+      select: { id: true, numeroProcesso: true, cliente: { select: { nome: true } } },
+    }).then(ordenarProcessosPorCliente),
   ]);
 
   return (
@@ -79,7 +80,7 @@ export default async function PrazosPage({
           <option value="">Todos os processos</option>
           {processos.map((processo) => (
             <option key={processo.id} value={processo.id}>
-              {processo.numeroProcesso ?? `Processo ${processo.id.slice(0, 8)}`}
+              {processo.cliente.nome} · {processo.numeroProcesso ?? `Processo ${processo.id.slice(0, 8)}`}
             </option>
           ))}
         </select>

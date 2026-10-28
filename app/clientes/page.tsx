@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { ordenarPorNome } from "@/lib/ordenacao";
 import type { Prisma } from "@/app/generated/prisma/client";
 import { EmptyState } from "@/components/empty-state";
 import {
@@ -30,7 +31,7 @@ export default async function ClientesPage({
     prisma.cliente.count({ where: whereBusca }),
     prisma.cliente.count({ where: { ...whereBusca, tipo: "PF" } }),
     prisma.cliente.count({ where: { ...whereBusca, tipo: "PJ" } }),
-    prisma.cliente.findMany({ where: whereListagem, orderBy: { nome: "asc" } }),
+    prisma.cliente.findMany({ where: whereListagem, orderBy: { nome: "asc" } }).then(ordenarPorNome),
   ]);
 
   const segmentos = [

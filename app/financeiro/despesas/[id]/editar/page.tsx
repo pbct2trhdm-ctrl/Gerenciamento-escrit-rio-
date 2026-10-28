@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { ordenarProcessosPorCliente } from "@/lib/ordenacao";
 import { DespesaForm } from "@/components/despesa-form";
 import { atualizarDespesa, excluirDespesa } from "@/lib/actions/despesas";
 import { classeBotaoPerigo, classeTituloSecao } from "@/lib/estilos";
@@ -16,7 +17,7 @@ export default async function EditarDespesaPage({
     prisma.processo.findMany({
       orderBy: { criadoEm: "desc" },
       include: { cliente: { select: { nome: true } } },
-    }),
+    }).then(ordenarProcessosPorCliente),
   ]);
 
   if (!despesa) {

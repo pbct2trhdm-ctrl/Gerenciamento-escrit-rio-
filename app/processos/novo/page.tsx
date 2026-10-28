@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { ordenarPorNome } from "@/lib/ordenacao";
 import { ProcessoForm } from "@/components/processo-form";
 import { criarProcesso } from "@/lib/actions/processos";
 import { classeTituloPagina } from "@/lib/estilos";
@@ -13,7 +14,7 @@ export default async function NovoProcessoPage({
   const clientes = await prisma.cliente.findMany({
     orderBy: { nome: "asc" },
     select: { id: true, nome: true, cpfCnpj: true },
-  });
+  }).then(ordenarPorNome);
 
   return (
     <div>

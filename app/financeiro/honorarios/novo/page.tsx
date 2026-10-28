@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { ordenarProcessosPorCliente } from "@/lib/ordenacao";
 import { HonorarioForm } from "@/components/honorario-form";
 import { criarHonorario } from "@/lib/actions/honorarios";
 import { classeTituloSecao } from "@/lib/estilos";
@@ -13,7 +14,7 @@ export default async function NovoHonorarioPage({
   const processos = await prisma.processo.findMany({
     orderBy: { criadoEm: "desc" },
     include: { cliente: { select: { nome: true } } },
-  });
+  }).then(ordenarProcessosPorCliente);
 
   return (
     <div>

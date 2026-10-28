@@ -34,7 +34,7 @@ export function PrazoForm({
   action,
 }: {
   prazo?: Prazo;
-  processos: Pick<Processo, "id" | "numeroProcesso">[];
+  processos: (Pick<Processo, "id" | "numeroProcesso"> & { cliente: { nome: string } })[];
   processoIdPadrao?: string;
   action: (formData: FormData) => void;
 }) {
@@ -97,7 +97,7 @@ export function PrazoForm({
           </option>
           {processos.map((processo) => (
             <option key={processo.id} value={processo.id}>
-              {processo.numeroProcesso ?? `Processo ${processo.id.slice(0, 8)}`}
+              {processo.cliente.nome} · {processo.numeroProcesso ?? `Processo ${processo.id.slice(0, 8)}`}
             </option>
           ))}
         </select>

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { ordenarProcessosPorCliente } from "@/lib/ordenacao";
 import { AlvaraForm } from "@/components/alvara-form";
 import { criarAlvara } from "@/lib/actions/alvaras";
 import { carregarOpcoesAlvara } from "@/lib/alvara-opcoes";
@@ -15,7 +16,7 @@ export default async function NovoAlvaraPage({
     prisma.processo.findMany({
       orderBy: { criadoEm: "desc" },
       include: { cliente: { select: { nome: true } } },
-    }),
+    }).then(ordenarProcessosPorCliente),
     carregarOpcoesAlvara(),
   ]);
 

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { ordenarProcessosPorCliente } from "@/lib/ordenacao";
 import { SucumbenciaForm } from "@/components/sucumbencia-form";
 import { criarSucumbencia } from "@/lib/actions/sucumbencia";
 import { classeTituloSecao } from "@/lib/estilos";
@@ -13,7 +14,7 @@ export default async function NovaSucumbenciaPage({
   const processos = await prisma.processo.findMany({
     orderBy: { criadoEm: "desc" },
     include: { cliente: { select: { nome: true } } },
-  });
+  }).then(ordenarProcessosPorCliente);
 
   return (
     <div>
