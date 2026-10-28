@@ -30,7 +30,7 @@ const NUMEROS_POR_EXTENSO: Record<string, number> = {
 
 export type PrazoIdentificado = { dias: number; contagem: TipoContagem | null };
 
-function normalizarTexto(texto: string): string {
+export function normalizarTexto(texto: string): string {
   return texto
     .normalize("NFD")
     .replace(/[̀-ͯ]/g, "")
@@ -97,17 +97,24 @@ export function calcularVencimentoPublicacao(
  */
 export async function gerarPrazoDaPublicacao(
   publicacaoId: string,
-  origemAndamentoId: string | null
+  origemAndamentoId: string | null,
+  opcoes: { temAudiencia?: boolean } = {}
 ): Promise<"criado" | "a_definir" | "ignorado"> {
   const publicacao = await prisma.publicacao.findUnique({
     where: { id: publicacaoId },
-    include: { processo: { select: { area: true } }, prazos: { select: { id: true } } },
+    include: {
+      processo: { select: { area: true } },
+      // A audiência captada da mesma publicação não conta como "prazo já criado".
+      prazos: { where: { tipo: { not: "AUDIENCIA" } }, select: { id: true } },
+    },
   });
   if (!publicacao?.processoId || !publicacao.processo || publicacao.prazos.length > 0) {
     return "ignorado";
   }
 
   const identificado = identificarPrazoNoTexto(publicacao.textoPublicacao);
+  // Intimação de audiência sem prazo em dias: não é "prazo a definir".
+  if (!identificado && opcoes.temAudiencia) return "ignorado";
   if (!identificado) {
     await prisma.publicacao.update({
       where: { id: publicacaoId },

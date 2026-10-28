@@ -21,7 +21,7 @@ export function BotaoConfirmarPrazo({ prazoId }: { prazoId: string }) {
         textoAguardando="Confirmando…"
         className="inline-flex items-center rounded-md border border-atencao/40 bg-atencao-fundo px-3 py-1.5 text-xs font-semibold text-atencao transition-colors hover:bg-amber-100"
       >
-        Confirmar prazo
+        Confirmar
       </BotaoEnvio>
     </form>
   );

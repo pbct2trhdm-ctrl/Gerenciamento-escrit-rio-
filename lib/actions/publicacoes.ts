@@ -8,6 +8,7 @@ import {
   verificarEImportarPublicacoes,
   vincularPublicacaoAoProcessoId,
   importarHistoricoPublicacoes,
+  reprocessarAudienciasPublicacoes,
 } from "@/lib/publicacoes";
 import { calcularVencimentoPublicacao } from "@/lib/prazo-publicacao";
 
@@ -58,7 +59,7 @@ export async function buscarPublicacoesAgora() {
   try {
     const resumo = await verificarEImportarPublicacoes(new Date(), { forcar: true });
     destino = resumo.executado
-      ? `/publicacoes?busca=ok&novas=${resumo.novas}`
+      ? `/publicacoes?busca=ok&novas=${resumo.novas}&audiencias=${resumo.audiencias ?? 0}`
       : `/publicacoes?busca=erro&motivo=${encodeURIComponent(resumo.motivo ?? "Busca não executada.")}`;
   } catch (erro) {
     const motivo = erro instanceof Error ? erro.message : "Erro desconhecido ao consultar o DJEN.";
@@ -148,6 +149,7 @@ export async function importarHistorico(formData: FormData) {
       vinculadas: String(r.vinculadas),
       orfas: String(r.orfas),
       prazos: String(r.prazosCriados + r.prazosADefinir),
+      audiencias: String(r.audiencias),
       periodo: r.periodo,
     });
     destino = `/publicacoes?${qs}`;
@@ -161,4 +163,15 @@ export async function importarHistorico(formData: FormData) {
   revalidatePath("/processos");
   revalidatePath("/", "layout");
   redirect(destino);
+}
+
+/** Botão "Buscar audiências nas publicações já importadas". */
+export async function buscarAudienciasNasPublicacoes() {
+  const r = await reprocessarAudienciasPublicacoes();
+  revalidatePath("/publicacoes");
+  revalidatePath("/prazos");
+  revalidatePath("/");
+  redirect(
+    `/publicacoes?reprocesso=ok&analisadas=${r.analisadas}&audiencias=${r.criadas + r.redesignadas}`
+  );
 }

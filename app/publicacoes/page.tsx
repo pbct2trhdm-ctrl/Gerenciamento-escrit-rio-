@@ -9,6 +9,7 @@ import {
   vincularPublicacaoManualmente,
   buscarPublicacoesAgora,
   importarHistorico,
+  buscarAudienciasNasPublicacoes,
 } from "@/lib/actions/publicacoes";
 import { BotaoEnvio } from "@/components/botao-envio";
 import {
@@ -37,10 +38,26 @@ export default async function PublicacoesPage({
     orfas?: string;
     prazos?: string;
     periodo?: string;
+    audiencias?: string;
+    reprocesso?: string;
+    analisadas?: string;
   }>;
 }) {
-  const { aba, busca, novas, motivo, historico, vinculadas, orfas, prazos, periodo } =
-    await searchParams;
+  const {
+    aba,
+    busca,
+    novas,
+    motivo,
+    historico,
+    vinculadas,
+    orfas,
+    prazos,
+    periodo,
+    audiencias,
+    reprocesso,
+    analisadas,
+  } = await searchParams;
+  const qtdAudiencias = Number(audiencias ?? 0);
   const abaAtiva = aba === "vinculadas" || aba === "orfas" ? aba : "";
 
   const where: Prisma.PublicacaoWhereInput =
@@ -111,14 +128,32 @@ export default async function PublicacoesPage({
               </BotaoEnvio>
             </form>
           </details>
+          <form action={buscarAudienciasNasPublicacoes}>
+            <BotaoEnvio
+              className="text-sm text-texto-secundario underline hover:text-accent"
+              textoAguardando="Procurando audiências…"
+            >
+              Buscar audiências nas publicações já importadas
+            </BotaoEnvio>
+          </form>
         </div>
       </div>
+
+      {reprocesso === "ok" && (
+        <div className="mb-6 rounded-lg border border-tranquilo/30 bg-tranquilo-fundo px-4 py-3 text-sm text-tranquilo">
+          {analisadas} publicação(ões) vinculada(s) analisada(s):{" "}
+          {qtdAudiencias === 0
+            ? "nenhuma audiência futura nova encontrada."
+            : `${qtdAudiencias} audiência(s) cadastrada(s) ou redesignada(s) em Prazos/Agenda, com o selo "A conferir".`}
+        </div>
+      )}
 
       {historico === "ok" && (
         <div className="mb-6 rounded-lg border border-tranquilo/30 bg-tranquilo-fundo px-4 py-3 text-sm text-tranquilo">
           Histórico importado ({periodo}): {novas} publicação(ões) nova(s) — {vinculadas} vinculada(s)
           a processos cadastrados, {orfas} sem processo correspondente (aba Órfãs).
-          {Number(prazos ?? 0) > 0 && ` ${prazos} publicação(ões) recente(s) com prazo cadastrado ou a definir.`}{" "}
+          {Number(prazos ?? 0) > 0 && ` ${prazos} publicação(ões) recente(s) com prazo cadastrado ou a definir.`}
+          {qtdAudiencias > 0 && ` ${qtdAudiencias} audiência(s) futura(s) cadastrada(s) em Prazos/Agenda.`}{" "}
           Publicações com mais de 7 dias entram como lidas e sem prazo.
         </div>
       )}
@@ -142,6 +177,7 @@ export default async function PublicacoesPage({
           Busca concluída: {Number(novas ?? 0) === 0
             ? "nenhuma publicação nova."
             : `${novas} publicação(ões) nova(s) importada(s).`}
+          {qtdAudiencias > 0 && ` ${qtdAudiencias} audiência(s) cadastrada(s) em Prazos/Agenda.`}
         </div>
       )}
       {busca === "erro" && (

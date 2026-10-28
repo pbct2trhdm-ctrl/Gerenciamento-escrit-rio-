@@ -1,6 +1,11 @@
 import { prisma } from "@/lib/prisma";
 import { gerarPrazoDaPublicacao } from "@/lib/prazo-publicacao";
 import {
+  gerarAudienciaDaPublicacao,
+  identificarAudienciaNoTexto,
+  type ResultadoAudiencia,
+} from "@/lib/audiencia-publicacao";
+import {
   buscarPublicacoesDjen,
   extrairNumeroProcesso,
   type PublicacaoDjenNormalizada,
@@ -15,6 +20,7 @@ export type ResumoVerificacaoPublicacoes = {
   orfas: number;
   prazosCriados?: number;
   prazosADefinir?: number;
+  audiencias?: number;
   whatsappEnviado: boolean;
 };
 
@@ -107,9 +113,20 @@ export async function vincularPublicacaoAoProcessoId(
     },
   });
 
+  // Audiência futura no texto: entra em Prazos/Agenda (inclusive na
+  // importação de histórico, já que a data ainda não passou).
+  const temAudiencia = identificarAudienciaNoTexto(publicacao.textoPublicacao, new Date()) !== null;
+
   // Na importação de histórico, publicações antigas não geram prazo (já passou).
-  if (opcoes.gerarPrazo === false) return "ignorado" as const;
-  return gerarPrazoDaPublicacao(publicacaoId, andamento.id);
+  const resultadoPrazo =
+    opcoes.gerarPrazo === false
+      ? ("ignorado" as const)
+      : await gerarPrazoDaPublicacao(publicacaoId, andamento.id, { temAudiencia });
+  const resultadoAudiencia: ResultadoAudiencia = temAudiencia
+    ? await gerarAudienciaDaPublicacao(publicacaoId, andamento.id)
+    : "nenhuma";
+
+  return { resultadoPrazo, resultadoAudiencia };
 }
 
 /**
@@ -133,8 +150,8 @@ export async function vincularPublicacaoAoProcesso(
   );
   if (!processo) return null;
 
-  const resultadoPrazo = await vincularPublicacaoAoProcessoId(publicacaoId, processo.id, opcoes);
-  return { processoId: processo.id, resultadoPrazo };
+  const resultado = await vincularPublicacaoAoProcessoId(publicacaoId, processo.id, opcoes);
+  return { processoId: processo.id, ...resultado };
 }
 
 type ContagemImportacao = {
@@ -143,6 +160,7 @@ type ContagemImportacao = {
   orfas: number;
   prazosCriados: number;
   prazosADefinir: number;
+  audiencias: number;
 };
 
 const DIAS_PUBLICACAO_RECENTE = 7;
@@ -165,6 +183,7 @@ async function importarItens(
   let orfas = 0;
   let prazosCriados = 0;
   let prazosADefinir = 0;
+  let audiencias = 0;
 
   for (const item of itens) {
     const jaExiste = await prisma.publicacao.findUnique({
@@ -201,12 +220,15 @@ async function importarItens(
       vinculadas += 1;
       if (vinculo.resultadoPrazo === "criado") prazosCriados += 1;
       if (vinculo.resultadoPrazo === "a_definir") prazosADefinir += 1;
+      if (vinculo.resultadoAudiencia === "criada" || vinculo.resultadoAudiencia === "redesignada") {
+        audiencias += 1;
+      }
     } else {
       orfas += 1;
     }
   }
 
-  return { novas, vinculadas, orfas, prazosCriados, prazosADefinir };
+  return { novas, vinculadas, orfas, prazosCriados, prazosADefinir, audiencias };
 }
 
 /**
@@ -226,7 +248,14 @@ export async function importarHistoricoPublicacoes(
   const inicioTotal = new Date(agora);
   inicioTotal.setMonth(inicioTotal.getMonth() - meses);
 
-  const total: ContagemImportacao = { novas: 0, vinculadas: 0, orfas: 0, prazosCriados: 0, prazosADefinir: 0 };
+  const total: ContagemImportacao = {
+    novas: 0,
+    vinculadas: 0,
+    orfas: 0,
+    prazosCriados: 0,
+    prazosADefinir: 0,
+    audiencias: 0,
+  };
   let inicioTrecho = new Date(inicioTotal);
   while (inicioTrecho <= agora) {
     const fimTrecho = new Date(inicioTrecho);
@@ -330,7 +359,7 @@ export async function verificarEImportarPublicacoes(
     };
   }
 
-  const { novas, vinculadas, orfas, prazosCriados, prazosADefinir } = await importarItens(
+  const { novas, vinculadas, orfas, prazosCriados, prazosADefinir, audiencias } = await importarItens(
     itensDjen,
     agora,
     { historico: false }
@@ -355,6 +384,9 @@ export async function verificarEImportarPublicacoes(
           : []),
         ...(prazosADefinir > 0
           ? [`⚠️ ${prazosADefinir} publicação(ões) sem prazo identificado — defina no sistema.`]
+          : []),
+        ...(audiencias > 0
+          ? [`📅 ${audiencias} audiência(s) agendada(s) ou redesignada(s) — confira em Prazos/Agenda.`]
           : []),
       ].join("\n");
 
@@ -388,6 +420,30 @@ export async function verificarEImportarPublicacoes(
     orfas,
     prazosCriados,
     prazosADefinir,
+    audiencias,
     whatsappEnviado,
   };
+}
+
+/**
+ * Botão "Buscar audiências nas publicações já importadas": procura audiências
+ * futuras em todas as publicações vinculadas (útil para o que foi importado
+ * antes desta função existir). Não duplica audiências já cadastradas.
+ */
+export async function reprocessarAudienciasPublicacoes(
+  agora: Date = new Date()
+): Promise<{ analisadas: number; criadas: number; redesignadas: number }> {
+  const publicacoes = await prisma.publicacao.findMany({
+    where: { statusVinculo: "VINCULADA", processoId: { not: null } },
+    orderBy: { dataPublicacao: "asc" },
+    select: { id: true },
+  });
+  let criadas = 0;
+  let redesignadas = 0;
+  for (const { id } of publicacoes) {
+    const resultado = await gerarAudienciaDaPublicacao(id, null, agora);
+    if (resultado === "criada") criadas += 1;
+    if (resultado === "redesignada") redesignadas += 1;
+  }
+  return { analisadas: publicacoes.length, criadas, redesignadas };
 }

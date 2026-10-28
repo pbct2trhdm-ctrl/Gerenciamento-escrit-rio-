@@ -5,7 +5,9 @@ import {
   LABEL_STATUS_VINCULO_PUBLICACAO,
   LABEL_TIPO_PRAZO,
   LABEL_CONTAGEM,
+  LABEL_MODALIDADE_AUDIENCIA,
   formatarData,
+  formatarDataHorario,
 } from "@/lib/formatacao";
 import { marcarPublicacaoComoLida } from "@/lib/publicacoes";
 import {
@@ -84,7 +86,7 @@ export default async function PublicacaoDetalhePage({
 
       {publicacao.processo && (
         <div className="mb-6">
-          <h2 className={`${classeTituloSecao} mb-3`}>Prazo</h2>
+          <h2 className={`${classeTituloSecao} mb-3`}>Prazo e audiência</h2>
           {publicacao.prazos.length > 0 ? (
             <ul className="space-y-2">
               {publicacao.prazos.map((prazo) => (
@@ -92,16 +94,18 @@ export default async function PublicacaoDetalhePage({
                   <div className="flex items-center justify-between gap-3 flex-wrap">
                     <div className="flex items-center gap-2 flex-wrap">
                       <Link href={`/prazos/${prazo.id}`} className="font-medium text-accent underline">
-                        {LABEL_TIPO_PRAZO[prazo.tipo]} · vence em {formatarData(prazo.dataFinal)}
+                        {prazo.tipo === "AUDIENCIA"
+                          ? `Audiência · ${formatarDataHorario(prazo.dataFinal)}`
+                          : `${LABEL_TIPO_PRAZO[prazo.tipo]} · vence em ${formatarData(prazo.dataFinal)}`}
                       </Link>
                       {prazo.aConferir && <SeloAConferir />}
                     </div>
                     {prazo.aConferir && <BotaoConfirmarPrazo prazoId={prazo.id} />}
                   </div>
                   <p className="mt-1 text-xs text-texto-secundario">
-                    {prazo.dias} dias ({prazo.contagem ? LABEL_CONTAGEM[prazo.contagem] : "—"}) contados
-                    a partir da publicação em {prazo.dataBase ? formatarData(prazo.dataBase) : "—"}.
-                    Para corrigir, abra o prazo e clique em Editar.
+                    {prazo.tipo === "AUDIENCIA"
+                      ? `${prazo.modalidadeAudiencia ? `${LABEL_MODALIDADE_AUDIENCIA[prazo.modalidadeAudiencia]}. ` : ""}${prazo.observacoes ?? ""} Para corrigir, abra a audiência e clique em Editar.`
+                      : `${prazo.dias} dias (${prazo.contagem ? LABEL_CONTAGEM[prazo.contagem] : "—"}) contados a partir da publicação em ${prazo.dataBase ? formatarData(prazo.dataBase) : "—"}. Para corrigir, abra o prazo e clique em Editar.`}
                   </p>
                 </li>
               ))}
