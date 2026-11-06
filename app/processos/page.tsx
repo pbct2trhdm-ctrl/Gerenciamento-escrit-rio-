@@ -15,6 +15,7 @@ import { tierStatus } from "@/lib/urgencia";
 import { Badge } from "@/components/badge";
 import { EmptyState } from "@/components/empty-state";
 import { FiltroComarcaVara } from "@/components/filtro-comarca-vara";
+import { ProximoPrazo } from "@/components/proximo-prazo";
 import {
   classeInputAuto,
   classeBotaoPrimario,
@@ -70,7 +71,15 @@ export default async function ProcessosPage({
     prisma.processo.findMany({
       where,
       orderBy: { criadoEm: "desc" },
-      include: { cliente: true },
+      include: {
+        cliente: true,
+        prazos: {
+          where: { status: "PENDENTE" },
+          orderBy: { dataFinal: "asc" },
+          take: 1,
+          select: { id: true, dataFinal: true, tipo: true },
+        },
+      },
     }),
     prisma.processo.findMany({
       where: { tribunal: { not: null } },
@@ -90,7 +99,7 @@ export default async function ProcessosPage({
     .sort((a, b) => LABEL_TRIBUNAL[a].localeCompare(LABEL_TRIBUNAL[b]));
 
   return (
-    <div className="max-w-4xl">
+    <div className="max-w-6xl">
       <div className="flex items-center justify-between mb-6">
         <h1 className={classeTituloPagina}>Processos</h1>
         <Link href="/processos/novo" className={classeBotaoPrimario}>
@@ -121,34 +130,42 @@ export default async function ProcessosPage({
             </option>
           ))}
         </select>
-        <select name="area" defaultValue={area ?? ""} className={classeInputAuto}>
-          <option value="">Todas as áreas</option>
-          {AREAS_PROCESSO.map((codigo) => (
-            <option key={codigo} value={codigo}>
-              {LABEL_AREA[codigo]}
-            </option>
-          ))}
-        </select>
-        {opcoesTribunal.length > 0 && (
-          <select name="tribunal" defaultValue={tribunal ?? ""} className={classeInputAuto}>
-            <option value="">Todos os tribunais</option>
-            {opcoesTribunal.map((codigo) => (
-              <option key={codigo} value={codigo}>
-                {LABEL_TRIBUNAL[codigo]}
-              </option>
-            ))}
-          </select>
-        )}
-        {comarcaVaraEmUso.length > 0 && (
-          <FiltroComarcaVara
-            pares={comarcaVaraEmUso}
-            comarcaSelecionada={comarca ?? ""}
-            varaSelecionada={vara ?? ""}
-          />
-        )}
         <button type="submit" className={classeBotaoSecundario}>
           Filtrar
         </button>
+        <details className="group w-full" open={Boolean(area || tribunal || comarca || vara)}>
+          <summary className="cursor-pointer list-none text-sm text-accent [&::-webkit-details-marker]:hidden">
+            <span className="group-open:hidden">Mais filtros (área, tribunal, comarca, vara)</span>
+            <span className="hidden group-open:inline">Menos filtros</span>
+          </summary>
+          <div className="mt-3 flex flex-wrap gap-3">
+                <select name="area" defaultValue={area ?? ""} className={classeInputAuto}>
+              <option value="">Todas as áreas</option>
+              {AREAS_PROCESSO.map((codigo) => (
+                <option key={codigo} value={codigo}>
+                  {LABEL_AREA[codigo]}
+                </option>
+              ))}
+            </select>
+            {opcoesTribunal.length > 0 && (
+              <select name="tribunal" defaultValue={tribunal ?? ""} className={classeInputAuto}>
+                <option value="">Todos os tribunais</option>
+                {opcoesTribunal.map((codigo) => (
+                  <option key={codigo} value={codigo}>
+                    {LABEL_TRIBUNAL[codigo]}
+                  </option>
+                ))}
+              </select>
+            )}
+            {comarcaVaraEmUso.length > 0 && (
+              <FiltroComarcaVara
+                pares={comarcaVaraEmUso}
+                comarcaSelecionada={comarca ?? ""}
+                varaSelecionada={vara ?? ""}
+              />
+            )}
+          </div>
+        </details>
       </form>
 
       {processos.length === 0 ? (
@@ -164,9 +181,10 @@ export default async function ProcessosPage({
               <tr className="border-b border-slate-200 font-display text-left text-texto-principal">
                 <th className="px-4 py-3 font-medium">Número</th>
                 <th className="px-4 py-3 font-medium">Cliente</th>
-                <th className="px-4 py-3 font-medium">Área</th>
-                <th className="px-4 py-3 font-medium">Tribunal</th>
+                <th className="hidden px-4 py-3 font-medium lg:table-cell">Área</th>
+                <th className="hidden px-4 py-3 font-medium xl:table-cell">Tribunal</th>
                 <th className="px-4 py-3 font-medium">Grau</th>
+                <th className="px-4 py-3 font-medium whitespace-nowrap">Próximo prazo</th>
                 <th className="px-4 py-3 font-medium">Status</th>
               </tr>
             </thead>
@@ -176,26 +194,29 @@ export default async function ProcessosPage({
                   key={processo.id}
                   className="border-b border-slate-100 last:border-0 transition-colors hover:bg-fundo"
                 >
-                  <td className="font-medium">
+                  <td className="font-mono text-[13px] font-medium whitespace-nowrap">
                     <Link href={`/processos/${processo.id}`} className="block px-4 py-3">
                       {processo.numeroProcesso ?? "Sem número"}
                     </Link>
                   </td>
                   <td className="px-4 py-3 text-texto-secundario">{processo.cliente.nome}</td>
-                  <td className="px-4 py-3 text-texto-secundario">
+                  <td className="hidden px-4 py-3 text-texto-secundario lg:table-cell">
                     {formatarArea(processo.area, processo.areaOutraDescricao)}
                   </td>
-                  <td className="px-4 py-3 text-texto-secundario">
+                  <td className="hidden px-4 py-3 text-texto-secundario xl:table-cell">
                     {processo.tribunal ? LABEL_TRIBUNAL[processo.tribunal] : "—"}
                   </td>
                   <td className="px-4 py-3">
                     <span
-                      className={`${classeBadgeNeutro} ${
+                      className={`${classeBadgeNeutro} whitespace-nowrap ${
                         processo.grau === "PRIMEIRO_GRAU" ? "" : "!border-accent/40 !bg-accent/10 !text-accent"
                       }`}
                     >
                       {LABEL_GRAU_CURTO[processo.grau]}
                     </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <ProximoPrazo prazo={processo.prazos[0]} />
                   </td>
                   <td className="px-4 py-3">
                     <Badge tier={tierStatus(processo.status)}>

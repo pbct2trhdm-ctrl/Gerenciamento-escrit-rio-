@@ -38,7 +38,7 @@ export default async function RevisarPrazosPage({
   const processosSemPolo = [...new Map(semPolo.map((i) => [i.processoId, i])).values()];
 
   return (
-    <div className="max-w-4xl">
+    <div className="max-w-6xl">
       <LinkVoltar href="/prazos" label="Voltar para Prazos/Agenda" />
       <h1 className={`${classeTituloPagina} mb-1`}>Revisar prazos das publicações</h1>
       <p className="text-texto-secundario mb-6">

@@ -7,7 +7,7 @@ export default function FinanceiroLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="max-w-5xl">
+    <div className="max-w-6xl">
       <h1 className={`${classeTituloPagina} mb-4`}>Financeiro</h1>
       <FinanceiroTabs />
       {children}

@@ -9,8 +9,8 @@ export function VincularPublicacaoForm({
   action: (formData: FormData) => void;
 }) {
   return (
-    <form action={action} className="flex items-center gap-2 flex-wrap">
-      <select name="processoId" required defaultValue="" className={classeInputAuto}>
+    <form action={action} className="flex items-center gap-2">
+      <select name="processoId" required defaultValue="" className={`${classeInputAuto} min-w-0 max-w-full flex-1 sm:max-w-md`}>
         <option value="" disabled>
           Vincular a um processo…
         </option>
@@ -20,7 +20,7 @@ export function VincularPublicacaoForm({
           </option>
         ))}
       </select>
-      <button type="submit" className={`${classeBotaoSecundario} !px-3 !py-1 text-xs`}>
+      <button type="submit" className={`${classeBotaoSecundario} shrink-0 !px-3 !py-1 text-xs`}>
         Vincular
       </button>
     </form>

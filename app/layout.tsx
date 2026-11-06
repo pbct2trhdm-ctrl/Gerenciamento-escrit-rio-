@@ -32,9 +32,9 @@ export default async function RootLayout({
       lang="pt-BR"
       className={`${inter.variable} ${cinzel.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex bg-fundo text-texto-principal font-sans">
+      <body className="min-h-full flex flex-col md:flex-row bg-fundo text-texto-principal font-sans">
         <Sidebar publicacoesNaoLidas={publicacoesNaoLidas} />
-        <main className="flex-1 min-w-0 p-6 md:p-8">{children}</main>
+        <main className="flex-1 min-w-0 px-4 pt-5 pb-24 md:p-8">{children}</main>
       </body>
     </html>
   );

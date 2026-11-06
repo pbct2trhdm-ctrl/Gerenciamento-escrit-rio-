@@ -32,9 +32,11 @@ O cálculo de dias úteis considera fins de semana e feriados nacionais brasilei
 
 ## Telas
 
-- **Dashboard**: prazos pendentes mais próximos de vencer, com destaque para os que vencem em até 7 dias.
-- **Clientes**: listagem com busca/filtro, cadastro/edição, processos vinculados.
-- **Processos**: listagem com busca/filtros (status, grau, área, tribunal, comarca/vara), cadastro/edição, prazos vinculados.
+- **Dashboard**: resumo do dia (vencem hoje, esta semana, audiências, a conferir, publicações novas — cada número filtra a lista) e prazos pendentes agrupados em Atrasados / Hoje / Esta semana / Depois, com a descrição do prazo como título.
+- **Busca rápida**: campo no topo do menu (⌘K ou Ctrl+K) que encontra clientes, processos judiciais e administrativos e publicações pelo nome ou por parte do número (só os dígitos já bastam), sem diferenciar acentos; Enter abre o resultado ou a página `/busca` — ver `lib/busca.ts`.
+- **Celular / janela estreita**: barra superior com a logo e o nome do escritório, botão ☰ que abre o menu completo e barra inferior com Início, Prazos, Publicações e Processos.
+- **Clientes**: listagem com telefone (atalho para o WhatsApp em celulares), processos ativos e próximo prazo; busca/filtro, cadastro/edição, processos vinculados.
+- **Processos**: listagem com número em uma linha, coluna "Próximo prazo" e busca/filtros (status e grau à vista; área, tribunal, comarca/vara em "Mais filtros"). A ficha do processo mostra o próximo prazo em destaque e se divide em abas (Prazos, Andamentos, Atualizações, Recursos, Financeiro, Dados do processo); excluir fica no menu "⋯" e pede confirmação.
 - **Prazos/Agenda**: listagem geral com filtros, cadastro/edição com cálculo automático da data final, ação rápida "marcar como cumprido".
 - **Financeiro**: honorários contratuais e parcelas, honorários de sucumbência, alvarás/repasses, despesas e obrigações societárias (pró-labore, DAS, INSS, CPP, retiradas de lucro). Ver detalhes abaixo.
 

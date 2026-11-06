@@ -1,27 +1,36 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { diasRestantes } from "@/lib/prazos";
-import {
-  LABEL_TIPO_PRAZO,
-  LABEL_MODALIDADE_AUDIENCIA,
-  formatarData,
-  formatarDataHorario,
-} from "@/lib/formatacao";
-import { tierPorDiasRestantes, TIER_CLASSES, CLASSE_BADGE_AUDIENCIA } from "@/lib/urgencia";
-import { SeloPrazo } from "@/components/selo-prazo";
-import { SeloAConferir, BotaoConfirmarPrazo } from "@/components/prazo-a-conferir";
+import { formatarData } from "@/lib/formatacao";
+import { tierPorDiasRestantes } from "@/lib/urgencia";
+import { LinhaPrazo } from "@/components/linha-prazo";
 import { EmptyState } from "@/components/empty-state";
 import { classeTituloPagina } from "@/lib/estilos";
 
-export default async function DashboardPage() {
-  const [prazos, publicacoesNaoLidas, publicacoesPrazoADefinir] = await Promise.all([
+const FILTROS = ["hoje", "semana", "audiencias", "conferir"] as const;
+type Filtro = (typeof FILTROS)[number];
+
+const DATA_EXTENSO = new Intl.DateTimeFormat("pt-BR", {
+  weekday: "long",
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+  timeZone: "America/Belem",
+});
+
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ filtro?: string }>;
+}) {
+  const { filtro: filtroBruto } = await searchParams;
+  const filtro = (FILTROS as readonly string[]).includes(filtroBruto ?? "") ? (filtroBruto as Filtro) : null;
+
+  const [prazosPendentes, publicacoesNaoLidas, publicacoesPrazoADefinir] = await Promise.all([
     prisma.prazo.findMany({
       where: { status: "PENDENTE" },
       orderBy: { dataFinal: "asc" },
-      include: {
-        processo: { include: { cliente: true } },
-        origemAndamento: { select: { data: true } },
-      },
+      include: { processo: { include: { cliente: true } } },
     }),
     prisma.publicacao.count({ where: { lida: false } }),
     prisma.publicacao.findMany({
@@ -31,28 +40,67 @@ export default async function DashboardPage() {
     }),
   ]);
 
-  return (
-    <div className="max-w-4xl">
-      <h1 className={classeTituloPagina}>Dashboard</h1>
-      <p className="text-texto-secundario mb-6">
-        Prazos pendentes mais próximos de vencer
-      </p>
+  const prazos = prazosPendentes.map((prazo) => {
+    const dias = diasRestantes(prazo.dataFinal);
+    return { prazo, dias, tier: tierPorDiasRestantes(dias) };
+  });
 
-      {publicacoesNaoLidas > 0 && (
-        <Link
-          href="/publicacoes"
-          className="mb-6 flex items-center justify-between rounded-lg border border-accent/30 bg-accent/10 px-4 py-3 text-sm hover:bg-accent/15 transition-colors"
-        >
-          <span className="text-texto-principal">
-            <span className="font-semibold text-accent">
-              {publicacoesNaoLidas} nova{publicacoesNaoLidas === 1 ? "" : "s"} publicaç
-              {publicacoesNaoLidas === 1 ? "ão" : "ões"}
-            </span>{" "}
-            encontrada{publicacoesNaoLidas === 1 ? "" : "s"} no DJEN
-          </span>
-          <span className="text-accent">Ver publicações →</span>
-        </Link>
-      )}
+  const contagem = {
+    hoje: prazos.filter((p) => p.dias <= 0).length,
+    semana: prazos.filter((p) => p.dias >= 1 && p.dias <= 7).length,
+    audiencias: prazos.filter((p) => p.prazo.tipo === "AUDIENCIA" && p.dias >= 0).length,
+    conferir: prazos.filter((p) => p.prazo.aConferir).length,
+  };
+
+  const visiveis = prazos.filter((p) => {
+    if (filtro === "hoje") return p.dias <= 0;
+    if (filtro === "semana") return p.dias >= 1 && p.dias <= 7;
+    if (filtro === "audiencias") return p.prazo.tipo === "AUDIENCIA" && p.dias >= 0;
+    if (filtro === "conferir") return p.prazo.aConferir;
+    return true;
+  });
+
+  const grupos = [
+    { titulo: "Atrasados", itens: visiveis.filter((p) => p.dias < 0) },
+    { titulo: "Hoje", itens: visiveis.filter((p) => p.dias === 0) },
+    { titulo: "Esta semana", itens: visiveis.filter((p) => p.dias >= 1 && p.dias <= 7) },
+    { titulo: "Depois", itens: visiveis.filter((p) => p.dias > 7) },
+  ].filter((g) => g.itens.length > 0);
+
+  const indicadores: { chave: Filtro | "publicacoes"; rotulo: string; total: number; cor: string; href: string }[] = [
+    { chave: "hoje", rotulo: prazos.some((p) => p.dias < 0) ? "hoje ou atrasados" : "vencem hoje", total: contagem.hoje, cor: "text-critico", href: "/?filtro=hoje" },
+    { chave: "semana", rotulo: "esta semana", total: contagem.semana, cor: "text-atencao", href: "/?filtro=semana" },
+    { chave: "audiencias", rotulo: "audiências", total: contagem.audiencias, cor: "text-audiencia", href: "/?filtro=audiencias" },
+    { chave: "conferir", rotulo: "a conferir", total: contagem.conferir, cor: "text-texto-principal", href: "/?filtro=conferir" },
+    { chave: "publicacoes", rotulo: "publicações novas", total: publicacoesNaoLidas, cor: "text-accent", href: "/publicacoes" },
+  ];
+
+  return (
+    <div className="max-w-6xl">
+      <h1 className={classeTituloPagina}>Dashboard</h1>
+      <p className="mb-6 text-texto-secundario first-letter:uppercase">{DATA_EXTENSO.format(new Date())}</p>
+
+      <ul className="mb-6 grid grid-cols-5 gap-2 sm:gap-3">
+        {indicadores.map((item) => {
+          const ativo = item.chave === filtro;
+          return (
+            <li key={item.chave}>
+              <Link
+                href={ativo ? "/" : item.href}
+                aria-current={ativo ? "true" : undefined}
+                className={`flex h-full flex-col rounded-xl border bg-superficie px-2 py-2.5 shadow-xs transition-colors sm:px-4 sm:py-3 hover:border-accent/50 ${
+                  ativo ? "border-accent ring-1 ring-accent" : "border-slate-200"
+                }`}
+              >
+                <span className={`font-display text-2xl sm:text-3xl font-semibold leading-none tabular-nums ${item.total > 0 ? item.cor : "text-texto-secundario/50"}`}>
+                  {item.total}
+                </span>
+                <span className="mt-1 text-[11px] leading-tight text-texto-secundario sm:mt-1.5 sm:text-sm">{item.rotulo}</span>
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
 
       {publicacoesPrazoADefinir.length > 0 && (
         <div className="mb-6 rounded-lg border border-atencao/40 bg-atencao-fundo px-4 py-3 text-sm">
@@ -73,92 +121,66 @@ export default async function DashboardPage() {
         </div>
       )}
 
+      {filtro && (
+        <p className="mb-4 text-sm text-texto-secundario">
+          Mostrando só {indicadores.find((i) => i.chave === filtro)?.rotulo}.{" "}
+          <Link href="/" className="text-accent underline">
+            Mostrar todos os prazos
+          </Link>
+        </p>
+      )}
+
       {prazos.length === 0 ? (
         <EmptyState
           mensagem="Nenhum prazo pendente cadastrado."
           acaoHref="/prazos/novo"
           acaoLabel="Adicionar o primeiro prazo"
         />
+      ) : grupos.length === 0 ? (
+        <EmptyState mensagem="Nenhum prazo neste filtro." acaoHref="/" acaoLabel="Mostrar todos" />
       ) : (
-        <ul className="space-y-3">
-          {prazos.map((prazo) => {
-            const restantes = diasRestantes(prazo.dataFinal);
-            const tier = tierPorDiasRestantes(restantes);
-            const ehAudiencia = prazo.tipo === "AUDIENCIA";
-            const varaComarca = [prazo.processo.vara, prazo.processo.comarca]
-              .filter(Boolean)
-              .join(" — ");
-            const bordaUrgencia = ehAudiencia
-              ? "border-audiencia/40 hover:border-audiencia/70"
-              : tier === "critico"
-                ? "border-critico/30 hover:border-critico/60"
-                : tier === "atencao"
-                  ? "border-atencao/30 hover:border-atencao/60"
-                  : "border-tranquilo/30 hover:border-tranquilo/60";
+        <div className="space-y-6">
+          {grupos.map((grupo) => {
+            const lista = (
+              <ul className="divide-y divide-slate-100 overflow-hidden rounded-xl border border-slate-200 bg-superficie shadow-xs">
+                {grupo.itens.map(({ prazo, dias, tier }) => (
+                  <LinhaPrazo key={prazo.id} prazo={prazo} dias={dias} tier={tier} />
+                ))}
+              </ul>
+            );
+            const cabecalho = (
+              <>
+                <span>{grupo.titulo}</span>
+                <span className="rounded-full bg-slate-200/70 px-2 text-xs font-semibold text-texto-secundario">
+                  {grupo.itens.length}
+                </span>
+                <span className="h-px flex-1 bg-slate-200" aria-hidden="true" />
+              </>
+            );
+            const classeCabecalho =
+              "mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-texto-secundario";
+
+            // "Depois" começa recolhido quando há prazos mais próximos para ver.
+            if (grupo.titulo === "Depois" && grupos.length > 1) {
+              return (
+                <details key={grupo.titulo} className="group">
+                  <summary className={`${classeCabecalho} cursor-pointer list-none`}>
+                    {cabecalho}
+                    <span className="normal-case tracking-normal font-medium text-accent group-open:hidden">mostrar</span>
+                    <span className="hidden normal-case tracking-normal font-medium text-accent group-open:inline">ocultar</span>
+                  </summary>
+                  {lista}
+                </details>
+              );
+            }
             return (
-              <li key={prazo.id}>
-                <div
-                  className={`flex items-center gap-5 rounded-xl border bg-superficie p-4 shadow-xs transition-all ${bordaUrgencia}`}
-                >
-                  <SeloPrazo id={prazo.id} dias={restantes} tier={tier} size={72} />
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 flex-wrap mb-1">
-                      <p className="font-semibold text-texto-principal truncate">
-                        {LABEL_TIPO_PRAZO[prazo.tipo]}
-                      </p>
-                      {ehAudiencia && (
-                        <span
-                          className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium shrink-0 ${CLASSE_BADGE_AUDIENCIA}`}
-                        >
-                          Audiência
-                        </span>
-                      )}
-                      {prazo.aConferir && <SeloAConferir />}
-                    </div>
-                    <p className="text-xs text-texto-secundario font-mono truncate mb-1">
-                      Proc. nº {prazo.processo.numeroProcesso ?? "não informado"}
-                      {varaComarca && (
-                        <span className="font-sans"> • {varaComarca}</span>
-                      )}
-                    </p>
-                    <p className="text-xs text-texto-secundario truncate">
-                      <span className="font-medium text-texto-principal">
-                        {prazo.processo.cliente.nome}
-                      </span>{" "}
-                      · {ehAudiencia ? formatarDataHorario(prazo.dataFinal) : formatarData(prazo.dataFinal)}
-                      {ehAudiencia && prazo.modalidadeAudiencia && (
-                        <> · {LABEL_MODALIDADE_AUDIENCIA[prazo.modalidadeAudiencia]}</>
-                      )}
-                    </p>
-                    {prazo.origemAndamento && (
-                      <p className="text-xs text-texto-secundario italic truncate">
-                        Gerado a partir de andamento de {formatarData(prazo.origemAndamento.data)}
-                      </p>
-                    )}
-                  </div>
-                  <div className="flex flex-col items-end gap-2 shrink-0">
-                    <span
-                      className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${TIER_CLASSES[tier]}`}
-                    >
-                      {restantes < 0
-                        ? `${Math.abs(restantes)} dia(s) em atraso`
-                        : restantes === 0
-                          ? "Vence hoje"
-                          : `${restantes} dia(s) restante(s)`}
-                    </span>
-                    {prazo.aConferir && <BotaoConfirmarPrazo prazoId={prazo.id} />}
-                    <Link
-                      href={`/processos/${prazo.processoId}`}
-                      className="inline-flex items-center rounded-md bg-base-escura px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-accent"
-                    >
-                      Ver processo →
-                    </Link>
-                  </div>
-                </div>
-              </li>
+              <section key={grupo.titulo}>
+                <h2 className={classeCabecalho}>{cabecalho}</h2>
+                {lista}
+              </section>
             );
           })}
-        </ul>
+        </div>
       )}
     </div>
   );

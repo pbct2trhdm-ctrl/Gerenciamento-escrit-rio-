@@ -175,3 +175,15 @@ export async function buscarAudienciasNasPublicacoes() {
     `/publicacoes?reprocesso=ok&analisadas=${r.analisadas}&audiencias=${r.criadas + r.redesignadas}`
   );
 }
+
+export async function marcarPublicacaoLida(publicacaoId: string) {
+  await prisma.publicacao.update({ where: { id: publicacaoId }, data: { lida: true } });
+  revalidatePath("/publicacoes");
+  revalidatePath("/", "layout");
+}
+
+export async function marcarTodasPublicacoesLidas() {
+  await prisma.publicacao.updateMany({ where: { lida: false }, data: { lida: true } });
+  revalidatePath("/publicacoes");
+  revalidatePath("/", "layout");
+}

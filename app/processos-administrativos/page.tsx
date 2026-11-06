@@ -73,7 +73,7 @@ export default async function ProcessosAdministrativosPage({
   }
 
   return (
-    <div className="max-w-5xl">
+    <div className="max-w-6xl">
       <div className="flex items-center justify-between mb-6">
         <h1 className={classeTituloPagina}>Processos Administrativos</h1>
         <Link href="/processos-administrativos/novo" className={classeBotaoPrimario}>

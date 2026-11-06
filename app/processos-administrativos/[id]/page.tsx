@@ -58,7 +58,7 @@ export default async function ProcessoAdministrativoDetalhePage({
   }
 
   return (
-    <div className="max-w-4xl">
+    <div className="max-w-6xl">
       <LinkVoltar href="/processos-administrativos" label="Voltar para Processos Administrativos" />
       <div className="flex items-center justify-between mb-1">
         <h1 className={classeTituloPagina}>

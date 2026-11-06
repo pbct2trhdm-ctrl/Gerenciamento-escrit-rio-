@@ -13,15 +13,17 @@ import {
 export function SecaoAtualizacoesCliente({
   caminhoProcesso,
   atualizacoes,
+  className = "mt-10",
 }: {
   /** Ex.: /processos/abc ou /processos-administrativos/abc */
   caminhoProcesso: string;
   atualizacoes: AtualizacaoCliente[];
+  className?: string;
 }) {
   const novaHref = `${caminhoProcesso}/atualizacoes/nova`;
 
   return (
-    <div className="mt-10">
+    <div className={className}>
       <div className="flex items-center justify-between mb-3">
         <h2 className={classeTituloSecao}>Atualizações ao cliente</h2>
         <Link href={novaHref} className={classeBotaoPrimario}>

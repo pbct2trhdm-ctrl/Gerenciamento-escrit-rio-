@@ -1,8 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { ordenarProcessosPorCliente } from "@/lib/ordenacao";
-import { LABEL_STATUS_VINCULO_PUBLICACAO, formatarData } from "@/lib/formatacao";
-import { tierStatus } from "@/lib/urgencia";
+import { formatarData } from "@/lib/formatacao";
 import { Badge } from "@/components/badge";
 import { EmptyState } from "@/components/empty-state";
 import { VincularPublicacaoForm } from "@/components/vincular-publicacao-form";
@@ -11,13 +10,17 @@ import {
   buscarPublicacoesAgora,
   importarHistorico,
   buscarAudienciasNasPublicacoes,
+  marcarPublicacaoLida,
+  marcarTodasPublicacoesLidas,
 } from "@/lib/actions/publicacoes";
+import { MenuMaisAcoes } from "@/components/menu-mais-acoes";
 import { BotaoEnvio } from "@/components/botao-envio";
 import {
   classeCard,
   classeBadgeNeutro,
   classeTituloPagina,
   classeBotaoSecundario,
+  classeBotaoPrimario,
   classeInputAuto,
 } from "@/lib/estilos";
 import type { Prisma } from "@/app/generated/prisma/client";
@@ -68,11 +71,14 @@ export default async function PublicacoesPage({
         ? { statusVinculo: "ORFA" }
         : {};
 
-  const [publicacoes, totalTodas, totalVinculadas, totalOrfas, processos, configuracao] = await Promise.all([
+  const [publicacoes, totalTodas, totalVinculadas, totalOrfas, processos, configuracao, totalNaoLidas] = await Promise.all([
     prisma.publicacao.findMany({
       where,
       orderBy: { dataPublicacao: "desc" },
-      include: { processo: { include: { cliente: true } } },
+      include: {
+        processo: { include: { cliente: true } },
+        prazos: { select: { id: true, dataFinal: true }, orderBy: { dataFinal: "asc" } },
+      },
     }),
     prisma.publicacao.count(),
     prisma.publicacao.count({ where: { statusVinculo: "VINCULADA" } }),
@@ -85,7 +91,17 @@ export default async function PublicacoesPage({
       where: { id: 1 },
       select: { ultimaExecucao: true, ultimoErro: true, ultimoErroEm: true },
     }),
+    prisma.publicacao.count({ where: { lida: false } }),
   ]);
+
+  // Sem processo vinculado primeiro: são as que pedem ação.
+  const grupos =
+    abaAtiva === ""
+      ? [
+          { titulo: "Sem processo vinculado", itens: publicacoes.filter((p) => !p.processo) },
+          { titulo: "Vinculadas", itens: publicacoes.filter((p) => p.processo) },
+        ].filter((g) => g.itens.length > 0)
+      : [{ titulo: null, itens: publicacoes }];
 
   const segmentos = [
     { valor: "", label: "Todas", contagem: totalTodas },
@@ -94,49 +110,65 @@ export default async function PublicacoesPage({
   ] as const;
 
   return (
-    <div className="max-w-4xl">
-      <div className="flex items-start justify-between gap-4 mb-6 flex-wrap">
-        <div>
-          <h1 className={classeTituloPagina}>Publicações</h1>
-          <p className="text-sm text-texto-secundario mt-1">
-            {configuracao?.ultimaExecucao
-              ? `Última busca no DJEN: ${configuracao.ultimaExecucao.toLocaleString("pt-BR", {
-                  dateStyle: "short",
-                  timeStyle: "short",
-                })}`
-              : "Nenhuma busca no DJEN feita ainda."}
-          </p>
-        </div>
-        <div className="flex flex-col items-end gap-2">
+    <div className="max-w-6xl">
+      <h1 className={`${classeTituloPagina} mb-4`}>Publicações</h1>
+      <div className={`mb-6 flex flex-wrap items-center justify-between gap-3 ${classeCard} !py-3`}>
+        <p className="text-sm">
+          {configuracao?.ultimaExecucao ? (
+            <>
+              <span className="font-semibold">Última busca no DJEN:</span>{" "}
+              {configuracao.ultimaExecucao.toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}
+            </>
+          ) : (
+            "Nenhuma busca no DJEN feita ainda."
+          )}
+          {totalNaoLidas > 0 && (
+            <span className="text-texto-secundario">
+              {" · "}
+              {totalNaoLidas} não lida{totalNaoLidas === 1 ? "" : "s"}
+            </span>
+          )}
+        </p>
+        <div className="flex flex-wrap items-stretch gap-2">
+          {totalNaoLidas > 0 && (
+            <form action={marcarTodasPublicacoesLidas}>
+              <BotaoEnvio className={`${classeBotaoSecundario} h-full`} textoAguardando="Marcando…">
+                Marcar todas como lidas
+              </BotaoEnvio>
+            </form>
+          )}
           <form action={buscarPublicacoesAgora}>
-            <BotaoEnvio className={classeBotaoSecundario} textoAguardando="Buscando no DJEN…">
+            <BotaoEnvio className={`${classeBotaoPrimario} h-full`} textoAguardando="Buscando no DJEN…">
               Buscar agora
             </BotaoEnvio>
           </form>
-          <details className="text-sm">
-            <summary className="cursor-pointer text-texto-secundario hover:text-accent text-right">
-              Importar histórico
-            </summary>
-            <form action={importarHistorico} className="mt-2 flex items-center gap-2">
-              <select name="meses" defaultValue="12" className={classeInputAuto} aria-label="Período">
-                <option value="3">Últimos 3 meses</option>
-                <option value="6">Últimos 6 meses</option>
-                <option value="12">Últimos 12 meses</option>
-                <option value="24">Últimos 24 meses</option>
-              </select>
-              <BotaoEnvio className={classeBotaoSecundario} textoAguardando="Importando… (pode levar alguns minutos)">
-                Importar
+          <MenuMaisAcoes>
+            <form action={importarHistorico} className="space-y-2 border-b border-slate-100 pb-3">
+              <label htmlFor="meses-historico" className="block text-sm font-medium">
+                Importar histórico
+              </label>
+              <div className="flex gap-2">
+                <select id="meses-historico" name="meses" defaultValue="12" className={`${classeInputAuto} flex-1`}>
+                  <option value="3">Últimos 3 meses</option>
+                  <option value="6">Últimos 6 meses</option>
+                  <option value="12">Últimos 12 meses</option>
+                  <option value="24">Últimos 24 meses</option>
+                </select>
+                <BotaoEnvio className={classeBotaoSecundario} textoAguardando="Importando…">
+                  Importar
+                </BotaoEnvio>
+              </div>
+              <p className="text-xs text-texto-secundario">Pode levar alguns minutos.</p>
+            </form>
+            <form action={buscarAudienciasNasPublicacoes} className="pt-2">
+              <BotaoEnvio
+                className="w-full rounded-md px-2 py-1.5 text-left text-sm hover:bg-fundo"
+                textoAguardando="Procurando audiências…"
+              >
+                Buscar audiências nas publicações já importadas
               </BotaoEnvio>
             </form>
-          </details>
-          <form action={buscarAudienciasNasPublicacoes}>
-            <BotaoEnvio
-              className="text-sm text-texto-secundario underline hover:text-accent"
-              textoAguardando="Procurando audiências…"
-            >
-              Buscar audiências nas publicações já importadas
-            </BotaoEnvio>
-          </form>
+          </MenuMaisAcoes>
         </div>
       </div>
 
@@ -212,56 +244,78 @@ export default async function PublicacoesPage({
       {publicacoes.length === 0 ? (
         <EmptyState mensagem="Nenhuma publicação encontrada." />
       ) : (
-        <ul className="space-y-3">
-          {publicacoes.map((publicacao) => (
-            <li key={publicacao.id}>
-              <div className={`text-sm ${classeCard}`}>
-                <div className="flex items-center justify-between gap-3 flex-wrap">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <Link
-                      href={`/publicacoes/${publicacao.id}`}
-                      className="font-medium hover:underline tabular-nums"
-                    >
-                      {formatarData(publicacao.dataPublicacao)}
-                    </Link>
-                    <span className={classeBadgeNeutro}>{publicacao.tribunalOrgao}</span>
-                    <Badge tier={tierStatus(publicacao.statusVinculo)}>
-                      {LABEL_STATUS_VINCULO_PUBLICACAO[publicacao.statusVinculo]}
-                    </Badge>
-                    {!publicacao.lida && (
-                      <span className="inline-flex items-center rounded-full bg-accent px-2 py-0.5 text-xs font-medium text-white">
-                        Não lida
-                      </span>
-                    )}
-                  </div>
-                </div>
+        <div className="space-y-6">
+          {grupos.map((grupo) => (
+            <section key={grupo.titulo ?? "lista"}>
+              {grupo.titulo && (
+                <h2 className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-texto-secundario">
+                  {grupo.titulo}
+                  <span className="rounded-full bg-slate-200/70 px-2 text-xs">{grupo.itens.length}</span>
+                  <span className="h-px flex-1 bg-slate-200" aria-hidden="true" />
+                </h2>
+              )}
+              <ul className="space-y-3">
+                {grupo.itens.map((publicacao) => (
+                  <li key={publicacao.id}>
+                    <div className={`text-sm ${classeCard}`}>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {!publicacao.lida && (
+                          <span className="h-2 w-2 shrink-0 rounded-full bg-accent" title="Não lida" aria-label="Não lida" />
+                        )}
+                        <Link
+                          href={`/publicacoes/${publicacao.id}`}
+                          className={`hover:underline tabular-nums ${publicacao.lida ? "font-medium" : "font-semibold"}`}
+                        >
+                          {formatarData(publicacao.dataPublicacao)}
+                        </Link>
+                        <span className={classeBadgeNeutro}>{publicacao.tribunalOrgao}</span>
+                        {!publicacao.processo && publicacao.numeroProcessoIdentificado && (
+                          <span className="font-mono text-xs text-texto-secundario">
+                            {publicacao.numeroProcessoIdentificado}
+                          </span>
+                        )}
+                        {publicacao.prazos[0] && (
+                          <Badge tier="tranquilo">Prazo criado · {formatarData(publicacao.prazos[0].dataFinal)}</Badge>
+                        )}
+                        {publicacao.prazoADefinir && <Badge tier="atencao">Prazo a definir</Badge>}
+                      </div>
 
-                <p className="mt-2 whitespace-pre-wrap text-texto-secundario">
-                  {trechoTexto(publicacao.textoPublicacao)}
-                </p>
+                      <p className="mt-2 whitespace-pre-wrap text-texto-secundario">
+                        {trechoTexto(publicacao.textoPublicacao)}
+                      </p>
 
-                {publicacao.processo ? (
-                  <p className="mt-2">
-                    <Link
-                      href={`/processos/${publicacao.processo.id}`}
-                      className="text-accent underline"
-                    >
-                      {publicacao.processo.cliente.nome} ·{" "}
-                      {publicacao.processo.numeroProcesso ?? "sem número"}
-                    </Link>
-                  </p>
-                ) : (
-                  <div className="mt-3">
-                    <VincularPublicacaoForm
-                      processos={processos}
-                      action={vincularPublicacaoManualmente.bind(null, publicacao.id)}
-                    />
-                  </div>
-                )}
-              </div>
-            </li>
+                      <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+                        {publicacao.processo ? (
+                          <Link
+                            href={`/processos/${publicacao.processo.id}`}
+                            className="text-accent underline"
+                          >
+                            {publicacao.processo.cliente.nome} ·{" "}
+                            {publicacao.processo.numeroProcesso ?? "sem número"}
+                          </Link>
+                        ) : (
+                          <div className="min-w-0 w-full flex-1 sm:w-auto">
+                            <VincularPublicacaoForm
+                              processos={processos}
+                              action={vincularPublicacaoManualmente.bind(null, publicacao.id)}
+                            />
+                          </div>
+                        )}
+                        {!publicacao.lida && (
+                          <form action={marcarPublicacaoLida.bind(null, publicacao.id)}>
+                            <BotaoEnvio className={`${classeBotaoSecundario} !py-1 text-xs`} textoAguardando="Marcando…">
+                              Marcar como lida
+                            </BotaoEnvio>
+                          </form>
+                        )}
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </section>
           ))}
-        </ul>
+        </div>
       )}
     </div>
   );

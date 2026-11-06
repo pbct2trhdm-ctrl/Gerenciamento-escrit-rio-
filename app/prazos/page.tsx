@@ -2,13 +2,13 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { ordenarProcessosPorCliente } from "@/lib/ordenacao";
 import {
-  LABEL_TIPO_PRAZO,
   LABEL_STATUS_PRAZO,
   LABEL_MODALIDADE_AUDIENCIA,
   formatarData,
   formatarDataHorario,
 } from "@/lib/formatacao";
 import { diasRestantes } from "@/lib/prazos";
+import { tituloPrazo } from "@/lib/exibicao-prazo";
 import { marcarPrazoComoCumprido } from "@/lib/actions/prazos";
 import type { Prisma } from "@/app/generated/prisma/client";
 import { tierPrazo, CLASSE_BADGE_AUDIENCIA } from "@/lib/urgencia";
@@ -57,7 +57,7 @@ export default async function PrazosPage({
   ]);
 
   return (
-    <div className="max-w-4xl">
+    <div className="max-w-6xl">
       <div className="flex items-center justify-between mb-6">
         <h1 className={classeTituloPagina}>Prazos/Agenda</h1>
         <div className="flex flex-wrap gap-2">
@@ -118,7 +118,7 @@ export default async function PrazosPage({
                   }`}
                 >
                   <div className="flex items-center gap-4">
-                    <SeloPrazo id={prazo.id} dias={restantes} tier={tier} size={64} />
+                    <SeloPrazo id={prazo.id} dias={restantes} tier={tier} status={prazo.status} size={64} />
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
                         <Link
@@ -143,7 +143,10 @@ export default async function PrazosPage({
                         )}
                       </div>
                       <p className="text-sm text-texto-secundario">
-                        {LABEL_TIPO_PRAZO[prazo.tipo]}
+                        {(() => {
+                          const { titulo, tipoSeparado } = tituloPrazo(prazo);
+                          return tipoSeparado ? `${titulo} · ${tipoSeparado}` : titulo;
+                        })()}
                       </p>
                       {ehAudiencia && prazo.modalidadeAudiencia && (
                         <p className="text-sm text-texto-secundario">

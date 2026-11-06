@@ -4,7 +4,6 @@ import { prisma } from "@/lib/prisma";
 import {
   LABEL_STATUS_PROCESSO,
   LABEL_GRAU_PROCESSO,
-  LABEL_TIPO_PRAZO,
   LABEL_CONTAGEM,
   LABEL_STATUS_PRAZO,
   LABEL_TIPO_HONORARIO,
@@ -41,23 +40,33 @@ import { Badge } from "@/components/badge";
 import { EmptyState } from "@/components/empty-state";
 import { LinkVoltar } from "@/components/link-voltar";
 import { SecaoAtualizacoesCliente } from "@/components/secao-atualizacoes-cliente";
+import { AbasProcesso, type AbaProcesso } from "@/components/abas-processo";
+import { MenuMaisAcoes } from "@/components/menu-mais-acoes";
+import { tituloPrazo } from "@/lib/exibicao-prazo";
 import {
   classeBotaoPrimario,
   classeBotaoSecundario,
   classeBotaoPerigo,
   classeBotaoConfirma,
   classeCard,
+  classeCardHover,
   classeBadgeNeutro,
   classeTituloPagina,
   classeTituloSecao,
 } from "@/lib/estilos";
 
+const ABAS = ["prazos", "andamentos", "atualizacoes", "recursos", "financeiro", "dados"] as const;
+
 export default async function ProcessoDetalhePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ aba?: string }>;
 }) {
   const { id } = await params;
+  const { aba: abaBruta } = await searchParams;
+  const aba = (ABAS as readonly string[]).includes(abaBruta ?? "") ? abaBruta! : "prazos";
 
   const processo = await prisma.processo.findUnique({
     where: { id },
@@ -95,10 +104,25 @@ export default async function ProcessoDetalhePage({
       .filter((idOrigem): idOrigem is string => idOrigem !== null)
   );
 
+  const prazosPendentes = processo.prazos.filter((p) => p.status === "PENDENTE");
+  const proximoPrazo = prazosPendentes[0];
+  const abas: AbaProcesso[] = [
+    { chave: "prazos", rotulo: "Prazos", total: prazosPendentes.length },
+    { chave: "andamentos", rotulo: "Andamentos", total: processo.andamentos.length },
+    { chave: "atualizacoes", rotulo: "Atualizações", total: processo.atualizacoesCliente.length },
+    { chave: "recursos", rotulo: "Recursos", total: processo.recursos.length },
+    {
+      chave: "financeiro",
+      rotulo: "Financeiro",
+      total: processo.honorarios.length + processo.honorariosSucumbenciais.length + processo.alvaras.length,
+    },
+    { chave: "dados", rotulo: "Dados do processo" },
+  ];
+
   return (
-    <div className="max-w-4xl">
+    <div className="max-w-6xl">
       <LinkVoltar href="/processos" label="Voltar para Processos" />
-      <div className="flex items-center justify-between mb-1">
+      <div className="flex items-start justify-between gap-3 flex-wrap mb-1">
         <h1 className={classeTituloPagina}>
           {processo.numeroProcesso ?? "Processo sem número"}
         </h1>
@@ -112,14 +136,20 @@ export default async function ProcessoDetalhePage({
           <Link href={`/processos/${processo.id}/editar`} className={classeBotaoSecundario}>
             Editar
           </Link>
-          <form action={excluirProcesso.bind(null, processo.id)}>
-            <button type="submit" className={classeBotaoPerigo}>
-              Excluir
-            </button>
-          </form>
+          <MenuMaisAcoes>
+            <form action={excluirProcesso.bind(null, processo.id)}>
+              <BotaoEnvio
+                className={`${classeBotaoPerigo} w-full`}
+                textoAguardando="Excluindo…"
+                confirmacao="Excluir este processo com todos os prazos, andamentos e registros financeiros? Não dá para desfazer."
+              >
+                Excluir processo
+              </BotaoEnvio>
+            </form>
+          </MenuMaisAcoes>
         </div>
       </div>
-      <p className="text-texto-secundario mb-6 flex items-center gap-2 flex-wrap">
+      <p className="text-texto-secundario mb-5 flex items-center gap-2 flex-wrap">
         <Link href={`/clientes/${processo.cliente.id}`} className="underline">
           {processo.cliente.nome}
         </Link>
@@ -145,54 +175,38 @@ export default async function ProcessoDetalhePage({
         </div>
       )}
 
-      <div className={`grid grid-cols-3 gap-4 mb-8 text-sm ${classeCard}`}>
-        <div>
-          <p className="text-texto-secundario">Tribunal</p>
-          <p>{processo.tribunal ? LABEL_TRIBUNAL[processo.tribunal] : "—"}</p>
-        </div>
-        <div>
-          <p className="text-texto-secundario">Jurisdição</p>
-          <p>{processo.jurisdicao ? LABEL_JURISDICAO[processo.jurisdicao] : "—"}</p>
-        </div>
-        <div>
-          <p className="text-texto-secundario">Rito</p>
-          <p>{processo.rito ? LABEL_RITO[processo.rito] : "—"}</p>
-        </div>
-        <div>
-          <p className="text-texto-secundario">Vara</p>
-          <p>{processo.vara || "—"}</p>
-        </div>
-        <div>
-          <p className="text-texto-secundario">Comarca</p>
-          <p>{processo.comarca || "—"}</p>
-        </div>
-        <div>
-          <p className="text-texto-secundario">Grau</p>
-          <p>{LABEL_GRAU_PROCESSO[processo.grau]}</p>
-        </div>
-        <div>
-          <p className="text-texto-secundario">Cliente no</p>
-          <p>
-            {processo.poloCliente === "ATIVO"
-              ? "Polo ativo"
-              : processo.poloCliente === "PASSIVO"
-                ? "Polo passivo"
-                : "Não informado"}
-          </p>
-        </div>
-        <div>
-          <p className="text-texto-secundario">Criado em</p>
-          <p className="tabular-nums">{formatarData(processo.criadoEm)}</p>
-        </div>
-        <div className="col-span-3">
-          <p className="text-texto-secundario">Resumo</p>
-          <p className="whitespace-pre-wrap">{processo.resumo || "—"}</p>
-        </div>
-      </div>
+      {proximoPrazo && (
+        <Link
+          href={`/prazos/${proximoPrazo.id}`}
+          className={`mb-5 flex items-center gap-3 ${classeCardHover} !py-3`}
+        >
+          <SeloPrazo
+            id={`proximo-${proximoPrazo.id}`}
+            dias={diasRestantes(proximoPrazo.dataFinal)}
+            tier={tierPrazo(proximoPrazo.status, diasRestantes(proximoPrazo.dataFinal))}
+            size={44}
+          />
+          <span className="min-w-0 flex-1 text-sm">
+            <span className="text-texto-secundario">Próximo prazo: </span>
+            <span className="font-semibold">{tituloPrazo(proximoPrazo).titulo}</span>
+            <span className="text-texto-secundario">
+              {" · "}
+              {proximoPrazo.tipo === "AUDIENCIA"
+                ? formatarDataHorario(proximoPrazo.dataFinal)
+                : formatarData(proximoPrazo.dataFinal)}
+            </span>
+          </span>
+          {proximoPrazo.aConferir && <SeloAConferir />}
+        </Link>
+      )}
 
+      <AbasProcesso processoId={processo.id} abaAtual={aba} abas={abas} />
+
+      {aba === "prazos" && (
+        <>
       <div className="flex items-center justify-between mb-3">
         <h2 className={classeTituloSecao}>Prazos vinculados</h2>
-        <Link href={`/prazos/novo?processoId=${processo.id}`} className={classeBotaoPrimario}>
+        <Link href={`/prazos/novo?processoId=${processo.id}`} className={classeBotaoSecundario}>
           Novo prazo
         </Link>
       </div>
@@ -218,10 +232,10 @@ export default async function ProcessoDetalhePage({
                   }`}
                 >
                   <div className="flex items-center gap-4">
-                    <SeloPrazo id={prazo.id} dias={restantes} tier={tier} size={64} />
+                    <SeloPrazo id={prazo.id} dias={restantes} tier={tier} status={prazo.status} size={64} />
                     <div className="flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <p className="font-medium">{LABEL_TIPO_PRAZO[prazo.tipo]}</p>
+                        <p className="font-medium">{tituloPrazo(prazo).titulo}</p>
                         {prazo.tipo === "AUDIENCIA" && (
                           <span
                             className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${CLASSE_BADGE_AUDIENCIA}`}
@@ -322,18 +336,17 @@ export default async function ProcessoDetalhePage({
           })}
         </ul>
       )}
+        </>
+      )}
 
-      <SecaoAtualizacoesCliente
-        caminhoProcesso={`/processos/${processo.id}`}
-        atualizacoes={processo.atualizacoesCliente}
-      />
-
-      <div className="mt-10">
+      {aba === "andamentos" && (
+        <>
+      <div>
         <div className="flex items-center justify-between mb-3">
           <h2 className={classeTituloSecao}>Andamentos</h2>
           <Link
             href={`/processos/${processo.id}/andamentos/novo`}
-            className={classeBotaoPrimario}
+            className={classeBotaoSecundario}
           >
             Registrar andamento
           </Link>
@@ -409,13 +422,27 @@ export default async function ProcessoDetalhePage({
           </ul>
         )}
       </div>
+        </>
+      )}
 
-      <div className="mt-10">
+      {aba === "atualizacoes" && (
+        <>
+      <SecaoAtualizacoesCliente
+        className=""
+        caminhoProcesso={`/processos/${processo.id}`}
+        atualizacoes={processo.atualizacoesCliente}
+      />
+        </>
+      )}
+
+      {aba === "recursos" && (
+        <>
+      <div>
         <div className="flex items-center justify-between mb-3">
           <h2 className={classeTituloSecao}>Recursos</h2>
           <Link
             href={`/processos/${processo.id}/recursos/novo`}
-            className={classeBotaoPrimario}
+            className={classeBotaoSecundario}
           >
             Novo recurso
           </Link>
@@ -519,8 +546,12 @@ export default async function ProcessoDetalhePage({
           </ul>
         )}
       </div>
+        </>
+      )}
 
-      <div className="mt-10 space-y-8">
+      {aba === "financeiro" && (
+        <>
+      <div className="space-y-8">
         <div>
           <div className="flex items-center justify-between mb-3">
             <h2 className={classeTituloSecao}>Honorários contratuais</h2>
@@ -620,6 +651,47 @@ export default async function ProcessoDetalhePage({
           )}
         </div>
       </div>
+        </>
+      )}
+
+      {aba === "dados" && (
+        <>
+      <dl className={`grid grid-cols-1 gap-4 text-sm sm:grid-cols-3 ${classeCard}`}>
+        {[
+          ["Tribunal", processo.tribunal ? LABEL_TRIBUNAL[processo.tribunal] : null],
+          ["Vara", processo.vara],
+          ["Comarca", processo.comarca],
+          ["Grau", LABEL_GRAU_PROCESSO[processo.grau]],
+          ["Jurisdição", processo.jurisdicao ? LABEL_JURISDICAO[processo.jurisdicao] : null],
+          ["Rito", processo.rito ? LABEL_RITO[processo.rito] : null],
+          [
+            "Cliente no",
+            processo.poloCliente === "ATIVO"
+              ? "Polo ativo"
+              : processo.poloCliente === "PASSIVO"
+                ? "Polo passivo"
+                : "Não informado",
+          ],
+          ["Criado em", formatarData(processo.criadoEm)],
+        ]
+          // Campos vazios ficam ocultos; "Editar" mostra todos.
+          .filter(([, valor]) => valor)
+          .map(([rotulo, valor]) => (
+            <div key={rotulo}>
+              <dt className="text-texto-secundario">{rotulo}</dt>
+              <dd className="tabular-nums">{valor}</dd>
+            </div>
+          ))}
+        {processo.resumo && (
+          <div className="sm:col-span-3">
+            <dt className="text-texto-secundario">Resumo</dt>
+            <dd className="whitespace-pre-wrap">{processo.resumo}</dd>
+          </div>
+        )}
+      </dl>
+        </>
+      )}
+
     </div>
   );
 }

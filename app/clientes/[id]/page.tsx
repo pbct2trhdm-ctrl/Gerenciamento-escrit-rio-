@@ -41,7 +41,7 @@ export default async function ClienteDetalhePage({
   }
 
   return (
-    <div className="max-w-4xl">
+    <div className="max-w-6xl">
       <LinkVoltar href="/clientes" label="Voltar para Clientes" />
       <div className="flex items-center justify-between mb-1">
         <h1 className={classeTituloPagina}>{cliente.nome}</h1>

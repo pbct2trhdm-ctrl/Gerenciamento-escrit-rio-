@@ -6,6 +6,7 @@ import { useFormStatus } from "react-dom";
  * Botão de submit que mostra um texto de espera enquanto a action roda.
  * Com name/value, só o botão clicado troca de texto; os demais ficam
  * desabilitados para evitar um segundo envio no meio do primeiro.
+ * Com `confirmacao`, pede confirmação antes de enviar (ações sem volta).
  */
 export function BotaoEnvio({
   children,
@@ -14,6 +15,7 @@ export function BotaoEnvio({
   name,
   value,
   desabilitado = false,
+  confirmacao,
 }: {
   children: React.ReactNode;
   textoAguardando: string;
@@ -21,6 +23,7 @@ export function BotaoEnvio({
   name?: string;
   value?: string;
   desabilitado?: boolean;
+  confirmacao?: string;
 }) {
   const { pending, data } = useFormStatus();
   const esteBotao = pending && (!name || data?.get(name) === value);
@@ -31,6 +34,7 @@ export function BotaoEnvio({
       name={name}
       value={value}
       disabled={pending || desabilitado}
+      onClick={confirmacao ? (e) => !window.confirm(confirmacao) && e.preventDefault() : undefined}
       className={`${className} disabled:opacity-60 disabled:cursor-wait`}
     >
       {esteBotao ? textoAguardando : children}
