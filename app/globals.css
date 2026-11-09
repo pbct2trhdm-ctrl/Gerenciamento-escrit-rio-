@@ -57,3 +57,49 @@ button:focus-visible,
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
 }
+
+/* ── Animações de menus (menu lateral, menus suspensos, menu do celular) ──
+   Curtas (150–250 ms) para não atrasar o uso. Quem pede menos movimento no
+   sistema operacional (Acessibilidade → Reduzir movimento) não vê animação. */
+@keyframes surgir {
+  from { opacity: 0; transform: translateY(-6px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes sumir {
+  from { opacity: 1; transform: none; }
+  to { opacity: 0; transform: translateY(-6px) scale(0.98); }
+}
+@keyframes entrar-esquerda {
+  from { opacity: 0.6; transform: translateX(-105%); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes sair-esquerda {
+  from { opacity: 1; transform: none; }
+  to { opacity: 0.6; transform: translateX(-105%); }
+}
+@keyframes esmaecer-entrar {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes esmaecer-sair {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+.animar-surgir { animation: surgir 160ms cubic-bezier(0.2, 0.8, 0.2, 1) both; transform-origin: top right; }
+.animar-sumir { animation: sumir 140ms ease-in both; transform-origin: top right; }
+.animar-entrar-esquerda { animation: entrar-esquerda 240ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.animar-sair-esquerda { animation: sair-esquerda 200ms ease-in both; }
+.animar-esmaecer-entrar { animation: esmaecer-entrar 200ms ease-out both; }
+.animar-esmaecer-sair { animation: esmaecer-sair 200ms ease-in both; }
+
+/* Conteúdo de <details> (ex.: "Mais filtros", "Depois") aparece suavemente. */
+details[open] > :not(summary) { animation: surgir 180ms cubic-bezier(0.2, 0.8, 0.2, 1) both; transform-origin: top left; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animar-surgir, .animar-sumir, .animar-entrar-esquerda, .animar-sair-esquerda,
+  .animar-esmaecer-entrar, .animar-esmaecer-sair, details[open] > :not(summary) {
+    animation-duration: 1ms;
+  }
+  .indicador-menu { transition: none !important; }
+}

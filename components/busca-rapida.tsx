@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { ResultadoBusca } from "@/lib/busca";
+import { useAbertura } from "@/lib/use-abertura";
 
 const LABEL_TIPO: Record<ResultadoBusca["tipo"], string> = {
   cliente: "Cliente",
@@ -59,6 +60,7 @@ export function BuscaRapida({ aoNavegar, id }: { aoNavegar?: () => void; id: str
   }, [texto]);
 
   const lista = texto.trim().length >= 2 ? resultados : [];
+  const painel = useAbertura(aberto && texto.trim().length >= 2, 140);
 
   function abrir(href: string) {
     setAberto(false);
@@ -110,8 +112,13 @@ export function BuscaRapida({ aoNavegar, id }: { aoNavegar?: () => void; id: str
       <kbd className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 rounded border border-white/20 px-1.5 text-[10px] text-white/50 hidden md:block">
         ⌘K
       </kbd>
-      {aberto && texto.trim().length >= 2 && (
-        <div className="absolute left-0 z-50 mt-1 w-full md:w-[26rem] overflow-hidden rounded-lg border border-slate-200 bg-superficie text-texto-principal shadow-lg">
+      {painel.montado && (
+        <div
+          style={{ transformOrigin: "top left" }}
+          className={`absolute left-0 z-50 mt-2 w-full md:w-[26rem] overflow-hidden rounded-xl border border-slate-200 bg-superficie text-texto-principal shadow-xl shadow-slate-900/15 ${
+            painel.fechando ? "animar-sumir" : "animar-surgir"
+          }`}
+        >
           {lista.length === 0 ? (
             <p className="px-3 py-3 text-sm text-texto-secundario">Nada encontrado ainda…</p>
           ) : (
@@ -123,7 +130,7 @@ export function BuscaRapida({ aoNavegar, id }: { aoNavegar?: () => void; id: str
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={() => abrir(r.href)}
                     onMouseEnter={() => setSelecionado(i)}
-                    className={`flex w-full items-start gap-2 px-3 py-2 text-left ${i === selecionado ? "bg-slate-100" : ""}`}
+                    className={`flex w-full items-start gap-2 px-3 py-2 text-left transition-colors ${i === selecionado ? "bg-slate-100" : ""}`}
                   >
                     <span className="mt-0.5 w-16 shrink-0 text-[10px] font-semibold uppercase tracking-wide text-texto-secundario">
                       {LABEL_TIPO[r.tipo]}

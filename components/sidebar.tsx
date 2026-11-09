@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -16,6 +16,7 @@ import {
   IconeAgenda,
 } from "@/components/icones";
 import { BuscaRapida } from "@/components/busca-rapida";
+import { useAbertura } from "@/lib/use-abertura";
 
 const itens = [
   { href: "/", label: "Dashboard", Icone: IconeDashboard },
@@ -59,24 +60,54 @@ function ContadorPublicacoes({ total, claro = false }: { total: number; claro?: 
   );
 }
 
+/**
+ * Lista do menu com um destaque que desliza até o item da tela atual
+ * (em vez de pular de um item para outro).
+ */
 function ListaMenu({ pathname, publicacoesNaoLidas }: { pathname: string; publicacoesNaoLidas: number }) {
+  const lista = useRef<HTMLUListElement>(null);
+  const [indicador, setIndicador] = useState<{ top: number; height: number } | null>(null);
+  const indiceAtivo = itens.findIndex((item) => estaAtivo(pathname, item.href));
+
+  useLayoutEffect(() => {
+    function medir() {
+      const item = lista.current?.children[indiceAtivo + 1] as HTMLElement | undefined;
+      const link = item?.firstElementChild as HTMLElement | null | undefined;
+      setIndicador(item && link ? { top: item.offsetTop + link.offsetTop, height: link.offsetHeight } : null);
+    }
+    medir();
+    window.addEventListener("resize", medir);
+    return () => window.removeEventListener("resize", medir);
+  }, [indiceAtivo]);
+
   return (
-    <ul className="flex-1 py-4">
+    <ul ref={lista} className="relative flex-1 py-4">
+      {/* Destaque deslizante (primeiro filho; os itens vêm depois) */}
+      <li
+        aria-hidden="true"
+        className="indicador-menu pointer-events-none absolute inset-x-3 rounded-lg bg-white/12 shadow-[inset_3px_0_0_white] transition-[transform,height,opacity] duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)]"
+        style={{
+          transform: `translateY(${indicador?.top ?? 0}px)`,
+          height: indicador?.height ?? 0,
+          opacity: indicador ? 1 : 0,
+          top: 0,
+        }}
+      />
       {itens.map((item) => {
         const ativo = estaAtivo(pathname, item.href);
         return (
-          <li key={item.href}>
+          <li key={item.href} className="relative">
             <Link
               href={item.href}
               aria-current={ativo ? "page" : undefined}
-              className={`flex items-center gap-3 mx-3 mb-1 rounded-md py-2 text-sm transition-colors focus-visible:outline-white ${
-                ativo
-                  ? "border-l-[3px] border-white bg-white/10 pl-[9px] pr-3 font-semibold text-white"
-                  : "px-3 font-medium text-white/60 hover:bg-white/5 hover:text-white"
+              className={`group mx-3 mb-1 flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-[color,background-color] duration-200 focus-visible:outline-white ${
+                ativo ? "font-semibold text-white" : "font-medium text-white/60 hover:bg-white/5 hover:text-white"
               }`}
             >
-              <item.Icone />
-              <span className="flex-1">{item.label}</span>
+              <span className={`transition-transform duration-200 ${ativo ? "" : "group-hover:translate-x-0.5 group-hover:scale-110"}`}>
+                <item.Icone />
+              </span>
+              <span className="flex-1 transition-transform duration-200 group-hover:translate-x-0.5">{item.label}</span>
               {item.href === "/publicacoes" && <ContadorPublicacoes total={publicacoesNaoLidas} />}
             </Link>
           </li>
@@ -95,6 +126,7 @@ function ListaMenu({ pathname, publicacoesNaoLidas }: { pathname: string; public
 export function Sidebar({ publicacoesNaoLidas = 0 }: { publicacoesNaoLidas?: number }) {
   const pathname = usePathname();
   const [menuAberto, setMenuAberto] = useState(false);
+  const gaveta = useAbertura(menuAberto, 220);
   const [rotaDoMenu, setRotaDoMenu] = useState(pathname);
 
   // Fecha o menu do celular ao trocar de página.
@@ -117,7 +149,7 @@ export function Sidebar({ publicacoesNaoLidas = 0 }: { publicacoesNaoLidas?: num
   return (
     <>
       {/* Computador */}
-      <nav className="hidden md:flex w-60 shrink-0 border-r border-black/10 bg-base-escura h-screen sticky top-0 flex-col overflow-y-auto">
+      <nav className="hidden md:flex w-60 shrink-0 m-3 mr-0 rounded-2xl bg-base-escura shadow-xl shadow-base-escura/25 ring-1 ring-black/5 h-[calc(100vh-1.5rem)] sticky top-3 flex-col overflow-y-auto">
         <Link
           href="/"
           className="flex flex-col items-center gap-3 px-5 py-6 border-b border-white/10 focus-visible:outline-white"
@@ -167,17 +199,21 @@ export function Sidebar({ publicacoesNaoLidas = 0 }: { publicacoesNaoLidas?: num
       </header>
 
       {/* Celular: menu completo por cima do conteúdo */}
-      {menuAberto && (
-        <div className="md:hidden fixed inset-0 z-50 flex">
+      {gaveta.montado && (
+        <div className="md:hidden fixed inset-0 z-50 flex p-2">
           <button
             type="button"
             aria-label="Fechar menu"
-            className="absolute inset-0 bg-black/40"
+            className={`absolute inset-0 bg-base-escura/40 backdrop-blur-[2px] ${
+              gaveta.fechando ? "animar-esmaecer-sair" : "animar-esmaecer-entrar"
+            }`}
             onClick={() => setMenuAberto(false)}
           />
           <nav
             id="menu-celular"
-            className="relative flex h-full w-72 max-w-[85vw] flex-col overflow-y-auto bg-base-escura"
+            className={`relative flex h-full w-72 max-w-[85vw] flex-col overflow-y-auto rounded-2xl bg-base-escura shadow-2xl ${
+              gaveta.fechando ? "animar-sair-esquerda" : "animar-entrar-esquerda"
+            }`}
           >
             <div className="flex items-center justify-between border-b border-white/10 px-4 py-4">
               <div className="flex items-center gap-3">
