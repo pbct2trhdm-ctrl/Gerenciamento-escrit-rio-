@@ -113,7 +113,7 @@ export async function vincularPublicacaoAoProcessoId(
     },
   });
 
-  // Audiência futura no texto: entra em Prazos/Agenda (inclusive na
+  // Audiência futura no texto: entra em Prazos e na Agenda (inclusive na
   // importação de histórico, já que a data ainda não passou).
   const temAudiencia = identificarAudienciaNoTexto(publicacao.textoPublicacao, new Date()) !== null;
 
@@ -386,7 +386,7 @@ export async function verificarEImportarPublicacoes(
           ? [`⚠️ ${prazosADefinir} publicação(ões) sem prazo identificado — defina no sistema.`]
           : []),
         ...(audiencias > 0
-          ? [`📅 ${audiencias} audiência(s) agendada(s) ou redesignada(s) — confira em Prazos/Agenda.`]
+          ? [`📅 ${audiencias} audiência(s) agendada(s) ou redesignada(s) — confira em Prazos e na Agenda.`]
           : []),
       ].join("\n");
 

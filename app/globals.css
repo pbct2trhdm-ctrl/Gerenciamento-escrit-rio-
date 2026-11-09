@@ -29,6 +29,12 @@
   --color-audiencia: #6b21a8;
   --color-audiencia-fundo: #f3e8ff;
 
+  /* Agenda: reuniões e diligências (lib/agenda.ts) */
+  --color-reuniao: #1f4b61;
+  --color-reuniao-fundo: #e8f0f4;
+  --color-diligencia: #0f6b62;
+  --color-diligencia-fundo: #eaf6f4;
+
   --font-display: var(--font-cinzel), Georgia, "Times New Roman", serif;
   --font-sans: var(--font-inter), Arial, Helvetica, sans-serif;
 }

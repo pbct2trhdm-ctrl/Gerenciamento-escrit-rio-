@@ -6,7 +6,7 @@ import type { ModalidadeAudiencia } from "@/app/generated/prisma/client";
 /**
  * Captação de audiências nas publicações do DJEN: procura, perto da palavra
  * "audiência", uma data futura (e o horário, se houver), a modalidade e o
- * link da sala virtual. A audiência entra em Prazos/Agenda vinculada ao
+ * link da sala virtual. A audiência entra em Prazos e na Agenda vinculada ao
  * processo, com o selo "A conferir". Datas passadas (ex.: "audiência
  * realizada em…") são ignoradas; se houver mais de uma data futura possível,
  * nada é criado — melhor a advogada cadastrar do que o sistema escolher errado.

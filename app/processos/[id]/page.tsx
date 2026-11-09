@@ -20,6 +20,8 @@ import {
   formatarData,
   formatarDataHorario,
   formatarMoeda,
+  LABEL_TIPO_COMPROMISSO,
+  LABEL_STATUS_COMPROMISSO,
 } from "@/lib/formatacao";
 import { LABEL_TRIBUNAL } from "@/lib/tribunais";
 import { diasRestantes } from "@/lib/prazos";
@@ -55,7 +57,7 @@ import {
   classeTituloSecao,
 } from "@/lib/estilos";
 
-const ABAS = ["prazos", "andamentos", "atualizacoes", "recursos", "financeiro", "dados"] as const;
+const ABAS = ["prazos", "agenda", "andamentos", "atualizacoes", "recursos", "financeiro", "dados"] as const;
 
 export default async function ProcessoDetalhePage({
   params,
@@ -91,6 +93,7 @@ export default async function ProcessoDetalhePage({
       honorariosSucumbenciais: { orderBy: { criadoEm: "desc" } },
       alvaras: { orderBy: { criadoEm: "desc" } },
       atualizacoesCliente: { orderBy: { criadoEm: "desc" } },
+      compromissos: { orderBy: { inicio: "desc" } },
     },
   });
 
@@ -108,6 +111,7 @@ export default async function ProcessoDetalhePage({
   const proximoPrazo = prazosPendentes[0];
   const abas: AbaProcesso[] = [
     { chave: "prazos", rotulo: "Prazos", total: prazosPendentes.length },
+    { chave: "agenda", rotulo: "Reuniões e diligências", total: processo.compromissos.length },
     { chave: "andamentos", rotulo: "Andamentos", total: processo.andamentos.length },
     { chave: "atualizacoes", rotulo: "Atualizações", total: processo.atualizacoesCliente.length },
     { chave: "recursos", rotulo: "Recursos", total: processo.recursos.length },
@@ -336,6 +340,46 @@ export default async function ProcessoDetalhePage({
           })}
         </ul>
       )}
+        </>
+      )}
+
+      {aba === "agenda" && (
+        <>
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <h2 className={classeTituloSecao}>Reuniões e diligências</h2>
+            <div className="flex gap-2">
+              <Link href={`/agenda/novo?tipo=DILIGENCIA&processoId=${processo.id}`} className={classeBotaoSecundario}>
+                Nova diligência
+              </Link>
+              <Link href={`/agenda/novo?tipo=REUNIAO&processoId=${processo.id}`} className={classeBotaoSecundario}>
+                Nova reunião
+              </Link>
+            </div>
+          </div>
+          {processo.compromissos.length === 0 ? (
+            <EmptyState mensagem="Nenhuma reunião ou diligência agendada para este processo." />
+          ) : (
+            <ul className="divide-y divide-slate-100 overflow-hidden rounded-xl border border-slate-200 bg-superficie shadow-xs">
+              {processo.compromissos.map((c) => (
+                <li key={c.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3 text-sm">
+                  <span className="w-36 shrink-0 tabular-nums text-texto-secundario">
+                    {formatarDataHorario(c.inicio)}
+                  </span>
+                  <Link
+                    href={`/agenda/${c.id}/editar`}
+                    className={`font-medium hover:underline ${c.status === "CANCELADO" ? "line-through opacity-60" : ""}`}
+                  >
+                    {c.titulo}
+                  </Link>
+                  <span className={classeBadgeNeutro}>{LABEL_TIPO_COMPROMISSO[c.tipo]}</span>
+                  {c.status !== "AGENDADO" && (
+                    <span className="text-xs text-texto-secundario">{LABEL_STATUS_COMPROMISSO[c.status]}</span>
+                  )}
+                  {c.local && <span className="text-texto-secundario">· {c.local}</span>}
+                </li>
+              ))}
+            </ul>
+          )}
         </>
       )}
 

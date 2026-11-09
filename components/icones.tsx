@@ -83,3 +83,14 @@ export function IconeConfiguracoes({ className = base }: IconeProps) {
     </svg>
   );
 }
+
+export function IconeAgenda({ className = base }: IconeProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" className={className}>
+      <rect x="4" y="5.5" width="16" height="14.5" rx="1.5" />
+      <path d="M4 9.5h16M8 3.5v3.5M16 3.5v3.5" strokeLinecap="round" />
+      <circle cx="12" cy="14.75" r="3.25" />
+      <path d="M12 13.25v1.6l1 .75" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}

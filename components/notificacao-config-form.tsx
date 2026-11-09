@@ -59,7 +59,7 @@ export function NotificacaoConfigForm({
             className={classeInput}
           />
           <p className="mt-1 text-xs text-texto-secundario">
-            Horário local deste computador.
+            Horário local deste computador. Nesse horário também sai o resumo da agenda do dia (reuniões, diligências e audiências).
           </p>
         </div>
       </div>

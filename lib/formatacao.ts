@@ -409,3 +409,14 @@ export function formatarCompetencia(data: Date | string): string {
     year: "numeric",
   });
 }
+
+export const LABEL_TIPO_COMPROMISSO: Record<string, string> = {
+  REUNIAO: "Reunião",
+  DILIGENCIA: "Diligência",
+};
+
+export const LABEL_STATUS_COMPROMISSO: Record<string, string> = {
+  AGENDADO: "Agendado",
+  REALIZADO: "Realizado",
+  CANCELADO: "Cancelado",
+};

@@ -52,7 +52,7 @@ export default async function PrazoDetalhePage({
 
   return (
     <div className="max-w-3xl">
-      <LinkVoltar href="/prazos" label="Voltar para Prazos/Agenda" />
+      <LinkVoltar href="/prazos" label="Voltar para Prazos" />
       <div className="flex items-center justify-between mb-1">
         <div className="flex items-center gap-2 flex-wrap">
           <h1 className={classeTituloPagina}>{LABEL_TIPO_PRAZO[prazo.tipo]}</h1>

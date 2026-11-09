@@ -4,6 +4,8 @@ import { diasRestantes } from "@/lib/prazos";
 import { formatarData } from "@/lib/formatacao";
 import { tierPorDiasRestantes } from "@/lib/urgencia";
 import { LinhaPrazo } from "@/components/linha-prazo";
+import { ItemAgendaCartao } from "@/components/item-agenda";
+import { diaDeIso, hojeIso, itensDaAgenda, somarDias } from "@/lib/agenda";
 import { EmptyState } from "@/components/empty-state";
 import { classeTituloPagina } from "@/lib/estilos";
 
@@ -26,7 +28,8 @@ export default async function DashboardPage({
   const { filtro: filtroBruto } = await searchParams;
   const filtro = (FILTROS as readonly string[]).includes(filtroBruto ?? "") ? (filtroBruto as Filtro) : null;
 
-  const [prazosPendentes, publicacoesNaoLidas, publicacoesPrazoADefinir] = await Promise.all([
+  const hoje = diaDeIso(hojeIso())!;
+  const [prazosPendentes, publicacoesNaoLidas, publicacoesPrazoADefinir, agendaDeHoje] = await Promise.all([
     prisma.prazo.findMany({
       where: { status: "PENDENTE" },
       orderBy: { dataFinal: "asc" },
@@ -38,7 +41,9 @@ export default async function DashboardPage({
       orderBy: { dataPublicacao: "asc" },
       include: { processo: { include: { cliente: true } } },
     }),
+    itensDaAgenda(hoje, somarDias(hoje, 1)),
   ]);
+  const agendaAtiva = agendaDeHoje.filter((i) => i.status !== "CANCELADO");
 
   const prazos = prazosPendentes.map((prazo) => {
     const dias = diasRestantes(prazo.dataFinal);
@@ -101,6 +106,31 @@ export default async function DashboardPage({
           );
         })}
       </ul>
+
+      <section className="mb-6" aria-labelledby="titulo-agenda-hoje">
+        <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-texto-secundario">
+          <h2 id="titulo-agenda-hoje">Agenda de hoje</h2>
+          <span className="rounded-full bg-slate-200/70 px-2 text-xs font-semibold">{agendaAtiva.length}</span>
+          <span className="h-px flex-1 bg-slate-200" aria-hidden="true" />
+          <Link href="/agenda" className="normal-case tracking-normal font-medium text-accent">
+            Abrir agenda
+          </Link>
+        </div>
+        {agendaAtiva.length === 0 ? (
+          <p className="rounded-xl border border-dashed border-slate-300 bg-superficie/60 px-4 py-3 text-sm text-texto-secundario">
+            Nenhuma reunião, diligência ou audiência hoje.{" "}
+            <Link href="/agenda/novo?tipo=REUNIAO" className="text-accent underline">
+              Agendar
+            </Link>
+          </p>
+        ) : (
+          <ul className="divide-y divide-slate-100 overflow-hidden rounded-xl border border-slate-200 bg-superficie shadow-xs">
+            {agendaAtiva.map((item) => (
+              <ItemAgendaCartao key={`${item.origem}-${item.id}`} item={item} compacto />
+            ))}
+          </ul>
+        )}
+      </section>
 
       {publicacoesPrazoADefinir.length > 0 && (
         <div className="mb-6 rounded-lg border border-atencao/40 bg-atencao-fundo px-4 py-3 text-sm">

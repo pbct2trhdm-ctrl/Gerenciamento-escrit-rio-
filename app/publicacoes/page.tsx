@@ -177,7 +177,7 @@ export default async function PublicacoesPage({
           {analisadas} publicação(ões) vinculada(s) analisada(s):{" "}
           {qtdAudiencias === 0
             ? "nenhuma audiência futura nova encontrada."
-            : `${qtdAudiencias} audiência(s) cadastrada(s) ou redesignada(s) em Prazos/Agenda, com o selo "A conferir".`}
+            : `${qtdAudiencias} audiência(s) cadastrada(s) ou redesignada(s) em Prazos e na Agenda, com o selo "A conferir".`}
         </div>
       )}
 
@@ -186,7 +186,7 @@ export default async function PublicacoesPage({
           Histórico importado ({periodo}): {novas} publicação(ões) nova(s) — {vinculadas} vinculada(s)
           a processos cadastrados, {orfas} sem processo correspondente (aba Órfãs).
           {Number(prazos ?? 0) > 0 && ` ${prazos} publicação(ões) recente(s) com prazo cadastrado ou a definir.`}
-          {qtdAudiencias > 0 && ` ${qtdAudiencias} audiência(s) futura(s) cadastrada(s) em Prazos/Agenda.`}{" "}
+          {qtdAudiencias > 0 && ` ${qtdAudiencias} audiência(s) futura(s) cadastrada(s) em Prazos e na Agenda.`}{" "}
           Publicações com mais de 7 dias entram como lidas e sem prazo.
         </div>
       )}
@@ -210,7 +210,7 @@ export default async function PublicacoesPage({
           Busca concluída: {Number(novas ?? 0) === 0
             ? "nenhuma publicação nova."
             : `${novas} publicação(ões) nova(s) importada(s).`}
-          {qtdAudiencias > 0 && ` ${qtdAudiencias} audiência(s) cadastrada(s) em Prazos/Agenda.`}
+          {qtdAudiencias > 0 && ` ${qtdAudiencias} audiência(s) cadastrada(s) em Prazos e na Agenda.`}
         </div>
       )}
       {busca === "erro" && (

@@ -39,7 +39,7 @@ export default async function RevisarPrazosPage({
 
   return (
     <div className="max-w-6xl">
-      <LinkVoltar href="/prazos" label="Voltar para Prazos/Agenda" />
+      <LinkVoltar href="/prazos" label="Voltar para Prazos" />
       <h1 className={`${classeTituloPagina} mb-1`}>Revisar prazos das publicações</h1>
       <p className="text-texto-secundario mb-6">
         Analisa os {itens.length} prazo(s) pendente(s) gerado(s) de publicações do DJEN e aponta os

@@ -13,6 +13,7 @@ import {
   IconeProcessosAdministrativos,
   IconePublicacoes,
   IconeConfiguracoes,
+  IconeAgenda,
 } from "@/components/icones";
 import { BuscaRapida } from "@/components/busca-rapida";
 
@@ -25,7 +26,8 @@ const itens = [
     label: "Processos Administrativos",
     Icone: IconeProcessosAdministrativos,
   },
-  { href: "/prazos", label: "Prazos/Agenda", Icone: IconePrazos },
+  { href: "/agenda", label: "Agenda", Icone: IconeAgenda },
+  { href: "/prazos", label: "Prazos", Icone: IconePrazos },
   { href: "/publicacoes", label: "Publicações", Icone: IconePublicacoes },
   { href: "/financeiro", label: "Financeiro", Icone: IconeFinanceiro },
   { href: "/configuracoes", label: "Configurações", Icone: IconeConfiguracoes },
@@ -34,6 +36,7 @@ const itens = [
 /** Atalhos da barra inferior no celular. */
 const itensInferiores = [
   { href: "/", label: "Início", Icone: IconeDashboard },
+  { href: "/agenda", label: "Agenda", Icone: IconeAgenda },
   { href: "/prazos", label: "Prazos", Icone: IconePrazos },
   { href: "/publicacoes", label: "Publicações", Icone: IconePublicacoes },
   { href: "/processos", label: "Processos", Icone: IconeProcessos },
@@ -203,7 +206,7 @@ export function Sidebar({ publicacoesNaoLidas = 0 }: { publicacoesNaoLidas?: num
       {/* Celular: atalhos na barra inferior */}
       <nav
         aria-label="Atalhos"
-        className="md:hidden fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 border-t border-slate-200 bg-superficie pb-[env(safe-area-inset-bottom)]"
+        className="md:hidden fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-slate-200 bg-superficie pb-[env(safe-area-inset-bottom)]"
       >
         {itensInferiores.map((item) => {
           const ativo = estaAtivo(pathname, item.href);

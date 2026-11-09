@@ -343,6 +343,7 @@ model Cliente {
   criadoEm     DateTime    @default(now())
   processos    Processo[]
   processosAdministrativos ProcessoAdministrativo[]
+  compromissos Compromisso[]
 }
 
 model Processo {
@@ -372,6 +373,7 @@ model Processo {
   processosAdministrativosVinculados ProcessoAdministrativo[]
   publicacoes             Publicacao[]
   atualizacoesCliente     AtualizacaoCliente[]
+  compromissos            Compromisso[]
 }
 
 model Prazo {
@@ -440,6 +442,8 @@ model ConfiguracaoNotificacao {
   credencialApi          String?
   /// Token de Segurança da conta Z-API (header Client-Token) — exigido quando ativado no painel da Z-API.
   clientTokenApi         String?
+  /// Dia (início, hora local) em que o resumo da agenda do dia já foi enviado — evita repetir.
+  agendaEnviadaEm        DateTime?
   atualizadoEm           DateTime             @updatedAt
 }
 
@@ -735,4 +739,36 @@ model AtualizacaoCliente {
   andamento                Andamento?              @relation(fields: [andamentoId], references: [id], onDelete: SetNull)
   criadoEm                 DateTime                @default(now())
   atualizadoEm             DateTime                @updatedAt
+}
+
+enum TipoCompromisso {
+  REUNIAO
+  DILIGENCIA
+}
+
+enum StatusCompromisso {
+  AGENDADO
+  REALIZADO
+  CANCELADO
+}
+
+/// Reunião ou diligência na agenda do escritório. Início/fim seguem a mesma
+/// convenção das audiências: hora de parede gravada como UTC (09:00 → 09:00Z).
+model Compromisso {
+  id          String            @id @default(cuid())
+  tipo        TipoCompromisso
+  titulo      String
+  inicio      DateTime
+  fim         DateTime?
+  local       String?
+  link        String?
+  clienteId   String?
+  cliente     Cliente?          @relation(fields: [clienteId], references: [id], onDelete: SetNull)
+  processoId  String?
+  processo    Processo?         @relation(fields: [processoId], references: [id], onDelete: SetNull)
+  observacoes String?
+  status      StatusCompromisso @default(AGENDADO)
+  criadoEm    DateTime          @default(now())
+
+  @@index([inicio])
 }
