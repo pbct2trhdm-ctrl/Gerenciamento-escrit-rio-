@@ -19,7 +19,7 @@ import { BuscaRapida } from "@/components/busca-rapida";
 import { useAbertura } from "@/lib/use-abertura";
 
 const itens = [
-  { href: "/", label: "Dashboard", Icone: IconeDashboard },
+  { href: "/", label: "Resumo", Icone: IconeDashboard },
   { href: "/clientes", label: "Clientes", Icone: IconeClientes },
   { href: "/processos", label: "Processos", Icone: IconeProcessos },
   {
@@ -36,7 +36,7 @@ const itens = [
 
 /** Atalhos da barra inferior no celular. */
 const itensInferiores = [
-  { href: "/", label: "Início", Icone: IconeDashboard },
+  { href: "/", label: "Resumo", Icone: IconeDashboard },
   { href: "/agenda", label: "Agenda", Icone: IconeAgenda },
   { href: "/prazos", label: "Prazos", Icone: IconePrazos },
   { href: "/publicacoes", label: "Publicações", Icone: IconePublicacoes },
@@ -153,7 +153,7 @@ export function Sidebar({ publicacoesNaoLidas = 0 }: { publicacoesNaoLidas?: num
         <Link
           href="/"
           className="flex flex-col items-center gap-3 px-5 py-6 border-b border-white/10 focus-visible:outline-white"
-          aria-label="Pastana Mota Advocacia — Dashboard"
+          aria-label="Pastana Mota Advocacia — Resumo"
         >
           <Image src="/logo-pm-branca.png" alt="" width={600} height={328} priority className="h-auto w-20" />
           <Image
@@ -173,7 +173,7 @@ export function Sidebar({ publicacoesNaoLidas = 0 }: { publicacoesNaoLidas?: num
 
       {/* Celular: barra superior com logo e nome do escritório */}
       <header className="md:hidden sticky top-0 z-40 flex items-center gap-3 bg-base-escura px-4 py-2.5 shadow-sm">
-        <Link href="/" className="flex min-w-0 flex-1 items-center gap-3" aria-label="Pastana Mota Advocacia — Dashboard">
+        <Link href="/" className="flex min-w-0 flex-1 items-center gap-3" aria-label="Pastana Mota Advocacia — Resumo">
           <Image src="/logo-pm-branca.png" alt="" width={600} height={328} priority className="h-auto w-11 shrink-0" />
           <Image
             src="/logo-texto-branca.png"

@@ -32,7 +32,7 @@ O cálculo de dias úteis considera fins de semana e feriados nacionais brasilei
 
 ## Telas
 
-- **Dashboard**: resumo do dia (vencem hoje, esta semana, audiências, a conferir, publicações novas — cada número filtra a lista) e prazos pendentes agrupados em Atrasados / Hoje / Esta semana / Depois, com a descrição do prazo como título.
+- **Resumo** (tela inicial, `/`): saudação e data, números do dia (prazos hoje/atrasados e em 7 dias, itens na agenda, a conferir, publicações novas — os de prazos abrem a lista filtrada), "Hoje" (reuniões, diligências e audiências do dia e prazos de hoje/atrasados), "Próximos 7 dias" dia a dia (agenda e prazos), publicações novas, prazos a conferir com botão Confirmar e pendências financeiras (parcelas em atraso, a receber no mês, valores de alvarás a repassar).
 - **Busca rápida**: campo no topo do menu (⌘K ou Ctrl+K) que encontra clientes, processos judiciais e administrativos e publicações pelo nome ou por parte do número (só os dígitos já bastam), sem diferenciar acentos; Enter abre o resultado ou a página `/busca` — ver `lib/busca.ts`.
 - **Menus**: menu lateral flutuante (cartão com cantos arredondados e sombra) com destaque que desliza até a tela atual; menus suspensos (⋯, busca rápida) e o menu do celular abrem e fecham com animação curta, desligada quando o macOS está com "Reduzir movimento" ativo — ver `app/globals.css` e `lib/use-abertura.ts`.
 - **Celular / janela estreita**: barra superior com a logo e o nome do escritório, botão ☰ que abre o menu completo e barra inferior com Início, Prazos, Publicações e Processos.
