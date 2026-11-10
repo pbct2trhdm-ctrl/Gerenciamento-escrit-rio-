@@ -1,3 +1,5 @@
+import { diasAte } from "@/lib/datas";
+
 export type TipoContagem = "DIAS_UTEIS" | "DIAS_CORRIDOS";
 
 function dataPascoa(ano: number): Date {
@@ -90,17 +92,7 @@ export function calcularDataFinal(
 }
 
 export function diasRestantes(dataFinal: Date, referencia: Date = new Date()): number {
-  const inicio = Date.UTC(
-    referencia.getUTCFullYear(),
-    referencia.getUTCMonth(),
-    referencia.getUTCDate()
-  );
-  const fim = Date.UTC(
-    dataFinal.getUTCFullYear(),
-    dataFinal.getUTCMonth(),
-    dataFinal.getUTCDate()
-  );
-  return Math.round((fim - inicio) / (1000 * 60 * 60 * 24));
+  return diasAte(dataFinal, referencia);
 }
 
 export function prazoProximoDoVencimento(dataFinal: Date, referencia: Date = new Date()): boolean {

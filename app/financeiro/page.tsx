@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { hojeComoData } from "@/lib/datas";
 import { idsAlvarasDuplicados } from "@/lib/alvara-duplicados";
 import { prisma } from "@/lib/prisma";
 import { formatarMoeda, formatarData } from "@/lib/formatacao";
@@ -12,7 +13,7 @@ import { classeCard, classeTituloSecao } from "@/lib/estilos";
 
 export default async function FinanceiroVisaoGeralPage() {
   const hoje = new Date();
-  const inicioMes = primeiroDiaMes(hoje);
+  const inicioMes = primeiroDiaMes(hojeComoData(hoje));
 
   const [parcelasPendentes, sucumbenciasAbertas, parcelasPagas, sucumbenciasRecebidas, alvaras, despesas, obrigacoesPagas, retiradas] =
     await Promise.all([

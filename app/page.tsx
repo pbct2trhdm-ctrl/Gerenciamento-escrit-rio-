@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { hojeComoData } from "@/lib/datas";
 import { prisma } from "@/lib/prisma";
 import { diasRestantes } from "@/lib/prazos";
 import { formatarData, formatarMoeda } from "@/lib/formatacao";
@@ -60,7 +61,7 @@ export default async function ResumoPage({ searchParams }: { searchParams: Promi
 
   const agora = new Date();
   const hoje = diaDeIso(hojeIso(agora))!;
-  const inicioMes = primeiroDiaMes(agora);
+  const inicioMes = primeiroDiaMes(hojeComoData(agora));
 
   const [prazosPendentes, publicacoesNovas, totalPublicacoesNovas, publicacoesPrazoADefinir, agenda, parcelasPendentes, alvarasAguardando] =
     await Promise.all([

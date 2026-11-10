@@ -16,7 +16,7 @@ function validarCategoria(valor: FormDataEntryValue | null) {
 function parseData(valor: FormDataEntryValue | null): Date {
   const texto = (valor ?? "").toString();
   const [ano, mes, dia] = texto.split("-").map(Number);
-  return new Date(Date.UTC(ano || new Date().getUTCFullYear(), (mes || 1) - 1, dia || 1));
+  return new Date(Date.UTC(ano || new Date().getFullYear(), (mes || 1) - 1, dia || 1));
 }
 
 function dadosComuns(formData: FormData) {

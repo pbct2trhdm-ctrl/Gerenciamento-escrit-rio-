@@ -1,4 +1,5 @@
 import { gerarRelatorioFinanceiro, periodoDaQuery, formatarPeriodo } from "@/lib/relatorio";
+import { hojeComoData } from "@/lib/datas";
 import { competenciaParaString, primeiroDiaMes } from "@/lib/financeiro";
 import { NOME_ESCRITORIO, CNPJ_ESCRITORIO } from "@/lib/escritorio";
 import { RelatorioFiltro } from "@/components/relatorio-filtro";
@@ -26,7 +27,7 @@ export default async function RelatoriosPage({
   const relatorio = await gerarRelatorioFinanceiro(periodo, comparar);
 
   const mesAtualStr = competenciaParaString(
-    periodo.tipo === "mes" ? periodo.inicio : primeiroDiaMes(new Date())
+    periodo.tipo === "mes" ? periodo.inicio : primeiroDiaMes(hojeComoData())
   );
 
   const queryPdf = new URLSearchParams({

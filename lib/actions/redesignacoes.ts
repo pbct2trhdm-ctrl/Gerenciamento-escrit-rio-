@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { hojeUtc } from "@/lib/datas";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { formatarDataHorario } from "@/lib/formatacao";
@@ -17,8 +18,7 @@ function parseDataHorario(
 }
 
 function hojeData(): Date {
-  const agora = new Date();
-  return new Date(Date.UTC(agora.getUTCFullYear(), agora.getUTCMonth(), agora.getUTCDate()));
+  return new Date(hojeUtc());
 }
 
 export async function criarRedesignacao(prazoId: string, formData: FormData) {

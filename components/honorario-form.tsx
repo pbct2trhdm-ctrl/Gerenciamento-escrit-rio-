@@ -1,4 +1,5 @@
 import type { Honorario, Processo, Cliente } from "@/app/generated/prisma/client";
+import { hojeIsoLocal } from "@/lib/datas";
 import { classeInput, classeLabel, classeBotaoPrimario } from "@/lib/estilos";
 
 type ProcessoComCliente = Pick<Processo, "id" | "numeroProcesso"> & {
@@ -111,7 +112,7 @@ export function HonorarioForm({
           type="date"
           required
           defaultValue={
-            honorario ? paraInputDate(honorario.dataContrato) : paraInputDate(new Date())
+            honorario ? paraInputDate(honorario.dataContrato) : hojeIsoLocal()
           }
           className={classeInput}
         />

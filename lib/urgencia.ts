@@ -1,3 +1,4 @@
+import { diasAte } from "@/lib/datas";
 import { statusEfetivoParcela } from "@/lib/financeiro";
 
 /**
@@ -113,19 +114,7 @@ export function tierParcela(
   const efetivo = statusEfetivoParcela(parcela, referencia);
   if (efetivo === "ATRASADO") return "critico";
   if (efetivo === "PAGO") return "tranquilo";
-  const diasParaVencer = Math.round(
-    (Date.UTC(
-      parcela.vencimento.getUTCFullYear(),
-      parcela.vencimento.getUTCMonth(),
-      parcela.vencimento.getUTCDate()
-    ) -
-      Date.UTC(
-        referencia.getUTCFullYear(),
-        referencia.getUTCMonth(),
-        referencia.getUTCDate()
-      )) /
-      (1000 * 60 * 60 * 24)
-  );
+  const diasParaVencer = diasAte(parcela.vencimento, referencia);
   return diasParaVencer <= 7 ? "atencao" : "tranquilo";
 }
 
@@ -136,18 +125,6 @@ export function tierAlvara(
 ): Tier {
   if (alvara.status === "REPASSADO") return "tranquilo";
   if (!alvara.dataRecebimento) return "neutro";
-  const dias = Math.round(
-    (Date.UTC(
-      referencia.getUTCFullYear(),
-      referencia.getUTCMonth(),
-      referencia.getUTCDate()
-    ) -
-      Date.UTC(
-        alvara.dataRecebimento.getUTCFullYear(),
-        alvara.dataRecebimento.getUTCMonth(),
-        alvara.dataRecebimento.getUTCDate()
-      )) /
-      (1000 * 60 * 60 * 24)
-  );
+  const dias = -diasAte(alvara.dataRecebimento, referencia);
   return dias > diasAlerta ? "critico" : "atencao";
 }

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { hojeComoData } from "@/lib/datas";
 import { prisma } from "@/lib/prisma";
 import { formatarMoeda, formatarData, formatarCompetencia } from "@/lib/formatacao";
 import {
@@ -31,7 +32,7 @@ export default async function ObrigacoesPage({
   const { competencia: competenciaTexto } = await searchParams;
   const competencia = competenciaTexto
     ? competenciaDeString(competenciaTexto)
-    : primeiroDiaMes(new Date());
+    : primeiroDiaMes(hojeComoData());
   const competenciaStr = competenciaParaString(competencia);
   const mesAnterior = competenciaParaString(mesAdjacente(competencia, -1));
   const proximoMes = competenciaParaString(mesAdjacente(competencia, 1));

@@ -1,3 +1,5 @@
+import { diasAte } from "@/lib/datas";
+
 export const DIAS_ALERTA_ALVARA = 7;
 
 export type StatusParcelaEfetivo = "PENDENTE" | "PAGO" | "ATRASADO";
@@ -12,17 +14,7 @@ export function statusEfetivoParcela(
   referencia: Date = new Date()
 ): StatusParcelaEfetivo {
   if (parcela.status === "PAGO") return "PAGO";
-  const hoje = Date.UTC(
-    referencia.getUTCFullYear(),
-    referencia.getUTCMonth(),
-    referencia.getUTCDate()
-  );
-  const vencimento = Date.UTC(
-    parcela.vencimento.getUTCFullYear(),
-    parcela.vencimento.getUTCMonth(),
-    parcela.vencimento.getUTCDate()
-  );
-  return vencimento < hoje ? "ATRASADO" : "PENDENTE";
+  return diasAte(parcela.vencimento, referencia) < 0 ? "ATRASADO" : "PENDENTE";
 }
 
 export function primeiroDiaMes(data: Date): Date {
@@ -50,17 +42,7 @@ export function dentroDoMes(data: Date, competencia: Date): boolean {
 }
 
 export function diasDesde(data: Date, referencia: Date = new Date()): number {
-  const hoje = Date.UTC(
-    referencia.getUTCFullYear(),
-    referencia.getUTCMonth(),
-    referencia.getUTCDate()
-  );
-  const inicio = Date.UTC(
-    data.getUTCFullYear(),
-    data.getUTCMonth(),
-    data.getUTCDate()
-  );
-  return Math.round((hoje - inicio) / (1000 * 60 * 60 * 24));
+  return -diasAte(data, referencia);
 }
 
 export function sugerirInss(valorProLabore: number): number {

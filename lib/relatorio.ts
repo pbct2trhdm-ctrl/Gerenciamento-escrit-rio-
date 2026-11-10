@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { hojeComoData } from "@/lib/datas";
 import {
   primeiroDiaMes,
   competenciaDeString,
@@ -68,7 +69,7 @@ export function periodoDaQuery(params: {
       fim: parseDataUTC(params.dataFim),
     };
   }
-  const competencia = params.mes ? competenciaDeString(params.mes) : primeiroDiaMes(new Date());
+  const competencia = params.mes ? competenciaDeString(params.mes) : primeiroDiaMes(hojeComoData());
   return { tipo: "mes", inicio: competencia, fim: ultimoDiaMes(competencia) };
 }
 

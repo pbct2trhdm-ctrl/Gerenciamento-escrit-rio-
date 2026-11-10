@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { hojeIsoLocal } from "@/lib/datas";
 
 /**
  * Agenda do escritório: reuniões e diligências (Compromisso) e, junto com
@@ -23,12 +24,7 @@ export type ItemAgenda = {
 };
 
 /** "AAAA-MM-DD" de hoje no relógio do computador que roda o sistema. */
-export function hojeIso(agora: Date = new Date()): string {
-  const ano = agora.getFullYear();
-  const mes = String(agora.getMonth() + 1).padStart(2, "0");
-  const dia = String(agora.getDate()).padStart(2, "0");
-  return `${ano}-${mes}-${dia}`;
-}
+export const hojeIso = hojeIsoLocal;
 
 /** Converte "AAAA-MM-DD" no início do dia (UTC de parede); inválido → null. */
 export function diaDeIso(texto: string | undefined): Date | null {
